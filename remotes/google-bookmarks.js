@@ -114,63 +114,6 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 			gbm.bookmarks.bm[url] = bookmark;
 		}
 	}
-	
-	/*var sub; // sub element of bookmark element, one bookmark node
-	for (var i=0, g_bookmark; g_bookmark=google_bookmarks[i]; i++) {
-		var bookmark = {labels: [], ids: []};
-		for (var j=0; sub=g_bookmark.childNodes[j]; j++) {
-			if (sub.nodeName == 'labels') {
-				for (var k=0; labelNode=sub.childNodes[k]; k++) {
-					if (labelNode.nodeName != 'label') continue;
-					var label = labelNode.childNodes[0].nodeValue;
-					if (label == gbm.rootNodeLabel) {
-						var folder = gbm.bookmarks;
-					} else {
-						if (!gbm.labels[label]) {
-							// Add the new folder to the list
-							var elements = label.split(gbm.folderSep);
-							var folder = gbm.bookmarks;
-							var element;
-							for (var i_element=0; element=elements[i_element]; i_element++) {
-								// this is a new directory?
-								if (folder.f[element] == undefined) {
-									// yes, create it first
-									folder.f[element] = {bm: {}, f: {}, title: element, parentNode: folder};
-								}
-								// folder does exist
-								folder = folder.f[element];
-							}
-							gbm.labels[label] = folder;
-						} else {
-							var folder = gbm.labels[label];
-						}
-					}
-					bookmark.labels.push(folder);
-				}
-				continue;
-			}
-			// the rest are keys/values
-			var key = sub.nodeName;
-			var value = sub.childNodes[0].nodeValue;
-			if (key == 'url') {
-				// strange... but is needed
-				value = value.replace(/ /g, '%20');
-
-				gbm.urls[value] = bookmark;
-			}
-			if (key == 'title') {
-				// decode UTF-8 encoding in urls
-				// maybe for URLs too? (I don't know)
-				value = unescape(value);
-			}
-			bookmark[key] = value;
-		}
-		if (bookmark.labels.length == 0) {
-			bookmark.labels.push(root);
-			root.bm[bookmark.url] = bookmark;
-		}
-		bookmark.time = parseInt(bookmark.timestamp)/1000;
-	}*/
 }
 
 
@@ -190,7 +133,7 @@ gbm.onRssLoaded = function () {
 	}
 }
 
-gbm.parseRssBookmarks = function (xmlTree) {
+// TODO gbm.parseRssBookmarks = function (xmlTree) {
 	//try {
 		var channel = xmlTree.firstChild.firstChild;
 		gbm.sig     = channel.getElementsByTagName('signature')[0].firstChild.nodeValue;
