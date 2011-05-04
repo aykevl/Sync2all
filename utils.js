@@ -7,6 +7,7 @@ Array.prototype.remove = function (element) {
 	this.splice(index, 1);
 }
 
+// See http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
 /**
  * Simple relative date.
  *
@@ -44,6 +45,7 @@ function relativeDate(olderDate, newerDate) {
 
 
 
+// http://cbas.pandion.im/2009/10/generating-rfc-3339-timestamps-in.html
 /*
  Internet Timestamp Generator
  Copyright (c) 2009 Sebastiaan Deckers

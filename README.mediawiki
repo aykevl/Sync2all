@@ -1,0 +1,24 @@
+= Google Chrome synchronization =
+
+This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link. '''It doesn't work properly yet. It is buggy, and you shouldn't try to rename folders or use slashes in the name, because it will cause errors (renamed folders will be copied.)'''.
+
+== Supported protocols ==
+
+=== Google Bookmarks ===
+
+The Google bookmarks support is better than that of Opera Link. It nearly 'just works' -- except, if you change labels outside Chrome, the folders will get duplicated.
+
+=== Opera Link ===
+
+The Opera Link support is really bad, it supports only creation and deletion of bookmarks and folders, no renaming.
+
+=== Firefox Sync ===
+
+Not yet because it is very hard to decode the encrypted bookmarks. See https://bitbucket.org/philikon/weaveclient-chromium/.
+
+== Credits ==
+
+* M. Martins for how Google Bookmarks work: http://www.mmartins.com/mmartins/googlebookmarksapi/
+* Erik Hanson for a simple function to calculate human-readable relative dates (for example: x seconds ago): http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
+* ChaosinaCan for a JavaScript library that can access Opera Link: https://github.com/ChaosinaCan/OperaLink.js
+* Sebastiaan Deckers for a JavaScript function that calculates ISO 3339 timestamps (although I don't use it yet): http://cbas.pandion.im/2009/10/generating-rfc-3339-timestamps-in.html
