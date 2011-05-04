@@ -1,0 +1,18 @@
+{
+  "name": "Real Google Bookmarks Sync",
+  "version": "1.0",
+  "description": "Synchronizes the browser bookmarks with Google Bookmarks, thus a partially replacement of Chrome Sync.",
+  "browser_action": {
+    "default_icon": "icon.png",
+    "popup": "popup.html"
+  },
+  "background_page": "background.html",
+  "options_page": "options.html",
+  "permissions": [
+    "bookmarks",
+    "tabs",
+    "https://www.google.com/bookmarks/",
+    "https://auth.opera.com/",
+	"https://link.api.opera.com/"
+  ]
+}

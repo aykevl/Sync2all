@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>Real Google Bookmarks - options</title>
+	<meta name="encoding" content="utf-8" />
+</head>
+
+<script type="text/javascript">
+function save_options() {
+	var error_text = 'Settings are not OK:\n\n'; // for when there is an error
+	var has_error = false; // set to true when the alert is needed
+
+	var opt_pathsep = document.getElementById("opt_pathsep").value;
+	if (opt_pathsep.length < 1) {
+		error_text += ' * Path separator is too short\n';
+		has_error = true;
+	}
+
+	if (has_error) {
+		// give feedback about the error
+		alert(error_text); // TODO make form fields red
+	} else {
+		// save the options
+		localStorage["opt_pathsep"] = opt_pathsep;
+		alert("Settings saved."); // TODO make someting better
+	}
+}
+
+function restore_options() {
+	var opt_pathsep = localStorage["opt_pathsep"];
+	if (opt_pathsep) {
+		document.getElementById("opt_pathsep").value = opt_pathsep;
+	}
+}
+
+</script>
+
+<body onload="restore_options();">
+
+<h1>Real Google Bookmarks Sync - options</h1>
+
+<table>
+	<tr>
+		<th> Path separator: </th>
+		<td><input type=text id="opt_pathsep" title="Token between folders, usually '/' or '&gt;'." value="/"></td>
+	</tr>
+	<tr>
+		<td align="center" colspan="2">
+			<button onclick="save_options();">Save</button>
+		</td>
+	</tr>
+</table>
+
+</body>
+</html>
