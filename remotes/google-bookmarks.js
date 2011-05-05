@@ -44,8 +44,6 @@ gbm.init = function (enable) {
 
 gbm.start = function () {
 
-	console.log('start');
-
 	// mark enabled
 	if (!gbm.enabled) {
 		localStorage['gbm_enabled'] = true;
@@ -55,9 +53,7 @@ gbm.start = function () {
 
 	// set status
 	gbm.status = gbm.statuses.DOWNLOADING;
-	console.log('start2');
 	gbm.popup_update();
-	console.log('start3');
 
 	// initialize variables
     gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
