@@ -103,7 +103,8 @@ function use_rqueue(obj) {
 	};
 
 	obj.r_queue_next = function () {
-		update_ui();
+		this.popup_update();
+
 		if (this.r_queue.length == 0) {
 			console.log('Finished uploading');
 			this.r_queue.running = false;

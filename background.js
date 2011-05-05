@@ -1,6 +1,7 @@
 
 var current_browser = gchr; // currently only supports Google Chrome
 var remotes = [gbm, opl];
+var remotes_enabled = [];
 var local   = gchr; // TODO make more flexible in the future (for Firefox support)
 var remotes_finished;
 
@@ -37,9 +38,9 @@ var DO_NOTHING = false;
 
 var lastSync      = 0; //localStorage['lastSync'];
 
-var synced = false;      // when in sync, this is true
+/*var synced = false;      // when in sync, this is true
 var syncing = false;     // if doing some work locally (or when syncing full)
-var downloading = false; // if downloading bookmarks
+var downloading = false; // if downloading bookmarks*/
 
 var popup_ui_update;
 function update_ui() {
@@ -52,11 +53,7 @@ function update_ui() {
 
 
 function onLoad() {
-	if (localStorage["synced"] != "true") {
-		return;
-	}
-
-	startSync();
+	initSync();
 }
 
 function call_all(funcname, target, params) { // function will not be called on target, this indicates the target where it is already noted
@@ -88,9 +85,13 @@ function target_finished(remote) {
 	remotes_finished.push(remote);
 	lastSync = Math.max(lastSync, remote.lastSync);
 	merge(remote);
-	if (remotes.length == remotes_finished.length) {
+
+	// are all internet remotes finished? Start the browser sync!
+	if (remotes_enabled.length == remotes_finished.length) {
 		current_browser.start();
 	}
+
+	// is the syncing finished? Commit changes!
 	if (remote == current_browser) {
 		commit();
 	}
@@ -164,11 +165,7 @@ function set_default_opts() {
 }
 
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
-function startSync () {
-	console.log('Start fetching bookmarks...');
-	syncing     = true;
-	downloading = true;
-	localStorage.synced = true;
+function initSync () {
 	update_ui();
 
 	// load options
@@ -179,7 +176,7 @@ function startSync () {
 	startSync = 0; // will be updated when targets are synchronized
 	var remote;
 	for (var i=0; remote=remotes[i]; i++) {
-		remote.start();
+		remote.init();
 	}
 }
 

@@ -9,6 +9,10 @@ for details of the Google Bookmarks API
 gbm = {};
 
 gbm.name = 'Google Bookmarks';
+gbm.shortname = 'gbm';
+
+// imports
+use_rqueue(gbm);
 
 gbm.api_url = 'https://www.google.com/bookmarks/mark';
 gbm.labels;         // kind of label cache
@@ -19,26 +23,142 @@ gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'] || 'Bookmarks Bar';
 gbm.folderSep       = localStorage['gbm_folderSep'] || '/';
 gbm.lastSync      = localStorage['gbm_lastSync'] || 0;
 
-use_rqueue(gbm);
+
+gbm.statuses = {
+	READY: 0,
+	DOWNLOADING: 1,
+	MERGING: 2,
+	UPLOADING: 3,
+}
+
+gbm.status = gbm.statuses.READY;
+
+
+gbm.init = function (enable) {
+	gbm.enabled = localStorage['gbm_enabled'];
+	if (gbm.enabled) {
+		remotes_enabled.push(gbm);
+		gbm.start();
+	}
+};
 
 gbm.start = function () {
-	gbm.reqXml = new XMLHttpRequest();
-	gbm.reqXml.open (
-				"GET",
-				"https://www.google.com/bookmarks/?zx="+syncStartTime+"&output=xml&num=10000",
-				true);
-	gbm.reqXml.onreadystatechange = gbm.onXmlLoaded;
-	gbm.reqXml.send(null);
+
+	console.log('start');
+
+	// mark enabled
+	if (!gbm.enabled) {
+		localStorage['gbm_enabled'] = true;
+		gbm.enabled = true;
+		remotes_enabled.push(gbm);
+	}
+
+	// set status
+	gbm.status = gbm.statuses.DOWNLOADING;
+	console.log('start2');
+	gbm.popup_update();
+	console.log('start3');
+
+	// initialize variables
     gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
 	gbm.urls      = {}; // dictionary: url => list of bookmarks
 	gbm.labels    = {};
 	gbm.changed   = {}; // marked to be uploaded
+
+	// start download
+	gbm.reqXml = new XMLHttpRequest();
+	gbm.reqXml.open (
+				"GET",
+				"https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=xml&num=10000",
+				true);
+	gbm.reqXml.onreadystatechange = gbm.onXmlLoaded;
+	gbm.reqXml.send(null);
 }
 
 gbm.finished_start = function () {
+
+	// set status
+	gbm.status = gbm.statuses.MERGING;
+	gbm.popup_update();
+
+	// send 'finished' signal
 	target_finished(gbm);
+
+	// set status (again)
+	gbm.status = gbm.statuses.READY;
+	gbm.popup_update();
+
+	// clear unused memory
 	delete gbm.bookmarks;
 	delete gbm.labels;
+};
+
+gbm.stop = function () {
+
+	if (gbm.status) return; // FIXME error handling
+
+	delete localStorage['gbm_enabled'];
+	gbm.enabled = false;
+	remotes_enabled.remove(gbm);
+
+	gbm.popup_update();
+};
+
+
+// initialize the popup
+// Sets basic HTML in the <div>.
+// @div The <div> element that needs innerHTML.
+/*gbm.popup_init = function (div) {
+}*/ // maybe in the future, but it seems better to me to keep this HTML in the popup itself.
+
+// Update the data in the popup.
+// @doc The <div> to get the data from
+gbm.popup_update = function (div) {
+	try {
+		if (!div) var div       = gbm.popup_div;
+		else      gbm.popup_div = div;
+		if (!div) return;
+		// update the popup's button
+		var button_start    = div.getElementById('gbm_button_start');
+		var button_stop     = div.getElementById('gbm_button_stop');
+		var button_noremove = div.getElementById('gbm_button_noremove');
+		var status_span     = div.getElementById('gbm_status');
+		var status_text   = 'Not in sync';
+		var busy = false;
+		if (gbm.status == gbm.statuses.DOWNLOADING) {
+			status_text = 'Downloading bookmarks...';
+			busy        = true;
+		} else if (gbm.status == gbm.statuses.MERGING) {
+			status_text = 'Syncing...';
+			busy        = true;
+		} else if (gbm.r_queue.running) {
+			status_text = 'Uploading changes ('+gbm.r_queue.length+' left)...';
+			busy = true;
+		} else if (gbm.enabled) {
+			status_text = 'Synchronized';// (last synchronized: '+relativeDate(gbm.lastSync, new Date().getTime())+')';
+		}
+		if (busy) {
+			button_start.disabled = "disabled";
+		} else {
+			delete button_start.disabled;
+		}
+		if (!gbm.enabled) {
+			button_stop.disabled = "disabled";
+			console.log('stop disabled');
+			console.log(busy);
+		} else {
+			delete button_stop.disabled;
+			console.log('stop enabled');
+		}
+		//button_noremove.disabled = ((localStorage["lastSync"]!=0))?false:"disabled";
+		//button_noremove_text = 'Keep old bookmarks';
+		/*if (localStorage["lastSync"]==0) {
+			button_noremove.innerText= 'Will keep old bookmarks till next synchronization';
+		}*/
+		status_span.innerText    = status_text;
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 
@@ -51,7 +171,7 @@ gbm.onXmlLoaded = function () {
 		alert('Failed to retrieve bookmarks (XML). Is there an internet connection?');
 	} else {
 		gbm.reqRss = new XMLHttpRequest();
-		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+syncStartTime+"&output=rss&num=1000&start=0", true);
+		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1000&start=0", true);
 		gbm.reqRss.onreadystatechange = gbm.onRssLoaded;
 		gbm.reqRss.send(null);
 
@@ -133,7 +253,8 @@ gbm.onRssLoaded = function () {
 	}
 }
 
-// TODO gbm.parseRssBookmarks = function (xmlTree) {
+// TODO
+gbm.parseRssBookmarks = function (xmlTree) {
 	//try {
 		var channel = xmlTree.firstChild.firstChild;
 		gbm.sig     = channel.getElementsByTagName('signature')[0].firstChild.nodeValue;
@@ -262,6 +383,7 @@ gbm.upload_all = function (folder) {
 
 gbm.commit = function () {
 	for (url in gbm.changed) {
+
 		// gbm.changed contains the real urls, as in g_bookmarks
 		gbm.upload_bookmark(gbm.changed[url]);
 	}

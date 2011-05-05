@@ -4,6 +4,7 @@
 var opl = {};
 
 opl.name = 'Opera Link';
+opl.shortname = 'opl';
 
 // imports
 use_queue(opl);
@@ -15,19 +16,44 @@ opera.link.authorizeFunction = function (url) {
 	chrome.tabs.create({url: url});
 }
 
+opl.init = function () {
+	// initialize opera.link
+	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
+	opera.link.loadToken();
+
+	opl.enabled = localStorage['opl_enabled'];
+
+	// start if enabled
+	if (opl.enabled) {
+		remotes_enabled.push(opl);
+		opl.start();
+	}
+}
+
 opl.start = function () {
+
+	// mark enabled
+	localStorage.opl_enabled = true;
+	opl.enabled = true;
+	remotes_enabled.push(opl);
+
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title
 	opl.lastSync = 0;
 
-	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
-	opera.link.loadToken();
+	// start downloading
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
 opl.finished_start = function () {
 	target_finished(opl);
 };
+
+opl.popup_update = function (div) {
+	if (!div) var div       = opl.popup_div;
+	else      opl.popup_div = div;
+	if (!div) return;
+}
 
 opl.requestTokenCallback = function (e) {
 	opl.requestToken = e.token;

@@ -13,54 +13,39 @@ function popupClosed() {
 	background.popup_ui_update = undefined;
 }
 
+// TODO change this to a more fine-grained system.
 function updatePopup() {
-	// update the popup's button
-	var button_start    = document.getElementById('button_start');
-	var button_noremove = document.getElementById('button_noremove');
-	var status_span     = document.getElementById('status');
-	var status_text   = 'Not in sync';
-	var busy = false;
-	if (background.downloading) {
-		status_text = 'Downloading bookmarks...';
-		busy        = true;
-	} else if (background.syncing) {
-		status_text = 'Syncing...';
-		busy        = true;
-	} else if (background.r_queue.running) {
-		status_text = 'Uploading changes ('+background.r_queue.length+' left)...';
-		busy = true;
-	} else if (background.synced) {
-		status_text = 'Synchronized (last synchronized: '+relativeDate(localStorage.lastSync, new Date().getTime())+')';
+	var target;
+	for (var i=0; target=background.remotes[i]; i++) {
+		target.popup_update(document); // TODO popup_update expects div element
 	}
-	button_start.disabled    = busy?"disabled":false;
-	button_stop.disabled     = ((!busy) && (localStorage["synced"]=="true"))?false:"disabled";
-	button_noremove.disabled = ((localStorage["lastSync"]!=0))?false:"disabled";
-	button_noremove_text = 'Keep old bookmarks';
-	if (localStorage["lastSync"]==0) {
-		button_noremove.innerText= 'Will keep old bookmarks till next synchronization';
-	}
-	status_span.innerText    = status_text;
 }
 
 background.popup_ui_update = updatePopup;
 
 </script>
 <style>
-button, #status {
-	white-space: nowrap;
-}
 body {
 	text-align: right;
+}
+.target {
+	border: 1px darkgrey solid;
+	white-space: nowrap;
 }
 </style>
 </head>
 
 <body onload="updatePopup();" onunload="popupClosed();">
 
-<span id="status">Ready</span><br />
-<button id='button_start' onclick="background.startSync();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">Synchronize</button><br />
-<button id='button_noremove' onclick="localStorage.lastSync=0;background.lastSync=0;updatePopup();" title="This sets the 'last-synchronized' time to zero, so that all bookmarks seem to be new. This will be reset after a synchronisation has completed.">Keep old bookmarks</button><br />
-<button id='button_stop' onclick="localStorage['synced'] = 'false'; updatePopup();" title="Stop synchronizing with Google Bookmarks">Stop synchronizing</button>
+<div id="target_gbm" class="target">
+	<strong>Google Bookmarks:</strong> <span id="gbm_status">Ready</span><br />
+	<button id='gbm_button_start' onclick="background.gbm.start();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">Synchronize</button><br />
+	<!--<button id='gbm_button_noremove' onclick="localStorage.gbm_lastSync=0; updatePopup();" title="This sets the 'last-synchronized' time to zero, so that all bookmarks seem to be new. This will be reset after a synchronisation has completed.">Keep old bookmarks</button><br />-->
+	<button id='gbm_button_stop' onclick="background.gbm.stop();" title="Stop synchronizing with Google Bookmarks">Stop synchronizing</button>
+</div>
+
+<div id="target_opl" class="target">
+</div>
 
 </body>
 
