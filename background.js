@@ -7,6 +7,13 @@ var remotes_finished;
 
 var g_bookmarks; // global bookmarks
 
+statuses = {
+	READY: 0,
+	DOWNLOADING: 1,
+	MERGING: 2,
+	UPLOADING: 3,
+}
+
 
 // global variables that are only for the (first) sync
 var l_queue   = []; // local queue (list of [callback, data])

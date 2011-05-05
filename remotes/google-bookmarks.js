@@ -24,17 +24,9 @@ gbm.folderSep       = localStorage['gbm_folderSep'] || '/';
 gbm.lastSync      = localStorage['gbm_lastSync'] || 0;
 
 
-gbm.statuses = {
-	READY: 0,
-	DOWNLOADING: 1,
-	MERGING: 2,
-	UPLOADING: 3,
-}
-
-gbm.status = gbm.statuses.READY;
-
-
 gbm.init = function (enable) {
+	gbm.status = statuses.READY;
+
 	gbm.enabled = localStorage['gbm_enabled'];
 	if (gbm.enabled) {
 		remotes_enabled.push(gbm);
@@ -44,6 +36,8 @@ gbm.init = function (enable) {
 
 gbm.start = function () {
 
+	if (gbm.status) return; // FIXME error handling
+
 	// mark enabled
 	if (!gbm.enabled) {
 		localStorage['gbm_enabled'] = true;
@@ -52,7 +46,7 @@ gbm.start = function () {
 	}
 
 	// set status
-	gbm.status = gbm.statuses.DOWNLOADING;
+	gbm.status = statuses.DOWNLOADING;
 	gbm.popup_update();
 
 	// initialize variables
@@ -74,14 +68,14 @@ gbm.start = function () {
 gbm.finished_start = function () {
 
 	// set status
-	gbm.status = gbm.statuses.MERGING;
+	gbm.status = statuses.MERGING;
 	gbm.popup_update();
 
 	// send 'finished' signal
 	target_finished(gbm);
 
 	// set status (again)
-	gbm.status = gbm.statuses.READY;
+	gbm.status = statuses.READY;
 	gbm.popup_update();
 
 	// clear unused memory
@@ -121,10 +115,10 @@ gbm.popup_update = function (div) {
 		var status_span     = div.getElementById('gbm_status');
 		var status_text   = 'Not in sync';
 		var busy = false;
-		if (gbm.status == gbm.statuses.DOWNLOADING) {
+		if (gbm.status == statuses.DOWNLOADING) {
 			status_text = 'Downloading bookmarks...';
 			busy        = true;
-		} else if (gbm.status == gbm.statuses.MERGING) {
+		} else if (gbm.status == statuses.MERGING) {
 			status_text = 'Syncing...';
 			busy        = true;
 		} else if (gbm.r_queue.running) {
@@ -134,17 +128,14 @@ gbm.popup_update = function (div) {
 			status_text = 'Synchronized';// (last synchronized: '+relativeDate(gbm.lastSync, new Date().getTime())+')';
 		}
 		if (busy) {
-			button_start.disabled = "disabled";
+			button_start.disabled = true;
 		} else {
-			delete button_start.disabled;
+			button_start.disabled = false;
 		}
-		if (!gbm.enabled) {
-			button_stop.disabled = "disabled";
-			console.log('stop disabled');
-			console.log(busy);
+		if (busy || !gbm.enabled) {
+			button_stop.disabled = true;
 		} else {
-			delete button_stop.disabled;
-			console.log('stop enabled');
+			button_stop.disabled = false;
 		}
 		//button_noremove.disabled = ((localStorage["lastSync"]!=0))?false:"disabled";
 		//button_noremove_text = 'Keep old bookmarks';

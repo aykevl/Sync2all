@@ -22,6 +22,7 @@ opl.init = function () {
 	opera.link.loadToken();
 
 	opl.enabled = localStorage['opl_enabled'];
+	opl.status = statuses.READY;
 
 	// start if enabled
 	if (opl.enabled) {
@@ -32,27 +33,74 @@ opl.init = function () {
 
 opl.start = function () {
 
+	opl.status = statuses.DOWNLOADING;
+	opl.popup_update();
+
 	// mark enabled
-	localStorage.opl_enabled = true;
-	opl.enabled = true;
-	remotes_enabled.push(opl);
+	if (!opl.enabled) {
+		localStorage.opl_enabled = true;
+		opl.enabled = true;
+		remotes_enabled.push(opl);
+	}
 
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title
 	opl.lastSync = 0;
 
 	// start downloading
+	opl.status = statuses.DOWNLOADING;
+	opl.popup_update();
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
 opl.finished_start = function () {
+	// set status to merging
+	opl.status = statuses.MERGING;
+	opl.popup_update();
+
+	// mark as ready
 	target_finished(opl);
+	
+	// set status to finished
+	opl.status = statuses.READY;
+	opl.popup_update();
 };
 
+opl.stop = function () {
+	if (!opl.enabled || opl.status) {
+		return; // FIXME error handling
+	}
+
+	delete localStorage['opl_enabled'];
+	opl.enabled = false;
+	remotes_enabled.remove(opl);
+
+	opl.popup_update();
+
+}
+
 opl.popup_update = function (div) {
-	if (!div) var div       = opl.popup_div;
-	else      opl.popup_div = div;
-	if (!div) return;
+	try {
+		if (!div) var div       = opl.popup_div;
+		else      opl.popup_div = div;
+		if (!div) return;
+
+		var status_text = 'Not in sync';
+		if (opl.enabled) status_text = 'Ready.';
+		if (opl.status == statuses.DOWNLOADING) {
+			status_text = 'Downloading information...';
+		} else if (opl.status == statuses.MERGING) {
+			status_text = 'Syncing...';
+		} else if (opl.status == statuses.UPLOADING) {
+			status_text = 'Uploading...';
+		}
+
+		div.getElementById('opl_status').innerText = status_text;
+		div.getElementById('opl_start').enabled = (!opl.status);
+		div.getElementById('opl_stop').enabled  = (!opl.status && opl.enabled);
+	} catch (error) {
+		console.log(error);
+	}
 }
 
 opl.requestTokenCallback = function (e) {
