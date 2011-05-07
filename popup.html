@@ -42,14 +42,14 @@ body {
 
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
-	<button id='gbm_button_start' onclick="background.gbm.start();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">Synchronize</button><br />
+	<button id='gbm_button_start' onclick="background.gbm.start();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button><br />
 	<!--<button id='gbm_button_noremove' onclick="localStorage.gbm_lastSync=0; updatePopup();" title="This sets the 'last-synchronized' time to zero, so that all bookmarks seem to be new. This will be reset after a synchronisation has completed.">Keep old bookmarks</button><br />-->
-	<button id='gbm_button_stop' onclick="background.gbm.stop();" title="Stop synchronizing with Google Bookmarks">Stop synchronizing</button>
+	<button id='gbm_button_stop' onclick="background.gbm.stop();" title="Stop synchronizing with Google Bookmarks">Stop</button>
 </div>
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">Synchronize</button><br />
+	<button id="opl_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">(Re)synchronize</button><br />
 	<button id="opl_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Stop</button>
 </div>
 

@@ -19,9 +19,25 @@ gbm.labels;         // kind of label cache
 // Copied from GMarks, from the top of the file components/nsIGmarksCom_google.js
 gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarksbkmklet";
 
-gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'] || 'Bookmarks Bar';
-gbm.folderSep       = localStorage['gbm_folderSep'] || '/';
-gbm.lastSync      = localStorage['gbm_lastSync'] || 0;
+
+// set default options
+// TODO maybe in a separate function?
+gbm.defaults = {
+	'gbm_rootNodeLabel': 'Bookmarks Bar',
+	'gbm_folderSep':     '/',
+	'gbm_lastSync':      0,
+}
+for (default_key in gbm.defaults) {
+	if (localStorage[default_key] === undefined) {
+		localStorage[default_key] = gbm.defaults[default_key];
+	}
+}
+
+
+
+gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
+gbm.folderSep     = localStorage['gbm_folderSep'];
+gbm.lastSync      = localStorage['gbm_lastSync'];
 
 
 gbm.init = function (enable) {
@@ -79,7 +95,7 @@ gbm.finished_start = function () {
 	gbm.popup_update();
 
 	// clear unused memory
-	delete gbm.bookmarks;
+	//delete gbm.bookmarks;
 	delete gbm.labels;
 };
 
@@ -210,7 +226,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 					folder = gbm.labels[label];
 				}
 			}
-			var bookmark = {url: url, title: title, parentNode: folder, timestamp: timestamp};
+			var bookmark = {url: url, title: title, parentNode: folder, timestamp: timestamp, gbm_id: id};
 			folder.bm[bookmark.url] = bookmark;
 			gbm.added_bookmark(bookmark, id);
 		}

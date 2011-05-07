@@ -44,7 +44,7 @@ opl.start = function () {
 	}
 
 	// initialize variables
-	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title
+	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title, only childrens
 	opl.lastSync = 0;
 
 	// start downloading
@@ -106,10 +106,15 @@ opl.popup_update = function (div) {
 opl.requestTokenCallback = function (e) {
 	opl.requestToken = e.token;
 	opl.requestTokenSecret = e.secret;
-	setTimeout(function () {
+	/*setTimeout(function () {
 				opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, prompt('Verifier:'), opl.accessTokenCallback, opl.accessTokenError);
-			}, 10*1000);
+			}, 10*1000);*/
+	chrome.extension.onConnect.addListener(opl.gotVerifier);
 };
+
+opl.gotVerifier = function (port) {
+	console.log(port);
+}
 
 opl.requestTokenError = function (e) {
 	console.log('error getting request token:');

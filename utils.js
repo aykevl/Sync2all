@@ -103,14 +103,18 @@ function use_rqueue(obj) {
 	};
 
 	obj.r_queue_next = function () {
-		this.popup_update();
 
 		if (this.r_queue.length == 0) {
 			console.log('Finished uploading');
 			this.r_queue.running = false;
-			localStorage['lastSync'] = syncStartTime;
+			//localStorage['lastSync'] = syncStartTime;
+			this.popup_update(); // update popup with 'finished' count
 			return;
 		}
+
+		// update the popup with the new 'left' count
+		this.popup_update();
+
 		var req      = this.r_queue[0][0];
 		var params   = this.r_queue[0][1];
 		var callback = this.r_queue[0][2];

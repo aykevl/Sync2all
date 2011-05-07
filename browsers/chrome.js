@@ -25,16 +25,16 @@ gchr.start = function () {
 
 gchr.finished_start = function () {
 	target_finished(gchr);
-	delete gchr.bookmarks;
+	//delete gchr.bookmarks;
 	gchr.import_ids(g_bookmarks);
 	gchr.addListeners();
 };
 
 // import all local id's into gchr.ids
 gchr.import_ids = function (folder) {
+	gchr.ids[folder.id] = folder;
 	for (title in folder.f) {
 		var subfolder = folder.f[title];
-		gchr.ids[subfolder.id] = subfolder;
 		gchr.import_ids(subfolder);
 	}
 	for (url in folder.bm) {
@@ -199,7 +199,7 @@ gchr.evt_onCreated = function (id, node) {
 
 gchr.evt_onRemoved = function (id, removeInfo) {
 	console.log('evt_onRemoved');
-	if (!(id in gchr.ids)) return; // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+	if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
 	var node = gchr.ids[id];
 	if (node.url) {
 		// bookmark

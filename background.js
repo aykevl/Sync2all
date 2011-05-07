@@ -157,26 +157,9 @@ function dump_all() {
 	console.log('--------------------------------------------------');
 }
 
-// Set default options.
-// Shouldn't be here, but rather in the remotes itself.
-function set_default_opts() {
-	var defaults = { // TODO move this to each remote
-		'gbm_pathsep': '/',
-		'gbm_rootNodeLabel': 'Root',
-	};
-	for (key in defaults) {
-		if (localStorage[key] == undefined) {
-			localStorage[key] = defaults[key];
-		}
-	}
-}
-
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
 function initSync () {
 	update_ui();
-
-	// load options
-	set_default_opts(); // only sets the default when needed
 
 	remotes_finished = [];
 
@@ -202,14 +185,18 @@ function merge (obj) {
 function mergeProperties(from, to) {
 	for (key in from) {
 		if (key == 'bm' || key == 'f' || key == 'parentNode') continue;
-		if (to[key]) continue;
-		to[key] = from[key];
+		if (to[key] === undefined) {
+			to[key] = from[key];
+		}
 	}
 };
 
 // 'local' represents 'remote'.
 // 'target' is the source of 'remote' ($remote might represent $target.bookmarks)
 function mergeBookmarks(local, remote, target) {
+
+	// merge properties
+	mergeProperties(remote, local);
 
 	// unique local folders
 	for (title in local.f) {
@@ -225,9 +212,6 @@ function mergeBookmarks(local, remote, target) {
 			// other folder does exist, merge it too
 
 			var remote_subfolder = remote.f[title];
-
-			// merge properties
-			mergeProperties(remote, local);
 
 			mergeBookmarks(local_subfolder, remote_subfolder, target);
 		}
