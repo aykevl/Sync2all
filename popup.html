@@ -18,6 +18,7 @@ function updatePopup() {
 	var target;
 	for (var i=0; target=background.remotes[i]; i++) {
 		target.popup_update(document); // TODO popup_update expects div element
+		document.getElementById(target.shortname+'_button_stop').disabled = !(target.enabled && !target.status);
 	}
 }
 
@@ -49,8 +50,8 @@ body {
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">(Re)synchronize</button><br />
-	<button id="opl_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Stop</button>
+	<button id="opl_button_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">(Re)synchronize</button><br />
+	<button id="opl_button_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Stop</button>
 </div>
 
 </body>

@@ -77,19 +77,7 @@ try {
 	/**
 	 * @namespace Opera
 	 */
-	opera = new function Opera() {
-
-		/*// compatibility with Google Chrome
-		if (chrome) {
-			this.extension = new function () {
-				this.tabs = new function () {
-					this.create = function (options) {
-						chrome.tabs.create({url: options.url, selected: options.focused == undefined ? true : options.focused});
-					};
-				};
-			};
-		}*/
-	};
+	opera = new function Opera() {};
 }
 
 try {
@@ -346,7 +334,8 @@ opera.link = new function OperaLink() {
 	 */
 	this.testAuthorization = function(callback) {
 		this.get(this.apiurl + 'bookmark', null, function(xhr) {
-			callback(xhr.status != opera.link.response.Unauthorized);
+			callback(xhr.status != opera.link.response.Unauthorized
+			      && xhr.status < 500); // 50x error is a server error.
 		});
 	}
 	

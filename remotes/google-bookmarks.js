@@ -102,6 +102,7 @@ gbm.finished_start = function () {
 gbm.stop = function () {
 
 	if (gbm.status) return; // FIXME error handling
+	if (!gbm.enabled) return; // already stopped
 
 	delete localStorage['gbm_enabled'];
 	gbm.enabled = false;
@@ -148,11 +149,11 @@ gbm.popup_update = function (div) {
 		} else {
 			button_start.disabled = false;
 		}
-		if (busy || !gbm.enabled) {
+		/*if (busy || !gbm.enabled) {
 			button_stop.disabled = true;
 		} else {
 			button_stop.disabled = false;
-		}
+		}*/
 		//button_noremove.disabled = ((localStorage["lastSync"]!=0))?false:"disabled";
 		//button_noremove_text = 'Keep old bookmarks';
 		/*if (localStorage["lastSync"]==0) {

@@ -24,8 +24,12 @@ opl.init = function () {
 	opl.enabled = localStorage['opl_enabled'];
 	opl.status = statuses.READY;
 
+	opl.authorized = false;
+
 	// start if enabled
 	if (opl.enabled) {
+		console.log('opl.enabled true:');
+		console.log(opl.enabled);
 		remotes_enabled.push(opl);
 		opl.start();
 	}
@@ -71,7 +75,7 @@ opl.stop = function () {
 		return; // FIXME error handling
 	}
 
-	delete localStorage['opl_enabled'];
+	delete localStorage.opl_enabled;
 	opl.enabled = false;
 	remotes_enabled.remove(opl);
 
@@ -96,34 +100,62 @@ opl.popup_update = function (div) {
 		}
 
 		div.getElementById('opl_status').innerText = status_text;
-		div.getElementById('opl_start').enabled = (!opl.status);
-		div.getElementById('opl_stop').enabled  = (!opl.status && opl.enabled);
 	} catch (error) {
 		console.log(error);
 	}
 }
 
 opl.requestTokenCallback = function (e) {
+	// save temporary tokens tokens
 	opl.requestToken = e.token;
 	opl.requestTokenSecret = e.secret;
-	/*setTimeout(function () {
-				opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, prompt('Verifier:'), opl.accessTokenCallback, opl.accessTokenError);
-			}, 10*1000);*/
-	chrome.extension.onConnect.addListener(opl.gotVerifier);
+
+	// listen to the verifier from the content script
+	chrome.extension.onRequest.addListener(opl.onRequest);
 };
 
-opl.gotVerifier = function (port) {
-	console.log(port);
-}
+opl.onRequest = function (request, sender, sendResponse) {
+	// handle request
+	console.log(request);
+	if (request.action != 'opl_verifier') return;
+	sendResponse({}); // Mark this as being received.
+	opl.onVerifier(request);
+};
+
+opl.onVerifier = function (request) {
+
+	if (opl.authorized) return; // strange
+
+	var verifier = request.verifier;
+	if (!verifier) { // check for validity
+		opl.status = statuses.READY;
+		opl.stop();
+		return;
+	}
+
+	// use verifier
+	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, verifier, opl.accessTokenCallback, opl.accessTokenError);
+};
 
 opl.requestTokenError = function (e) {
+	// report error
 	console.log('error getting request token:');
 	console.log(e);
-	alert('There was an error while connecting to Opera Link. See the log for details.');
+	console.log('Old tokens have been removed, so you might want to try again.');
+	alert('There was an error while connecting to Opera Link. See the log for details.\n\nOpera Link is now disabled.');
+	
+	// remove possibly bad tokens
+	delete localStorage.oauth_token;
+	delete localStorage.oauth_secret;
+
+	// disable Opera Link
+	opl.status = statuses.READY;
+	opl.stop();
 };
 
 opl.accessTokenCallback = function (e) {
 	opera.link.saveToken();
+	opl.authorized = true;
 	opl.loadBookmarks();
 };
 
@@ -135,6 +167,7 @@ opl.accessTokenError = function (e) {
 
 opl.authorizationTested = function (authorized) {
 	if (authorized) {
+		opl.authorized = true;
 		opl.loadBookmarks();
 	} else {
 		// authorize now
