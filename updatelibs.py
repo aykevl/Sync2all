@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 files = {
-    'operalink.js': 'https://github.com/aykevl93/OperaLink.js/raw/master/src/script/operalink.js',
+    'operalink.js': 'https://github.com/ChaosinaCan/OperaLink.js/raw/master/src/script/operalink.js',
     'oauth.js':     'https://github.com/ChaosinaCan/OperaLink.js/raw/master/build/oauth.js',
     'sha1.js':      'https://github.com/ChaosinaCan/OperaLink.js/raw/master/build/sha1.js',
 }

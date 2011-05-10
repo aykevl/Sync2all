@@ -2,16 +2,18 @@
 var current_browser = gchr; // currently only supports Google Chrome
 var remotes = [gbm, opl];
 var remotes_enabled = [];
+var remotes_by_name = {gbm: gbm, opl: opl};
 var local   = gchr; // TODO make more flexible in the future (for Firefox support)
 var remotes_finished;
 
 var g_bookmarks; // global bookmarks
 
 statuses = {
-	READY: 0,
-	DOWNLOADING: 1,
-	MERGING: 2,
-	UPLOADING: 3,
+	READY:       0,
+	AUTHORIZING: 1,
+	DOWNLOADING: 2,
+	MERGING:     3,
+	UPLOADING:   4,
 }
 
 
@@ -49,13 +51,9 @@ var lastSync      = 0; //localStorage['lastSync'];
 var syncing = false;     // if doing some work locally (or when syncing full)
 var downloading = false; // if downloading bookmarks*/
 
-var popup_ui_update;
+// update the popup UI
 function update_ui() {
-	// events should attach to this function
-	// maybe tere's a better way to handle this?
-	if (popup_ui_update) {
-		popup_ui_update();
-	}
+	chrome.extension.sendRequest({action: 'updateUi'}, function () {});
 }
 
 

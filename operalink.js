@@ -574,13 +574,13 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 	
 	/**
 	 * Gets an array of all bookmarks inside a folder
-	 * @param {null|String} parent The id of the parent folder or null to use the root
 	 * @param {Function(result)} callback Function which is called with the result
 	 *		of the request. The function is passed one argument, an object with 
 	 *		two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
+	 * @param {null|String} [parent] The id of the parent folder or null to use the root
 	 */
-	this.getAll = function(parent, callback) {
+	this.getAll = function(callback, parent) {
 		var item = parent ? parent + '/descendants' : 'descendants';
 		item = item.replace('//', '/');
 		util.get(type, item, null, callback);
@@ -719,13 +719,13 @@ opera.link.notes = new function OperaLinkNotes() {
 	
 	/**
 	 * Gets an array of all notes inside a folder
-	 * @param {null|String} parent The id of the parent folder or null to use the root
 	 * @param {Function(result)} callback Function which is called with the result
 	 *		of the request. The function is passed one argument, an object with 
 	 *		two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
+	 *	@param {null|String} [parent] The id of the parent folder or null to use the root
 	 */
-	this.getAll = function(parent, callback) {
+	this.getAll = function(callback, parent) {
 		var item = parent ? parent + '/descendants' : 'descendants';
 		item = item.replace('//', '/');
 		util.get(type, item, null, callback);

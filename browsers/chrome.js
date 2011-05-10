@@ -5,6 +5,7 @@ gchr = {};
 gchr.name = 'Google Chrome';
 
 // include libraries
+use_target(gchr);
 use_queue(gchr);
 
 // get saved data

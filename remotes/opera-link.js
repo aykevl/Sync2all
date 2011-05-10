@@ -7,6 +7,7 @@ opl.name = 'Opera Link';
 opl.shortname = 'opl';
 
 // imports
+use_target(opl);
 use_queue(opl);
 
 var oauth;
@@ -28,8 +29,6 @@ opl.init = function () {
 
 	// start if enabled
 	if (opl.enabled) {
-		console.log('opl.enabled true:');
-		console.log(opl.enabled);
 		remotes_enabled.push(opl);
 		opl.start();
 	}
@@ -37,8 +36,7 @@ opl.init = function () {
 
 opl.start = function () {
 
-	opl.status = statuses.DOWNLOADING;
-	opl.popup_update();
+	opl.updateStatus(statuses.DOWNLOADING);
 
 	// mark enabled
 	if (!opl.enabled) {
@@ -52,22 +50,19 @@ opl.start = function () {
 	opl.lastSync = 0;
 
 	// start downloading
-	opl.status = statuses.DOWNLOADING;
-	opl.popup_update();
+	opl.updateStatus(statuses.DOWNLOADING);
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
 opl.finished_start = function () {
 	// set status to merging
-	opl.status = statuses.MERGING;
-	opl.popup_update();
+	opl.updateStatus(statuses.MERGING);
 
 	// mark as ready
 	target_finished(opl);
 	
 	// set status to finished
-	opl.status = statuses.READY;
-	opl.popup_update();
+	opl.updateStatus(statuses.READY);
 };
 
 opl.stop = function () {
@@ -79,30 +74,7 @@ opl.stop = function () {
 	opl.enabled = false;
 	remotes_enabled.remove(opl);
 
-	opl.popup_update();
-
-}
-
-opl.popup_update = function (div) {
-	try {
-		if (!div) var div       = opl.popup_div;
-		else      opl.popup_div = div;
-		if (!div) return;
-
-		var status_text = 'Not in sync';
-		if (opl.enabled) status_text = 'Ready.';
-		if (opl.status == statuses.DOWNLOADING) {
-			status_text = 'Downloading information...';
-		} else if (opl.status == statuses.MERGING) {
-			status_text = 'Syncing...';
-		} else if (opl.status == statuses.UPLOADING) {
-			status_text = 'Uploading...';
-		}
-
-		div.getElementById('opl_status').innerText = status_text;
-	} catch (error) {
-		console.log(error);
-	}
+	opl.updateStatus(statuses.READY);
 }
 
 opl.requestTokenCallback = function (e) {
@@ -176,7 +148,7 @@ opl.authorizationTested = function (authorized) {
 };
 
 opl.loadBookmarks = function () {
-	opera.link.bookmarks.getAll(undefined, opl.bookmarksLoaded);
+	opera.link.bookmarks.getAll(opl.bookmarksLoaded);
 };
 
 opl.bookmarksLoaded = function (result) {
