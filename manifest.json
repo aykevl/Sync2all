@@ -3,7 +3,7 @@
 	"version": "0.1",
 	"description": "Synchronizes the browser bookmarks with bookmarks on the web: Google Bookmarks and Opera Link.",
 	"browser_action": {
-		"default_icon": "images/icon.png",
+		"default_icon": "chrome/skin/icon.png",
 		"popup": "popup.html"
 	},
 	"background_page": "background.html",

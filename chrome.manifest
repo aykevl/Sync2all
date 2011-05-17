@@ -1,0 +1,7 @@
+content   sync2all                 chrome/content/
+skin      sync2all   classic/1.0   chrome/skin/
+locale    sync2all   en-US         chrome/locale/en-US/
+
+
+overlay   chrome://browser/content/browser.xul   chrome://sync2all/content/ff-overlay.xul
+style chrome://global/content/customizeToolbar.xul chrome://sync2all/skin/overlay.css
