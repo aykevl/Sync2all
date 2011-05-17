@@ -2,17 +2,16 @@
 
 <html>
 <head>
-	<title>Real Google Bookmarks - options</title>
+	<title>Sync2All - options</title>
 	<meta name="encoding" content="utf-8" />
-</head>
 
 <script type="text/javascript">
 function save_options() {
 	var error_text = 'Settings are not OK:\n\n'; // for when there is an error
 	var has_error = false; // set to true when the alert is needed
 
-	var opt_pathsep = document.getElementById("opt_pathsep").value;
-	if (opt_pathsep.length < 1) {
+	var gbm_folderSep = document.getElementById("gbm_folderSep").value;
+	if (gbm_folderSep.length < 1) {
 		error_text += ' * Path separator is too short\n';
 		has_error = true;
 	}
@@ -22,28 +21,32 @@ function save_options() {
 		alert(error_text); // TODO make form fields red
 	} else {
 		// save the options
-		localStorage["opt_pathsep"] = opt_pathsep;
+		localStorage["gbm_folderSep"] = gbm_folderSep;
 		alert("Settings saved."); // TODO make someting better
 	}
 }
 
 function restore_options() {
-	var opt_pathsep = localStorage["opt_pathsep"];
-	if (opt_pathsep) {
-		document.getElementById("opt_pathsep").value = opt_pathsep;
+	var gbm_folderSep = localStorage["gbm_folderSep"];
+	if (gbm_folderSep) {
+		document.getElementById("gbm_folderSep").value = gbm_folderSep;
 	}
 }
 
 </script>
 
+</head>
+
 <body onload="restore_options();">
 
-<h1>Real Google Bookmarks Sync - options</h1>
+<h1>Sync2All - options</h1>
+
+<p style="font-weight: bold; color: red;">Warning: the last tested update on the options page was long ago, so it might not work as expected!</p>
 
 <table>
 	<tr>
 		<th> Path separator: </th>
-		<td><input type=text id="opt_pathsep" title="Token between folders, usually '/' or '&gt;'." value="/"></td>
+		<td><input type=text id="gbm_folderSep" title="Character between folders, usually '/' or '&gt;'." value="/"></td>
 	</tr>
 	<tr>
 		<td align="center" colspan="2">

@@ -1,9 +1,9 @@
 {
-	"name": "Real Google Bookmarks Sync",
-	"version": "1.0",
-	"description": "Synchronizes the browser bookmarks with Google Bookmarks, thus a partially replacement of Chrome Sync.",
+	"name": "Sync2All",
+	"version": "0.1",
+	"description": "Synchronizes the browser bookmarks with bookmarks on the web: Google Bookmarks and Opera Link.",
 	"browser_action": {
-		"default_icon": "images/star1.png",
+		"default_icon": "images/icon.png",
 		"popup": "popup.html"
 	},
 	"background_page": "background.html",
