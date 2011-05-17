@@ -244,7 +244,6 @@ gbm.bm_add = function (target, bookmark) {
 };
 
 gbm.bm_del = function (target, bookmark) {
-	console.log(bookmark);
 	// get all bookmarks with this url
 	var gbookmark = gbm.urls[bookmark.url];
 	// delete this label/folder

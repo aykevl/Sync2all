@@ -107,13 +107,12 @@ function use_rqueue(obj) {
 		if (this.r_queue.length == 0) {
 			console.log('Finished uploading');
 			this.r_queue.running = false;
-			//localStorage['lastSync'] = syncStartTime;
-			this.popup_update(); // update popup with 'finished' count
+			this.updateStatus(); // update popup with 'finished' count
 			return;
 		}
 
 		// update the popup with the new 'left' count
-		this.popup_update();
+		this.updateStatus();
 
 		var req      = this.r_queue[0][0];
 		var params   = this.r_queue[0][1];

@@ -191,9 +191,11 @@ opl.parse_bookmarks = function (array, folder) {
 	}
 };
 
+// Callbacks for Opera Link
+// TODO merge these
 opl.itemCreated = function (result) {
 	if (result.status != 200) {
-		console.log('Error creating bookmark/folder:');
+		console.log('ERROR creating bookmark/folder:');
 		console.log(result);
 		return;
 	}
@@ -202,7 +204,23 @@ opl.itemCreated = function (result) {
 };
 opl.itemDeleted = function (result) {
 	if (!result.status == 204) {
-		console.log('Error deleting:');
+		console.log('ERROR deleting:');
+		console.log(result);
+		return;
+	}
+	opl.queue_next();
+};
+opl.itemMoved = function (result) {
+	if (!result.status == 200) {
+		console.log('ERROR moving:');
+		console.log(result);
+		return;
+	}
+	opl.queue_next();
+};
+opl.itemUpdated = function (result) {
+	if (!result.status == 200) {
+		console.log('ERROR updating:');
 		console.log(result);
 		return;
 	}
@@ -242,6 +260,24 @@ opl.bm_del = opl.f_del = function (target, node) {
 	opl.queue_add(
 			function (node) {
 				opera.link.bookmarks.deleteItem(node.opl_id, opl.itemDeleted);
+			}, node);
+}
+
+opl.bm_mv = opl.f_mv = function (target, node, oldParent) {
+	opl.queue_add(
+			function (node) {
+				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id, 'into', opl.itemMoved);
+			}, node);
+};
+
+opl.f_mod_title = opl.f_mod_url = function (target, node, oldtitle) {
+	opl.sendChanges(node.opl_id, {title: node.title});
+}
+
+opl.sendChanges = function (node, changes) {
+	opl.queue_add(
+			function (node) {
+				opera.link.bookmarks.update(node.opl_id, changes, opl.itemUpdated);
 			}, node);
 }
 
