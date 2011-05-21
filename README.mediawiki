@@ -1,20 +1,20 @@
 = Google Chrome synchronization =
 
-This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link. '''It doesn't work properly yet. It is buggy, and you shouldn't try to rename folders or use slashes in the name, because it will cause errors (renamed folders will be copied.)'''.
+This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link. '''It doesn't work properly yet. It is buggy, and you shouldn't try to rename folders or use slashes in the name, because it will cause errors (renamed folders will sometimes be copied.)'''.
 
 == Supported protocols ==
 
 === Google Bookmarks ===
 
-The Google bookmarks support is better than that of Opera Link. It nearly 'just works' -- except, if you change labels outside Chrome, the folders will get duplicated.
+The Google bookmarks support is better than that of Opera Link. It nearly 'just works' -- except, if you change labels outside Chrome, empty folders will remain in Chrome. I'm working on that.
 
 === Opera Link ===
 
-The Opera Link support is really bad, it supports only creation and deletion of bookmarks and folders, no renaming.
+Creating, deleting and moving of bookmarks and folders is supported (but buggy, sometimes it gives an error and it will get duplicated at the next sync). Thanks to ChaosinaCan for is excellent Opera Link JavaScript library (see the bottom of this page).
 
 === Firefox Sync ===
 
-Not yet because it is very hard to decode the encrypted bookmarks. See https://bitbucket.org/philikon/weaveclient-chromium/.
+Not yet because it is very hard to decode the encrypted bookmarks (And I won't even think of encrypting them...). See https://bitbucket.org/philikon/weaveclient-chromium/. But I am working on a Firefox extension (then it uses the native Firefox bookmarks and synchronizes with Google Bookmarks or Opera Link).
 
 == Credits ==
 
