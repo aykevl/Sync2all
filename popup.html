@@ -81,13 +81,13 @@ body {
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
 	<button id='gbm_button_start' onclick="background.gbm.start();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-	<button id='gbm_button_stop' onclick="background.gbm.stop();" title="Stop synchronizing with Google Bookmarks">Stop</button>
+	<button id='gbm_button_stop' onclick="background.gbm.disable();" title="Stop synchronizing with Google Bookmarks">Disable</button>
 </div>
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
 	<button id="opl_button_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-	<button id="opl_button_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Stop</button>
+	<button id="opl_button_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Disable</button>
 </div>
 
 </body>

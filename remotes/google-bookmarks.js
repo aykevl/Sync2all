@@ -70,6 +70,8 @@ gbm.start = function () {
 	gbm.urls      = {}; // dictionary: url => list of bookmarks
 	gbm.labels    = {};
 	gbm.changed   = {}; // marked to be uploaded
+	gbm.actions   = [];
+	gbm.cbl_ids   = {}; // current browser IDs
 
 	// start download
 	gbm.reqXml = new XMLHttpRequest();
@@ -83,6 +85,23 @@ gbm.start = function () {
 
 gbm.finished_start = function () {
 
+	gbm.get_cbl_ids(g_bookmarks);
+
+	// get actions
+	if (localStorage['gbm_state']) {
+		try {
+			gbm.calculate_actions(JSON.parse(localStorage['gbm_state']), gbm.bookmarks); // yes, gbm.bookmarks
+			if (gbm.actions.length) {
+				console.log('gbm actions:');
+				console.log(gbm.actions);
+			}
+		} catch (err) {
+			console.log('gbm: error while calculating actions:');
+			console.log(err);
+			// bookmarks will just be merged, so no real harm done. You will only get duplicates...
+		}
+	}
+
 	// set status
 	gbm.updateStatus(statuses.MERGING);
 
@@ -93,10 +112,92 @@ gbm.finished_start = function () {
 	gbm.updateStatus(statuses.READY);
 
 	// clear unused memory
-	//delete gbm.bookmarks;
 	delete gbm.labels;
 };
 
+gbm.get_cbl_ids = function (folder) {
+	gbm.cbl_ids[folder.id] = folder;
+	for (url in folder.bm) {
+		gbm.cbl_ids[folder.bm[url].id] = folder.bm[url];
+	}
+	for (title in folder.f) {
+		gbm.get_cbl_ids(folder.f[title]);
+	}
+}
+
+// the (re)synchronisation has finished (all bookmarks are merged, committing is in progress)
+gbm.finished_sync = function () {
+	var state = {bm: [], f: {}};
+	gbm.get_state(state, g_bookmarks);
+	localStorage['gbm_state'] = JSON.stringify(state);
+	delete state;
+
+	delete gbm.bookmarks;
+	delete gbm.cbl_ids;
+};
+
+gbm.get_state = function (state, folder) {
+	for (url in folder.bm) {
+		state.bm.push(folder.bm[url].id+'\n'+url);
+	}
+	for (title in folder.f) {
+		state.f[title] = {bm: [], f: {}};
+		gbm.get_state(state.f[title], folder.f[title]);
+	}
+};
+
+gbm.calculate_actions = function (state, folder) {
+	// only look for removed bookmarks, not for added bookmarks (and moved bookmarks are 'removed' and 'added', TODO fix in a future version, this should 'just work').
+	var data = undefined;
+	var id, url;
+	for (var i=0; data=state.bm[i]; i++) {
+
+		data = data.split('\n');
+		id = data[0]; url = data[1];
+
+		if (!folder.bm[url]) {
+			// this bookmark has been removed
+			console.log('Bookmark deleted: '+url);
+			gbm.actions.push(['bm_del', id]);
+		}
+	}
+	for (title in state.f) {
+		var substate = state.f[title];
+		if (!folder.f[title]) {
+			gbm.mark_state_deleted(substate);
+			continue;
+		}
+		gbm.calculate_actions(substate, folder.f[title]);
+	}
+}
+
+// TODO this is nearly the same code as gbm.calculate_actions()
+gbm.mark_state_deleted = function (state) {
+	//gbm.actions.push(['f_del_ifempty', state. // FIXME clean up empty folders
+	for (var i=0; data=state.bm[i]; i++) {
+
+		var id, url;
+		data = data.split('\n');
+		id = data[0]; url = data[1];
+
+		// this bookmark has been removed
+		console.log('Bookmark deleted: '+url);
+		gbm.actions.push(['bm_del', id]);
+	}
+	for (title in state.f) {
+		var substate = state.f[title];
+		gbm.mark_state_deleted(substate);
+	}
+}
+
+
+// remove memory-eating status information and stop
+gbm.disable = function () {
+	delete localStorage['gbm_state'];
+	gbm.stop();
+};
+
+// don't synchronize
 gbm.stop = function () {
 
 	if (gbm.status) return; // FIXME error handling
@@ -118,7 +219,7 @@ gbm.onXmlLoaded = function () {
 		alert('Failed to retrieve bookmarks (XML). Is there an internet connection?');
 	} else {
 		gbm.reqRss = new XMLHttpRequest();
-		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1000&start=0", true);
+		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1&start=0", true); // will always give at least 25 bookmarks
 		gbm.reqRss.onreadystatechange = gbm.onRssLoaded;
 		gbm.reqRss.send(null);
 
@@ -129,7 +230,7 @@ gbm.onXmlLoaded = function () {
 
 gbm.parseXmlBookmarks = function (xmlTree) {
 	try {
-		//var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
+		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
 	} catch (err) {
 		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
@@ -183,6 +284,8 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 	}
 }
 
+/* RSS doesn't seem to be needed, because javascript bookmarklets now seem to be accepted by Google... */
+/* TODO: use RSS for the descriptions of bookmarks... */
 
 gbm.onRssLoaded = function () {
 	if (gbm.reqRss.readyState != 4) return;
@@ -195,20 +298,20 @@ gbm.onRssLoaded = function () {
 		alert('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 		console.log(gbm.reqRss);
 	} else {
-        gbm.parseRssBookmarks(gbm.reqRss.responseXML);
-        gbm.finished_start();
+		gbm.parseRssBookmarks(gbm.reqRss.responseXML);
+		gbm.finished_start();
 	}
 }
 
 // TODO
 gbm.parseRssBookmarks = function (xmlTree) {
-	//try {
+	try {
 		var channel = xmlTree.firstChild.firstChild;
 		gbm.sig     = channel.getElementsByTagName('signature')[0].firstChild.nodeValue;
-	/*} catch (err) {
+	} catch (err) {
 		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
-	}*/
+	}
 	var element;
 	var elements = channel.getElementsByTagName('item');
 	for (var i=0; element=elements[i]; i++) {
@@ -328,6 +431,7 @@ gbm.upload_all = function (folder) {
 };
 
 gbm.commit = function () {
+	//return; // DEBUG FIXME TODO
 	for (url in gbm.changed) {
 
 		// gbm.changed contains the real urls, as in g_bookmarks

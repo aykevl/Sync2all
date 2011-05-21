@@ -87,18 +87,23 @@ function commit() {
 }
 
 function target_finished(remote) {
+
+	// is this the browser itself? start the rest!
 	remotes_finished.push(remote);
-	lastSync = Math.max(lastSync, remote.lastSync);
 	merge(remote);
-
-	// are all internet remotes finished? Start the browser sync!
-	if (remotes_enabled.length == remotes_finished.length) {
-		current_browser.start();
-	}
-
-	// is the syncing finished? Commit changes!
 	if (remote == current_browser) {
+		var remote;
+		for (var i=0; remote=remotes[i]; i++) {
+			remote.init();
+		}
+	} else {
+		// this is a real target link
+	}
+	
+	// is the syncing finished? Commit changes!
+	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
 		commit();
+		call_all('finished_sync');
 	}
 }
 
@@ -162,14 +167,26 @@ function initSync () {
 	remotes_finished = [];
 
 	startSync = 0; // will be updated when targets are synchronized
-	var remote;
-	for (var i=0; remote=remotes[i]; i++) {
-		remote.init();
-	}
+	current_browser.start();
 }
 
 
 function merge (obj) {
+	// apply actions
+	var action;
+	for (var i=0; action=obj.actions[i]; i++) {
+
+		// like call_all
+		var command = current_browser[action[0]];
+		var args    = [obj];
+		var arg;
+		// start after the first arg
+		for (var i_arg=1; arg=action[i_arg]; i_arg++) {
+			args.push(current_browser.ids[arg]);
+		}
+		command.apply(this, args);
+	}
+	
 	if (!g_bookmarks) {
 		console.log('Taking '+obj.name+' as base of the bookmarks.');
 		g_bookmarks = obj.bookmarks;
@@ -221,7 +238,6 @@ function mergeBookmarks(local, remote, target) {
 		if (!(url in local.bm)) {
 			// unique remote bookmark
 			console.log('Unique remote bookmark: '+bookmark.url);
-			console.log(bookmark.parentNode.opl_id);
 			syncRBookmark(target, bookmark, local);
 		} else {
 			mergeProperties(bookmark, local.bm[url]);
@@ -304,7 +320,7 @@ function syncRFolder(target, rfolder, lparentfolder) {
 function syncLFolder(target, folder) {
 	var bookmark_count = 0;
 
-	target.f_add(undefined, folder);
+	if (target.f_add !== false) target.f_add(undefined, folder);
 
 	// sync folders
 	var subfolder;

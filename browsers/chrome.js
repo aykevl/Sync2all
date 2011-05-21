@@ -12,9 +12,9 @@ use_queue(gchr);
 gchr.lastSync = localStorage['gchr_lastSync'] || 0;
 
 gchr.start = function () {
-	gchr.ids = {'1': g_bookmarks};
-	g_bookmarks.id = '1';
+	gchr.ids = {'1': gchr.bookmarks}; // gchr.bookmarks will become g_bookmarks
 	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
+	gchr.actions = []; // TODO implement actions
 
 	chrome.bookmarks.getTree(
 			function (tree) {
@@ -25,10 +25,18 @@ gchr.start = function () {
 };
 
 gchr.finished_start = function () {
+	// merge() depends on current_browser.ids
+	// use gchr.bookmarks because they will become g_bookmarks anyway
+	gchr.import_ids(gchr.bookmarks);
+
+	// send 'finished' signal
 	target_finished(gchr);
-	//delete gchr.bookmarks;
-	gchr.import_ids(g_bookmarks);
-	gchr.addListeners();
+	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
+};
+
+gchr.finished_sync = function () {
+	// cleanup memory
+	delete gchr.bookmarks;
 };
 
 // import all local id's into gchr.ids
@@ -142,22 +150,36 @@ gchr.f_del = function (source, folder) {
 			}, folder);
 }
 
-gchr.bm_add = function (source, bm) {
+gchr.bm_add = function (source, bm, lfolder) {
+	if (!lfolder) lfolder = bm.parentNode;
+	console.log('gchr.bm_add:');
 	console.log(bm);
 	gchr.queue_add(
-			function (bm) {
-				gchr.creating_parentId = bm.parentNode.id;
-				gchr.creating_url      = bm.url;
-				chrome.bookmarks.create({parentId: bm.parentNode.id, title: bm.title, url: bm.url}, 
+			function (data) {
+				gchr.creating_parentId = data.lfolder.id;
+				gchr.creating_url      = data.bm.url;
+				chrome.bookmarks.create({parentId: data.lfolder.id, title: data.bm.title, url: data.bm.url},
 						function (result) {
-							bm.id = result.id;
-							gchr.ids[bm.id] = bm;
+							data.bm.id = result.id;
+							gchr.ids[data.bm.id] = data.bm;
+							gchr.queue_next();
+						});
+			}, {bm: bm, lfolder: lfolder});
+};
+
+gchr.bm_del = function (source, bm) {
+	// just to keep it safe, in the queue
+	_rmBookmark(bm); // _ before it so it won't call bm_del on all links
+	gchr.queue_add(
+			function (bm) {
+				chrome.bookmarks.remove(bm.id,
+						function (result) {
+							// this MUST be in a separate function
+							// (queue_next MUST be called on gchr, otherwise it doesn't have
+							//  a 'this' object)
 							gchr.queue_next();
 						});
 			}, bm);
-};
-
-gchr.bm_del = function (source, bookmark) {
 };
 
 gchr.commit = function () {

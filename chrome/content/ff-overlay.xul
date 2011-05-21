@@ -10,9 +10,12 @@
   </stringbundleset>
 
   <toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton id="sync2all-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+  <toolbarbutton id="sync2all-toolbar-button" 
     label="&sync2allToolbarButton.label;" tooltiptext="&sync2allToolbarButton.tooltip;"
-    oncommand="sync2all.onToolbarButtonCommand()"/>
+    type="menu" orient="horizontal"/>
+    <menupopup>
+    	<menuitem label="abc"/>
+    </menupopup>
   </toolbarpalette>
 
 
