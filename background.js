@@ -173,7 +173,7 @@ function initSync () {
 
 function merge (link) {
 	// apply actions
-	if (link.action) {
+	if (link.actions) {
 		var action;
 		for (var i=0; action=link.actions[i]; i++) {
 
