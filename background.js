@@ -171,28 +171,30 @@ function initSync () {
 }
 
 
-function merge (obj) {
+function merge (link) {
 	// apply actions
-	var action;
-	for (var i=0; action=obj.actions[i]; i++) {
+	if (link.action) {
+		var action;
+		for (var i=0; action=link.actions[i]; i++) {
 
-		// like call_all
-		var command = current_browser[action[0]];
-		var args    = [obj];
-		var arg;
-		// start after the first arg
-		for (var i_arg=1; arg=action[i_arg]; i_arg++) {
-			args.push(current_browser.ids[arg]);
+			// like call_all
+			var command = current_browser[action[0]];
+			var args    = [link];
+			var arg;
+			// start after the first arg
+			for (var i_arg=1; arg=action[i_arg]; i_arg++) {
+				args.push(current_browser.ids[arg]);
+			}
+			command.apply(this, args);
 		}
-		command.apply(this, args);
 	}
 	
 	if (!g_bookmarks) {
-		console.log('Taking '+obj.name+' as base of the bookmarks.');
-		g_bookmarks = obj.bookmarks;
+		console.log('Taking '+link.name+' as base of the bookmarks.');
+		g_bookmarks = link.bookmarks;
 	} else {
-		console.log('Merging bookmarks with '+obj.name+'...');
-		mergeBookmarks(g_bookmarks, obj.bookmarks, obj);
+		console.log('Merging bookmarks with '+link.name+'...');
+		mergeBookmarks(g_bookmarks, link.bookmarks, link);
 		console.log('Finished merging.');
 	}
 };
