@@ -170,22 +170,13 @@ function initSync () {
 	current_browser.start();
 }
 
-
 function merge (link) {
 	// apply actions
 	if (link.actions) {
 		var action;
 		for (var i=0; action=link.actions[i]; i++) {
 
-			// like call_all
-			var command = current_browser[action[0]];
-			var args    = [link];
-			var arg;
-			// start after the first arg
-			for (var i_arg=1; arg=action[i_arg]; i_arg++) {
-				args.push(current_browser.ids[arg]);
-			}
-			command.apply(this, args);
+			apply_action(link, action);
 		}
 	}
 	
@@ -198,6 +189,20 @@ function merge (link) {
 		console.log('Finished merging.');
 	}
 };
+
+// like call_all
+function apply_action (link, action) {
+	var command = current_browser[action[0]];
+	var args    = [link];
+	var arg;
+	// start after the first arg
+	for (var i_arg=1; arg=action[i_arg]; i_arg++) {
+		arg = current_browser.ids[arg];
+		if (!arg) return; // WARNING: errors may not be catched!
+		args.push(arg);
+	}
+	command.apply(this, args);
+}
 
 function mergeProperties(from, to) {
 	for (key in from) {
