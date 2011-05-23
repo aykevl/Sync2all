@@ -234,9 +234,11 @@ gchr.evt_onRemoved = function (id, removeInfo) {
 		rmFolder(gchr, node);
 	}
 	commit();
+	console.log('end of evt_onRemoved');
 }
 
 gchr.evt_onChanged = function (id, changeInfo) {
+	console.log('evt_onChanged');
 	var node = gchr.ids[id];
 	if (!node) return; // somewhere outside the synced folder (or bug)
 	if (changeInfo.url) {
@@ -291,6 +293,7 @@ gchr.evt_onChanged = function (id, changeInfo) {
 }
 
 gchr.evt_onMoved = function (id, moveInfo) {
+	console.log('evt_onMoved');
 	// get info
 	var node      = gchr.ids[id];
 	var newParent = gchr.ids[moveInfo.parentId];

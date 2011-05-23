@@ -137,6 +137,7 @@ gbm.finished_sync = function () {
 };
 
 gbm.get_state = function (state, folder) {
+	state.id = folder.id;
 	for (url in folder.bm) {
 		state.bm.push(folder.bm[url].id+'\n'+url);
 	}
@@ -168,25 +169,6 @@ gbm.calculate_actions = function (state, folder) {
 			continue;
 		}
 		gbm.calculate_actions(substate, folder.f[title]);
-	}
-}
-
-// TODO this is nearly the same code as gbm.calculate_actions()
-gbm.mark_state_deleted = function (state) {
-	//gbm.actions.push(['f_del_ifempty', state. // FIXME clean up empty folders
-	for (var i=0; data=state.bm[i]; i++) {
-
-		var id, url;
-		data = data.split('\n');
-		id = data[0]; url = data[1];
-
-		// this bookmark has been removed
-		console.log('Bookmark deleted: '+url);
-		gbm.actions.push(['bm_del', id]);
-	}
-	for (title in state.f) {
-		var substate = state.f[title];
-		gbm.mark_state_deleted(substate);
 	}
 }
 

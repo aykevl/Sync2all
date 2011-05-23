@@ -149,6 +149,14 @@ function _rmFolder(folder) {
 	delete folder.parentNode.f[folder.title];
 }
 
+function has_contents(folder) {
+	for (url in folder.bm) {
+		return true;
+	}
+	for (title in folder.f) {
+		return true;
+	}
+}
 
 
 // dump all important variables
@@ -192,7 +200,7 @@ function merge (link) {
 
 // like call_all
 function apply_action (link, action) {
-	var command = current_browser[action[0]];
+	// first get the arguments
 	var args    = [link];
 	var arg;
 	// start after the first arg
@@ -201,7 +209,16 @@ function apply_action (link, action) {
 		if (!arg) return; // WARNING: errors may not be catched!
 		args.push(arg);
 	}
-	command.apply(this, args);
+	
+	// then get the command
+	var command = action[0];
+	// and check whether it is allowed
+	if (command == 'f_del_ifempty') {
+		// directory shouldn't be removed if it has entries in it
+		if (has_contents(args[1])) return;
+		command = 'f_del';
+	}
+	current_browser[command].apply(this, args);
 }
 
 function mergeProperties(from, to) {
