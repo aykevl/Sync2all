@@ -7,6 +7,7 @@ var local   = gchr; // TODO make more flexible in the future (for Firefox suppor
 var remotes_finished;
 
 var g_bookmarks; // global bookmarks
+var g_bookmark_ids;
 
 statuses = {
 	READY:       0,
@@ -186,6 +187,7 @@ function target_finished(link) {
 
 	// is this the browser itself? start the rest!
 	if (link == current_browser) {
+		g_bookmark_ids = current_browser.ids;
 		var remote;
 		for (var i=0; remote=remotes[i]; i++) {
 			remote.init();

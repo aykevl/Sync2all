@@ -186,7 +186,17 @@ gbm.calculate_actions = function (state, folder) {
 	for (title in state.f) {
 		var substate = state.f[title];
 		if (!folder.f[title]) {
+			// if this is true, the folder has been moved or renamed and the
+			// browser link should take care of it.
+			if (g_bookmark_ids[substate.id]) continue;
+
+			// mark all bookmarks inside it as deleted, and mark all folders as
+			// 'delete-if-empty'
 			gbm.mark_state_deleted(substate);
+
+			// don't recurse, because folder.f[title] doesn't exist
+			// (g_bookmark_ids[substate.id] can't be used because
+			// folder.f[title] is part of gbm.bookmarks
 			continue;
 		}
 		gbm.calculate_actions(substate, folder.f[title]);
@@ -359,9 +369,6 @@ gbm.bm_add = function (target, bookmark) {
 };
 
 gbm.bm_del = function (target, bookmark) {
-
-	console.log('gbm.bm_del():');
-	console.trace();
 
 	// get all bookmarks with this url
 	var gbookmark = gbm.urls[bookmark.url];
