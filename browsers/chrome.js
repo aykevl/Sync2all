@@ -143,6 +143,11 @@ gchr.f_add  = function (source, folder) {
 }
 
 gchr.f_del = function (source, folder) {
+	// remove own references
+	delete gchr.ids[folder.id];
+	// remove global references
+	_rmFolder(folder);
+	// keep in the queue to prevent possible errors
 	gchr.queue_add(
 			function (folder) {
 				chrome.bookmarks.removeTree(folder.id);
@@ -168,8 +173,12 @@ gchr.bm_add = function (source, bm, lfolder) {
 };
 
 gchr.bm_del = function (source, bm) {
-	// just to keep it safe, in the queue
+	// remove this from our data
+	// this keeps evt_onRemoved from calling call_all('bm_del', ...)
+	delete gchr.ids[bm.id];
+	// delete global reference
 	_rmBookmark(bm); // _ before it so it won't call bm_del on all links
+	// just to keep it safe, in the queue
 	gchr.queue_add(
 			function (bm) {
 				chrome.bookmarks.remove(bm.id,
@@ -221,19 +230,24 @@ gchr.evt_onCreated = function (id, node) {
 };
 
 gchr.evt_onRemoved = function (id, removeInfo) {
-	console.log('evt_onRemoved');
-	if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
-	var node = gchr.ids[id];
-	if (node.url) {
-		// bookmark
-		var bookmark = node;
-		rmBookmark(gchr, bookmark);
-	} else {
-		// folder
-		console.log('Removed folder: '+node.title);
-		rmFolder(gchr, node);
+	try {
+		console.log('evt_onRemoved');
+		if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+		var node = gchr.ids[id];
+		if (node.url) {
+			// bookmark
+			var bookmark = node;
+			rmBookmark(gchr, bookmark);
+		} else {
+			// folder
+			console.log('Removed folder: '+node.title);
+			rmFolder(gchr, node);
+		}
+		commit();
+	} catch (error) {
+		console.log('ERROR ERROR ERROR in evt_onRemoved:');
+		console.log(error);
 	}
-	commit();
 	console.log('end of evt_onRemoved');
 }
 

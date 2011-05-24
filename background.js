@@ -74,37 +74,22 @@ function call_all(funcname, target, params) { // function will not be called on 
 			continue;
 		}
 
-		if (params) {
-			func.apply(this, params);
-		} else {
-			func.apply(this);
+		try {
+			if (params) {
+				func.apply(this, params);
+			} else {
+				func.apply(this);
+			}
+		} catch (error) {
+			console.log('call_all: ERROR: in function '+funcname+' applied to link '+remote.name+':');
+			console.error(error);
+			console.trace();
 		}
 	}
 }
 
 function commit() {
 	call_all('commit');
-}
-
-function target_finished(remote) {
-
-	// is this the browser itself? start the rest!
-	remotes_finished.push(remote);
-	merge(remote);
-	if (remote == current_browser) {
-		var remote;
-		for (var i=0; remote=remotes[i]; i++) {
-			remote.init();
-		}
-	} else {
-		// this is a real target link
-	}
-	
-	// is the syncing finished? Commit changes!
-	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
-		commit();
-		call_all('finished_sync');
-	}
 }
 
 function addNode(source, node, parentNode) {
@@ -178,7 +163,10 @@ function initSync () {
 	current_browser.start();
 }
 
-function merge (link) {
+function target_finished(link) {
+
+	remotes_finished.push(link);
+
 	// apply actions
 	if (link.actions) {
 		var action;
@@ -187,18 +175,33 @@ function merge (link) {
 			apply_action(link, action);
 		}
 	}
-	
-	if (!g_bookmarks) {
-		console.log('Taking '+link.name+' as base of the bookmarks.');
-		g_bookmarks = link.bookmarks;
-	} else {
-		console.log('Merging bookmarks with '+link.name+'...');
-		mergeBookmarks(g_bookmarks, link.bookmarks, link);
-		console.log('Finished merging.');
+	// update internal data to use objects from g_bookmarks and not
+	// from it's own data.
+	if (link.update_data) {
+		link.update_data();
 	}
-};
 
-// like call_all
+	// merge bookmarks etc.
+	merge(link);
+
+	// is this the browser itself? start the rest!
+	if (link == current_browser) {
+		var remote;
+		for (var i=0; remote=remotes[i]; i++) {
+			remote.init();
+		}
+	} else {
+		// this is a real target link
+	}
+	
+	// is the syncing finished? Commit changes!
+	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
+		commit();
+		call_all('finished_sync');
+	}
+}
+
+// like call_all, but will only call current_browser
 function apply_action (link, action) {
 	// first get the arguments
 	var args    = [link];
@@ -220,6 +223,18 @@ function apply_action (link, action) {
 	}
 	current_browser[command].apply(this, args);
 }
+
+function merge (link) {
+	
+	if (!g_bookmarks) {
+		console.log('Taking '+link.name+' as base of the bookmarks.');
+		g_bookmarks = link.bookmarks;
+	} else {
+		console.log('Merging bookmarks with '+link.name+'...');
+		mergeBookmarks(g_bookmarks, link.bookmarks, link);
+		console.log('Finished merging.');
+	}
+};
 
 function mergeProperties(from, to) {
 	for (key in from) {

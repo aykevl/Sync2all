@@ -85,7 +85,7 @@ gbm.start = function () {
 
 gbm.finished_start = function () {
 
-	gbm.get_cbl_ids(g_bookmarks);
+	//gbm.get_cbl_ids(g_bookmarks);
 
 	// get actions
 	if (localStorage['gbm_state']) {
@@ -110,12 +110,9 @@ gbm.finished_start = function () {
 
 	// set status (again)
 	gbm.updateStatus(statuses.READY);
-
-	// clear unused memory
-	delete gbm.labels;
 };
 
-gbm.get_cbl_ids = function (folder) {
+/*gbm.get_cbl_ids = function (folder) {
 	gbm.cbl_ids[folder.id] = folder;
 	for (url in folder.bm) {
 		gbm.cbl_ids[folder.bm[url].id] = folder.bm[url];
@@ -123,17 +120,41 @@ gbm.get_cbl_ids = function (folder) {
 	for (title in folder.f) {
 		gbm.get_cbl_ids(folder.f[title]);
 	}
+}*/
+
+/*gbm.use_global_urls = function (folder) {
+	for (url in folder.bm) {
+		gbm.added_bookmark(folder.bm[url]);
+	}
+	for (title in folder.f) {
+		gbm.use_global_urls(folder.f[title]);
+	}
+}*/
+
+gbm.update_data = function () {
+	gbm.update_urls(g_bookmarks);
 }
+gbm.update_urls = function (folder) {
+	for (url in folder.bm) {
+		gbm.added_bookmark(folder.bm[url]);
+	}
+	for (title in folder.f) {
+		gbm.update_urls(folder.f[title]);
+	}
+};
 
 // the (re)synchronisation has finished (all bookmarks are merged, committing is in progress)
 gbm.finished_sync = function () {
 	var state = {bm: [], f: {}};
 	gbm.get_state(state, g_bookmarks);
 	localStorage['gbm_state'] = JSON.stringify(state);
-	delete state;
+	delete state; // not really needed
 
-	delete gbm.bookmarks;
-	delete gbm.cbl_ids;
+	//delete gbm.bookmarks;
+	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
+
+	// clear unused memory
+	delete gbm.labels;
 };
 
 gbm.get_state = function (state, folder) {
@@ -226,6 +247,13 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		//gbm.urls[value] = bookmark;
 		var timestamp = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000; // same kind of value as returned by (new Date()).getTime();
 		var id        =          bm_element.getElementsByTagName('id'       )[0].firstChild.nodeValue;
+
+		// this one IS important
+		// This saves the ID, the rest comes later in gbm.update_data().
+		// That function uses bookmarks objects from g_bookmarks.
+		gbm.urls[url] = [];
+		gbm.urls[url].id = id;
+
 		var label_element;
 		var label_elements = bm_element.getElementsByTagName('label');
 		for (var j=0; label_element=label_elements[j]; j++) {
@@ -243,7 +271,8 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 						// is this a new directory?
 						if (folder.f[element] == undefined) {
 							// yes, create it first
-							folder.f[element] = {bm: {}, f: {}, title: element, parentNode: folder};
+							folder.f[element] = {bm: {}, f: {}, title: element,
+								parentNode: folder};
 						}
 						// folder does exist
 						folder = folder.f[element];
@@ -253,21 +282,23 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 					folder = gbm.labels[label];
 				}
 			}
-			var bookmark = {url: url, title: title, parentNode: folder, timestamp: timestamp, gbm_id: id};
+			var bookmark = {url: url, title: title, parentNode: folder,
+				timestamp: timestamp};
 			folder.bm[bookmark.url] = bookmark;
-			gbm.added_bookmark(bookmark, id);
 		}
 		if (!label_elements.length) {
 			// this bookmark has no labels, add it to root
-			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks, timestamp: timestamp};
-			gbm.added_bookmark(bookmark, id);
+			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks,
+				timestamp: timestamp};
 			gbm.bookmarks.bm[url] = bookmark;
 		}
 	}
 }
 
-/* RSS doesn't seem to be needed, because javascript bookmarklets now seem to be accepted by Google... */
-/* TODO: use RSS for the descriptions of bookmarks... */
+/* RSS doesn't seem to be needed, because javascript bookmarklets
+ * now seem to be accepted by Google... Don't know why they always disabled
+ * them. */
+/* TODO: use RSS for the descriptions of bookmarks */
 
 gbm.onRssLoaded = function () {
 	if (gbm.reqRss.readyState != 4) return;
@@ -294,7 +325,7 @@ gbm.parseRssBookmarks = function (xmlTree) {
 		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
 	}
-	var element;
+	/*var element;
 	var elements = channel.getElementsByTagName('item');
 	for (var i=0; element=elements[i]; i++) {
 		var isbkmk = element.getElementsByTagName('bkmk')[0];
@@ -305,19 +336,18 @@ gbm.parseRssBookmarks = function (xmlTree) {
 		try {
 			var url = element.getElementsByTagName('link' )[0].firstChild.nodeValue;
 		} catch (err) {
-			/*console.log('isbkmk:');
-			console.log(isbkmk.firstChild.nodeValue);
-			console.log(element.getElementsByTagName('link' )[0]);*/
+			//console.log('isbkmk:');
+			//console.log(isbkmk.firstChild.nodeValue);
+			//console.log(element.getElementsByTagName('link' )[0]);
 		}
-	}
+	}*/
 }
 
-gbm.added_bookmark = function (bm, id) {
+gbm.added_bookmark = function (bm) {
 	if (!gbm.urls[bm.url]) {
 		gbm.urls[bm.url] = [];
 	}
 	gbm.urls[bm.url].push(bm);
-	gbm.urls[bm.url].id = gbm.urls[bm.url].id || id;
 }
 
 
@@ -329,16 +359,24 @@ gbm.bm_add = function (target, bookmark) {
 };
 
 gbm.bm_del = function (target, bookmark) {
+
+	console.log('gbm.bm_del():');
+	console.trace();
+
 	// get all bookmarks with this url
 	var gbookmark = gbm.urls[bookmark.url];
-	// delete this label/folder
+
+	// delete this label
 	gbookmark.remove(bookmark);
-	// if there are labels left (most often: yes)
+
+	// if there are no labels left (most often: yes, because most often
+	// bookmarks have only one label)
 	if (!gbookmark.length) {
 		// no labels, delete this bookmark
 		gbm.delete_bookmark(gbookmark.id);
 	} else {
-		// has still at least one label, upload again (changing the bookmark)
+		// has still at least one label, upload again (changing the
+		// bookmark)
 		gbm.upload_bookmark(bookmark);
 	}
 }
