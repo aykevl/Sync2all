@@ -313,45 +313,79 @@ gchr.evt_onMoved = function (id, moveInfo) {
 	var newParent = gchr.ids[moveInfo.parentId];
 	var oldParent = gchr.ids[moveInfo.oldParentId];
 
-	if (!newParent && !node && !oldParent) {
-		console.log('Bookmark/folder outside synchronized folder moved. Ignoring.');
-		return;
-	}
-
+	// if node is moved to outside synced folder
 	if (!newParent) {
-		console.log('Move: new parent not found. Thus this bookmark/folder should be in the Other Bookmarks menu');
-		// remove the old parent
-		rmNode(gchr, node); // parent needed for bookmarks
-		commit()
-		return;
+		// if the node comes from outside the synced folder
+		if (!oldParent) {
+			if (!node) {
+				console.log('Bookmark/folder outside synchronized folder moved. Ignoring.');
+				return;
+			} else {
+				console.log('BUG: only the node is known, not the rest \
+						(including the parent!)');
+				return;
+			}
+		} else { // the 'else' is not really needed
+			if (!node) {
+				console.log('BUG: only the old parent is known, not the node \
+						nor the new parent');
+				return;
+			} else {
+				// newParent is not known, node and oldParent are known.
+				console.log('Move: new parent not found. Thus this bookmark/folder is \
+						moved to outside the synced folder.');
+
+				// remove the node
+				delete gchr.ids[node.id];
+				rmNode(gchr, node); // parent needed for bookmarks
+				commit()
+				return;
+			}
+		}
+	} else {
+		if (!node) {
+			if (!oldParent) {
+				// this bookmarks comes from the 'Other Bookmarks' menu (at least, its origin is unknown)
+				console.log('Move: node id and oldParent not found. I assume this\
+					bookmark comes from outside the synchronized tree. So doing a crete now');
+				gchr.queue_add(
+						function (id) {
+							chrome.bookmarks.get(id,
+									function (results) {
+										gchr.import_btns(results);
+										gchr.queue_next();
+									});
+						}, id);
+				commit();
+				return;
+			} else {
+				console.log('BUG: the node is not known, but the old parent \
+						and the new parent are.');
+				return;
+			}
+		} else {
+			if (!oldParent) {
+				console.log('BUG: only the old parent is not known. The node \
+						and the new parent are.');
+				return;
+			} else {
+				// the bookmark has been moved within the synced folder tree.
+				// Nothing strange has happened.
+			}
+		}
 	}
 
-	if (newParent && !node && !oldParent) {
-		// this bookmarks comes from the 'Other Bookmarks' menu (at least, its origin is unknown)
-		console.log('Move: node id and oldParent not found. I assume this bookmark comes from outside the synchronized tree. So doing a crete now');
-		gchr.queue_add(
-				function (id) {
-					chrome.bookmarks.get(id,
-							function (results) {
-								gchr.import_btns(results);
-								gchr.queue_next();
-							});
-				}, id);
-		return;
-	}
+	// newParent, node and oldParent are 'defined' variables. (i.e. not
+	// 'undefined').
 
 	if (newParent == oldParent) {
-		// node moved inside folder
+		// node moved inside folder (so nothing has happened, don't know
+		// whether this is really needed, Chrome might catch this).
 		return;
 	}
 	
-	if (node && !oldParent) {
-		console.log('BUG: node does exist but parentNode not. Node: ');
-		console.log(node);
-		return;
-	}
+	// Bookmark is moved inside synced folder.
 
-	// general changes
 	node.parentNode = newParent;
 
 	if (node.url) {
