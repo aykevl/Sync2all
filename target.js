@@ -1,6 +1,7 @@
 
 /* Library for sync targets
  */
+
 function use_target (target) {
 	target.updateStatus = function (status) {
 		if (status !== undefined) {

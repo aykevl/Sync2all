@@ -72,6 +72,8 @@ gbm.start = function () {
 	gbm.changed   = {}; // marked to be uploaded
 	gbm.actions   = [];
 	gbm.cbl_ids   = {}; // current browser IDs
+	// will be set to false once the status has been saved
+	gbm.initial_commit = true;
 
 	// start download
 	gbm.reqXml = new XMLHttpRequest();
@@ -84,8 +86,6 @@ gbm.start = function () {
 }
 
 gbm.finished_start = function () {
-
-	//gbm.get_cbl_ids(g_bookmarks);
 
 	// get actions
 	if (localStorage['gbm_state']) {
@@ -145,17 +145,22 @@ gbm.update_urls = function (folder) {
 
 // the (re)synchronisation has finished (all bookmarks are merged, committing is in progress)
 gbm.finished_sync = function () {
+
+	// clear unused memory
+	//delete gbm.bookmarks;
+	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
+	delete gbm.labels;
+};
+
+gbm.save_state = function () {
+	// maybe this is the wrong place?
+	gbm.initial_commit = false;
+
 	var state = {bm: [], f: {}};
 	gbm.get_state(state, g_bookmarks);
 	localStorage['gbm_state'] = JSON.stringify(state);
 	delete state; // not really needed
-
-	//delete gbm.bookmarks;
-	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
-
-	// clear unused memory
-	delete gbm.labels;
-};
+}
 
 gbm.get_state = function (state, folder) {
 	state.id = folder.id;
@@ -459,10 +464,15 @@ gbm.upload_all = function (folder) {
 
 gbm.commit = function () {
 	//return; // DEBUG FIXME TODO
+	var has_changes = false;
 	for (url in gbm.changed) {
+		has_changes = true;
 
 		// gbm.changed contains the real urls, as in g_bookmarks
 		gbm.upload_bookmark(gbm.changed[url]);
+	}
+	if (!has_changes && gbm.initial_commit) {
+		gbm.save_state();
 	}
 	gbm.changed = {};
 };

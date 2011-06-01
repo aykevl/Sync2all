@@ -6,7 +6,7 @@ var opl = {};
 opl.name = 'Opera Link';
 opl.shortname = 'opl';
 
-// imports
+// imports (or include if you want)
 use_target(opl);
 use_queue(opl);
 
@@ -47,14 +47,38 @@ opl.start = function () {
 
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title, only childrens
-	opl.lastSync = 0;
+	opl.lastSync  = 0;
+	opl.actions   = [];
+	// local IDs mapped to own bookmark objects, should be deleted after merging
+	opl.ids       = {};
+	opl.initial_commit = true;
 
 	// start downloading
 	opl.updateStatus(statuses.DOWNLOADING);
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
+// own loading and parsing has been done, now calculate the last bits before
+// submitting it to background.js
 opl.finished_start = function () {
+
+	// calculate actions if there is data available
+	if (localStorage['opl_state']) {
+		try {
+			var state = JSON.parse(localStorage['opl_state']);
+			opl.calculate_actions(state, opl.bookmarks);
+			delete state; // big variable
+			if (opl.actions.length) {
+				console.log('opl actions:');
+				console.log(opl.actions);
+			}
+		} catch (err) {
+			console.log('opl: Error while calculating changes in Opera Link bookmarks:');
+			console.error(err);
+			console.trace(err);
+		}
+	}
+
 	// set status to merging
 	opl.updateStatus(statuses.MERGING);
 
@@ -64,6 +88,101 @@ opl.finished_start = function () {
 	// set status to finished
 	opl.updateStatus(statuses.READY);
 };
+
+// called when sync has been finished.
+opl.finished_sync = function () {
+	// clean up unused memory
+	//delete opl.bookmarks;
+	delete opl.ids;
+}
+
+opl.save_state = function () {
+	console.log('opl: SAVE STATE');
+	// maybe this is the wrong place?
+	opl.initial_commit = false;
+
+	var state = [];
+	opl.get_state(state, g_bookmarks);
+	localStorage['opl_state'] = JSON.stringify(state);
+}
+
+opl.get_state = function (state, folder) {
+	for (url in folder.bm) {
+		state.push(folder.bm[url].id+'\n'+folder.bm[url].opl_id);
+	}
+	for (title in folder.f) {
+		// do it here and not at the start of opl.get_state, because the root of
+		// Opera Link has no ID.
+		var substate = {
+				opl_id: folder.f[title].opl_id,
+				id: folder.f[title].id,
+				children: [],
+			};
+		state.push(substate);
+		opl.get_state(substate.children, folder.f[title]);
+	}
+}
+
+// @var folder The current folder (represents #state), undefined if this folder
+// is deleted (and should be checked for moved items).
+opl.calculate_actions = function (state, folder) {
+	var state;
+	for (var i=0; item=state[i]; i++) {
+		// var id:     local (browser) ID
+		// var opl_id: opera link ID
+		var isfolder = false; // whether this item is a folder
+		if (item.id) {
+			isfolder = true
+			var id = item.id;
+			var opl_id = item.opl_id;
+		} else {
+			var ids = item.split('\n');
+			var id = ids[0];
+			var opl_id = ids[1];
+		}
+		if (!folder) {
+			// this folder has been deleted, check for items that have been
+			// moved outside this folder. Not really needed, but it is better
+			// to move folders and bookmarks than to re-create them. (Preserves
+			// more data, for example descriptions and favicons).
+			if (opl.ids[opl_id]) {
+				// this node does still exist, mark it as moved.
+				var node = opl.ids[opl_id];
+				// TODO get the parentNode ID
+			}
+		} else {
+			// this folder does exist (is most often the case).
+			if (!opl.ids[opl_id]){
+				if (isfolder) {
+					console.log('opl: old f: '+opl_id);
+
+					// first check for folders and bookmarks moved out of this
+					// folder.
+					opl.calculate_actions(item.children);
+
+					// then remove this bookmark recursively
+					opl.actions.push(['f_del',  id]);
+				} else {
+					console.log('opl: old bm: '+opl_id);
+					opl.actions.push(['bm_del', id]);
+				}
+			} else if (opl.ids[opl_id].parentNode.opl_id != folder.opl_id) {
+				console.log('opl: moved: '+opl_id);
+			} else {
+				// nothing has happened
+				if (isfolder) {
+					opl.calculate_actions(item.children, opl.ids[opl_id]);
+				}
+			}
+		}
+	}
+}
+
+opl.disable = function () {
+	if (localStorage.opl_state)
+		delete localStorage['opl_state'];
+	opl.stop();
+}
 
 opl.stop = function () {
 	if (!opl.enabled || opl.status) {
@@ -160,30 +279,61 @@ opl.parse_bookmarks = function (array, folder) {
 	var item;
 	for (var i=0; item=array[i]; i++) {
 		if (item.item_type == 'bookmark_folder') {
-			if (item.properties.title == 'Trash' && folder == opl.bookmarks) continue; // don't sync trashed bookmarks
+			if (item.properties.title == 'Trash' && folder == opl.bookmarks)
+				continue; // don't sync trashed bookmarks
+			// ??? Isn't this always a duplicate folder name?
 			if (folder.f[item.properties.title]) {
 				var subfolder = folder.f[item.properties.title];
 				if (subfolder.opl_id) {
-					console.log('FIXME: duplicate folder title: '+subfolder.title);
+					// ignore empty
+					console.log('FIXME: duplicate folder title: '+
+							subfolder.title);
+
+					// if the other is empty, remove it
+					if (!has_contents(subfolder)) {
+						console.log('has no contents: '+subfolder.title);
+						// TODO remove this folder if I'm sure that that
+						// won't remove boomkarks.
+					} else if (!item.children) {
+						console.log('has no childs: '+item.properties.title);
+						opera.link.bookmarks.deleteItem(item.id, function(){});
+					}
+				} else {
+					// second folder is more likely to be the wrong (new) folder
+					subfolder.opl_id = item.id;
+					console.log('NOTICE: something strange has happened here.');
 				}
-				subfolder.opl_id = item.id;
 			} else {
-				var subfolder = {title: item.properties.title, parentNode: folder, bm: {}, f: {}, opl_id: item.id};
+				var subfolder = {title: item.properties.title,
+						parentNode: folder, bm: {}, f: {}, opl_id: item.id};
+				opl.ids[item.id] = subfolder;
 				folder.f[subfolder.title] = subfolder;
 			}
 			if (item.children) {
 				opl.parse_bookmarks(item.children, subfolder);
 			} else {
-				console.log('empty folder: '+subfolder.title);
+				console.log('opl: empty folder: '+subfolder.title);
 			}
 		} else if (item.item_type == 'bookmark') {
 			if (!folder.bm[item.properties.uri]) {
-				var bookmark = {parentNode: folder, url: item.properties.uri, title: item.properties.title, opl_id: item.id};
+				var bookmark = {parentNode: folder, url: item.properties.uri,
+						title: item.properties.title, opl_id: item.id};
+				opl.ids[item.id] = bookmark;
 				folder.bm[item.properties.uri] = bookmark;
 			} else {
+				// strange too. Should only be here when there is a duplicate URL.
 				bookmark = folder.bm[item.properties.uri];
 				if (bookmark.opl_id) {
-					console.log('FIXME: duplicate url: '+bookmark.url);
+					console.log('Opera Link: duplicate url: '+bookmark.url);
+					// delete this duplicate bookmark.
+					// It may be done outside all queues, because this url
+					// will not be used anywhere else (it isn't in any tree)
+					// FIXME check which is newer and keep it.
+					// ignore errors
+					opera.link.bookmarks.deleteItem(item.id, function(){});
+					continue;
+				} else {
+					console.log('NOTICE: something strange has happened here.');
 				}
 				bookmark.opl_id = item.id;
 			}
@@ -192,7 +342,7 @@ opl.parse_bookmarks = function (array, folder) {
 };
 
 // Callbacks for Opera Link
-// TODO merge these
+// TODO merge these, because they are nearly the same
 opl.itemCreated = function (result) {
 	if (result.status != 200) {
 		console.log('ERROR creating bookmark/folder:');
@@ -264,9 +414,12 @@ opl.bm_del = opl.f_del = function (target, node) {
 }
 
 opl.bm_mv = opl.f_mv = function (target, node, oldParent) {
+	console.log('move:');
+	console.log(node);
 	opl.queue_add(
 			function (node) {
-				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id, 'into', opl.itemMoved);
+				// the parent ID should be an empty string when moving to the root.
+				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', opl.itemMoved);
 			}, node);
 };
 

@@ -108,6 +108,11 @@ function use_rqueue(obj) {
 			console.log('Finished uploading');
 			this.r_queue.running = false;
 			this.updateStatus(); // update popup with 'finished' count
+
+			// save current state when everything has been uploaded
+			if (this.initial_commit) {
+				this.save_state();
+			}
 			return;
 		}
 
@@ -150,7 +155,18 @@ function use_queue (obj) {
 
 	obj.queue_next = function () {
 		var queue_item = this.queue.shift();
-		if (!queue_item) return;
+		if (!queue_item) {
+
+			// save current state when everything has been uploaded
+			// this occurs also when there is nothing in the queue when the
+			// first commit happens.
+			if (this.initial_commit) {
+				this.save_state();
+			}
+
+			// queue has been finished!!!
+			return;
+		}
 		var callback = queue_item[0];
 		var data     = queue_item[1];
 		delete queue_item;
