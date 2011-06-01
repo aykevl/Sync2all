@@ -6,11 +6,13 @@ This is an extension that synchronizes Google Chrome (or Chromium or Iron or ...
 
 === Google Bookmarks ===
 
-The Google bookmarks support is better than that of Opera Link. It nearly 'just works' -- except, if you change labels outside Chrome, empty folders will remain in Chrome. I'm working on that.
+The Google bookmarks support is more stable than that of Opera Link (has been tested more). It nearly 'just works' -- except, if you change labels outside Chrome, empty folders will remain in Chrome. I'm working on that.
 
 === Opera Link ===
 
 Creating, deleting and moving of bookmarks and folders is supported (but buggy, sometimes it gives an error and it will get duplicated at the next sync). Thanks to ChaosinaCan for is excellent Opera Link JavaScript library (see the bottom of this page).
+
+Deleting of bookmarks outside Chrome is now supported! They will not be re-created.
 
 === Firefox Sync ===
 
