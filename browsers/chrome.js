@@ -1,4 +1,22 @@
 
+
+/* Message passing code below. */
+
+// handle general requests
+function onRequest (request, sender, sendResponse) {
+	if (request.action == 'popupCreated') {
+		popupCreated();
+		sendResponse(undefined); // only because I have to
+	} else if (request.action == 'popupClosed') {
+		popupClosed();
+		sendResponse(undefined); // because I have to
+	}
+}
+
+chrome.extension.onRequest.addListener(onRequest);
+
+/* Chrome link below. */
+
 // prefix: gchr (Google CHRome)
 gchr = {};
 
@@ -31,7 +49,7 @@ gchr.finished_start = function () {
 
 	// send 'finished' signal
 	target_finished(gchr);
-	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
+	//gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
 };
 
 gchr.finished_sync = function () {
@@ -75,6 +93,11 @@ gchr.gotTree = function (gchr_parentNode, folder) {
 			}
 			folder.bm[bookmark.url] = bookmark;
 		} else {
+			// ignore folders without a title
+			if (node.title === '') {
+				continue;
+			}
+
 			// folder
 			var subfolder = {title: node.title, parentNode: folder, bm: {}, f: {}, id: node.id};
 			if (folder.f[subfolder.title]) {
@@ -190,6 +213,14 @@ gchr.bm_del = function (source, bm) {
 						});
 			}, bm);
 };
+
+gchr.bm_mv = gchr.f_mv = function (target, node, oldParent) {
+	gchr.queue_add(
+			function (node) {
+				chrome.bookmarks.move(node.id, {parentId: node.parentNode.id},
+					function (result) { gchr.queue_next(); });
+			}, node);
+}
 
 gchr.commit = function () {
 	gchr.queue_start();
@@ -313,6 +344,11 @@ gchr.evt_onMoved = function (id, moveInfo) {
 	var newParent = gchr.ids[moveInfo.parentId];
 	var oldParent = gchr.ids[moveInfo.oldParentId];
 
+	// if the bookmark has been moved by Sync2all, ignore this event
+	if (node && newParent && node.parentNode == newParent) {
+		return;
+	}
+
 	// if node is moved to outside synced folder
 	if (!newParent) {
 		// if the node comes from outside the synced folder
@@ -383,6 +419,7 @@ gchr.evt_onMoved = function (id, moveInfo) {
 		// whether this is really needed, Chrome might catch this).
 		return;
 	}
+
 	
 	// Bookmark is moved inside synced folder.
 

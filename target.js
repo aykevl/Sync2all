@@ -4,10 +4,12 @@
 
 function use_target (target) {
 	target.updateStatus = function (status) {
+		// ??? to use my object (this), I have to use 'target' instead of 'this'.
 		if (status !== undefined) {
-			this.status = status;
+			target.status = status;
 		}
-		chrome.extension.sendRequest({action: 'updateUi', target: this.shortname}, function () {});
+		if (!is_popup_open) return;
+		chrome.extension.sendRequest({action: 'updateUi', shortname: target.shortname, left: (target.queue||target.r_queue).length, status: target.status, enabled: target.enabled}, function () {});
 	}
 
 	target.mark_state_deleted = function (state) {

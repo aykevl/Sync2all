@@ -2,22 +2,22 @@
 <?xml-stylesheet href="chrome://sync2all/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://sync2all/locale/overlay.dtd">
 <overlay id="sync2all-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="overlay.js"/>
-  <script src="ff-overlay.js"/>
+	<script src="overlay.js"/>
+	<script src="ff-overlay.js"/>
 
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="sync2all-strings" src="chrome://sync2all/locale/overlay.properties"/>
-  </stringbundleset>
+	<stringbundleset id="stringbundleset">
+		<stringbundle id="sync2all-strings" src="chrome://sync2all/locale/overlay.properties"/>
+	</stringbundleset>
 
-  <toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton id="sync2all-toolbar-button" 
-    label="&sync2allToolbarButton.label;" tooltiptext="&sync2allToolbarButton.tooltip;"
-    type="menu" orient="horizontal"/>
-    <menupopup>
-    	<menuitem label="abc"/>
-    </menupopup>
+
+	<toolbarpalette id="BrowserToolbarPalette">
+		<toolbarbutton id="sync2all-toolbar-button" 
+				label="&sync2allToolbarButton.label;" tooltiptext="&sync2allToolbarButton.tooltip;"
+				type="panel">
+			<panel id="sync2all-popup">
+				<iframe id="sync2all-popup-iframe" flex="1" src="chrome://sync2all/content/popup.html" width="300px" height="500px"/>
+			</panel>
+		</toolbarbutton>
   </toolbarpalette>
-
-
 
 </overlay>

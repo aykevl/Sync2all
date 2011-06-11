@@ -9,3 +9,4 @@ sync2all.showFirefoxContextMenu = function(event) {
 };
 
 window.addEventListener("load", function () { sync2all.onFirefoxLoad(); }, false);
+

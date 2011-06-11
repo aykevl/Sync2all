@@ -4,36 +4,32 @@
 <head>
 	<meta name="encoding" content="utf-8" />
 
-<script src="utils.js"></script>
+<script src="/utils.js"></script>
+<script src="/globals.js"></script>
 <script type="text/javascript">
 
-var background = chrome.extension.getBackgroundPage();
-var statuses = background.statuses;
-console.log(statuses);
-
+// send signal that this popup has been closed
 function popupClosed() {
-	background.popup_ui_update = undefined;
+	// this function is somehow not called (?)
+
+	if (browser.name == 'chrome') {
+		chrome.extenson.sendRequest({action: 'popupClosed'});
+	}
 }
 
-function updateTargetDiv(target, message) {
-	if (!message) {
-		var message = 'Not synchronized.';
-		if (target.enabled) {
-			if (target.status == statuses.READY) {
-				message = 'Synchronized.';
-			} else if (target.status == statuses.DOWNLOADING) {
-				message = 'Downloading...';
-			} else if (target.status == statuses.MERGING) {
-				message = 'Syncing...';
-			} else if (target.status == statuses.UPLOADING) {
-				message = 'Uploading...';
-				var queue = target.queue || target.r_queue;
-				if (queue) {
-					message = 'Uploading ('+queue.length+' left)...';
-				}
-			} else {
-				message = 'Enabled, but unknown status (BUG! status='+target.status+')';
-			}
+function updateTargetDiv(target) {
+	var message = 'Not synchronized.';
+	if (target.enabled) {
+		if (target.status == statuses.READY) {
+			message = 'Synchronized.';
+		} else if (target.status == statuses.DOWNLOADING) {
+			message = 'Downloading...';
+		} else if (target.status == statuses.MERGING) {
+			message = 'Syncing...';
+		} else if (target.status == statuses.UPLOADING) {
+			message = 'Uploading ('+target.left+' left)...';
+		} else {
+			message = 'Enabled, but unknown status (BUG! status='+target.status+')';
 		}
 	}
 	document.getElementById(target.shortname+'_status').innerText = message;
@@ -41,25 +37,37 @@ function updateTargetDiv(target, message) {
 
 // TODO change this to a more fine-grained system.
 function updatePopup() {
-	var target;
+	/*var target;
 	for (var i=0; target=background.remotes[i]; i++) {
 		updateTargetDiv(target);
 		document.getElementById(target.shortname+'_button_stop').disabled = !(target.enabled && !target.status);
-	}
+	}*/
 }
 
-chrome.extension.onRequest.addListener(
-		function (request, sender, sendResponse) {
-			if (request.action != 'updateUi') return; // not for me
-			if (request.target) {
-				// update single target
-				updateTargetDiv(background.remotes_by_name[request.target]);
-			} else {
-				// update whole popup
-				updatePopup();
-			}
-			sendResponse({});
-		});
+function onMessage (request, sender, sendResponse) {
+	if (!request) return;
+	console.log(request);
+	if (request.action != 'updateUi') return; // not for me
+	updateTargetDiv(request);
+	sendResponse(undefined);
+}
+
+/* Detect browser and do browser-specific initialisation */
+
+if (browser.name == 'chrome') {
+	// Chrome initialisation data
+	chrome.extension.onRequest.addListener(onMessage);
+	chrome.extension.sendRequest({action: 'popupCreated'});
+
+} else if (browser.name == 'opera') {
+	// Opera initialisation
+	var bgPort;
+	opera.extension.onmessage = function (x) {
+		bgPort = event.source;
+	};
+}
+
+
 
 </script>
 <style>
@@ -76,7 +84,7 @@ body {
 </style>
 </head>
 
-<body onload="updatePopup();" onunload="popupClosed();">
+<body onload="updatePopup();" onUnload="popupClosed();">
 
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />

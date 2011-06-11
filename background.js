@@ -9,17 +9,9 @@ var remotes_finished;
 var g_bookmarks; // global bookmarks
 var g_bookmark_ids;
 
-statuses = {
-	READY:       0,
-	AUTHORIZING: 1,
-	DOWNLOADING: 2,
-	MERGING:     3,
-	UPLOADING:   4,
-}
 
-
-// global variables that are only for the (first) sync
-var l_queue   = []; // local queue (list of [callback, data])
+// boolean value whether the popup is open
+var is_popup_open = false;
 
 
 // debugging flag, don't change Google Bookmarks (but may change local bookmarks)
@@ -57,6 +49,19 @@ function update_ui() {
 	chrome.extension.sendRequest({action: 'updateUi'}, function () {});
 }
 
+// these functions are called when the popup is created or closed
+
+function popupCreated() {
+	console.log('Popup created.');
+	is_popup_open = true;
+	call_all('updateStatus', current_browser);
+}
+
+function popupClosed() {
+	console.log('Popup closed.');
+	is_popup_open = false;
+}
+
 
 function onLoad() {
 	initSync();
@@ -64,7 +69,7 @@ function onLoad() {
 
 function call_all(funcname, target, params) { // function will not be called on target, this indicates the target where it is already noted
 	var remote;
-	if (params) params.unshift(target);
+	if (params) params.unshift(target); // add target at the start
 	for (var i=0; remote=remotes_finished[i]; i++) {
 		if (remote == target) continue; // if this is the target where the call comes from
 
@@ -76,10 +81,11 @@ function call_all(funcname, target, params) { // function will not be called on 
 		}
 
 		try {
+			var self = remote;
 			if (params) {
-				func.apply(this, params);
+				self[funcname].apply(this, params);
 			} else {
-				func.apply(this);
+				self[funcname].apply(this);
 			}
 		} catch (error) {
 			console.log('call_all: ERROR: in function '+funcname+' applied to link '+remote.name+':');
@@ -93,7 +99,13 @@ function commit() {
 	call_all('commit');
 }
 
+// Bookmark-tree modifying:
+// The functions prefixed with _ don't report it to other links.
+
 function addNode(source, node, parentNode) {
+	if (!parentNode) {
+		throw 'undefined parentNode';
+	}
 	node.parentNode = parentNode;
 	if (node.url) {
 		addBookmark(source, node);
@@ -102,6 +114,10 @@ function addNode(source, node, parentNode) {
 	}
 }
 function addBookmark(source, bm) {
+	if (!bm.parentNode) {
+		console.log(bm);
+		throw 'Undefined parentNode';
+	}
 	bm.parentNode.bm[bm.url] = bm;
 	call_all('bm_add', source, [bm]);
 }
@@ -118,12 +134,16 @@ function rmNode(source, node) {
 	}
 }
 
-function rmBookmark(source, bookmark) { // public function
+function rmBookmark(link, bookmark) { // public function
 	_rmBookmark(bookmark);
 	console.log('Removed bookmark: '+bookmark.url);
-	call_all('bm_del', gchr, [bookmark]);
+	call_all('bm_del', link, [bookmark]);
 }
 function _rmBookmark(bookmark) { // internal use only
+	if (!bookmark.parentNode) {
+		console.log(bookmark);
+		throw 'Undefined parentNode';
+	}
 	delete bookmark.parentNode.bm[bookmark.url];
 }
 
@@ -135,6 +155,54 @@ function _rmFolder(folder) {
 	delete folder.parentNode.f[folder.title];
 }
 
+function mvBookmark (link, bm, target) {
+	_mvBookmark(bm, target);
+	call_all('bm_mv', link, [bm, target]);
+}
+
+function mvNode(link, node, target) {
+	_mvNode(node, target);
+	if (node.url) {
+		call_all('bm_mv', link, [node, target]);
+	} else {
+		call_all('f_mv', link, [node, target]);
+	}
+}
+
+function _mvNode(node, target) {
+	if (node.parentNode == target) {
+		console.warn('WARNING: node moved to it\'s parent folder! node:');
+		console.log(node);
+		console.trace();
+		return; // nothing to do here
+	}
+	if (!target) {
+		throw 'undefined target';
+	}
+	if (node.url) {
+		_mvBookmark(node, target);
+	} else {
+		_mvFolder(node, target);
+	}
+}
+function _mvBookmark(bm, target) {
+	delete bm.parentNode.bm[bm.url];
+	bm.parentNode = target;
+	// FIXME check for duplicate
+	target.bm[bm.url] = bm;
+}
+function _mvFolder(folder, target) {
+	if (!folder.parentNode) {
+		console.log(folder);
+		throw 'Undefined parentNode';
+	}
+	delete folder.parentNode.f[folder.title];
+	folder.parentNode = target;
+	// FIXME check for duplicate
+	target.f[folder.title] = folder;
+}
+
+// whether this folder-node has contents (bookmarks or folders)
 function has_contents(folder) {
 	for (url in folder.bm) {
 		return true;
@@ -203,27 +271,84 @@ function target_finished(link) {
 	}
 }
 
-// like call_all, but will only call current_browser
+// Wrapper for call_all, for applying actions.
 function apply_action (link, action) {
 	// first get the arguments
-	var args    = [link];
+	var args    = [];
 	var arg;
-	// start after the first arg
+	// start after the first arg, that is the function name.
 	for (var i_arg=1; arg=action[i_arg]; i_arg++) {
-		arg = current_browser.ids[arg];
-		if (!arg) return; // WARNING: errors may not be catched!
+		if (typeof(arg) == 'object' && arg.length) {
+			arg = get_stable_lId(link, arg);
+		} else {
+			arg = current_browser.ids[arg];
+		}
+		if (!arg) {
+			console.log('WARNING: action could not be applied (link: '+link.name+'):');
+			console.log(action);
+			return; // WARNING: errors may not be catched!
+		}
 		args.push(arg);
 	}
 	
 	// then get the command
 	var command = action[0];
+
 	// and check whether it is allowed
 	if (command == 'f_del_ifempty') {
 		// directory shouldn't be removed if it has entries in it
-		if (has_contents(args[1])) return;
+		if (has_contents(args[0])) return;
 		command = 'f_del';
 	}
-	current_browser[command].apply(this, args);
+
+	// apply actions partially
+	if (command == 'bm_mv' || command == 'f_mv') {
+		// do the action here
+		mvNode(link, args[0], args[1]);
+	} else if (command == 'bm_del') {
+		rmBookmark(link, args[0]);
+	} else if (command == 'f_del') {
+		rmFolder(link, args[0]);
+	} else {
+		console.log('ERROR: unknown action: ');
+		console.log(action);
+		return;
+	}
+	//call_all(command, link, args);
+}
+
+function get_stable_lId(link, sid) {
+	// speed up. This will happen most of the time.
+	if (current_browser.ids[sid[0][0]]) {
+		return current_browser.ids[sid[0][0]];
+	}
+
+	// determine the first known node
+	var i=0;
+	while (true) {
+		// the first sid[i][0] will be '1', so it isn't needed to check
+		// whether i goes too far.
+		if (current_browser.ids[sid[i][0]]) {
+			break;
+		}
+		i += 1;
+	}
+
+	// make all remaining folders
+	var node = current_browser.ids[sid[i][0]];
+	while ( i>0 ) {
+		i -= 1;
+		// assume this is a directory
+		// check whether this folder already exsists
+		if (node.f[sid[i][1]]) {
+			node = node.f[sid[i][1]];
+		} else {
+			var folder = {bm: {}, f: {}, parentNode: node, title: sid[i][1]};
+			addFolder(link, folder);
+			node = folder;
+		}
+	}
+	return node;
 }
 
 function merge (link) {
@@ -234,7 +359,7 @@ function merge (link) {
 	} else {
 		console.log('Merging bookmarks with '+link.name+'...');
 		mergeBookmarks(g_bookmarks, link.bookmarks, link);
-		console.log('Finished merging.');
+		console.log('Finished merging with '+link.name+'.');
 	}
 };
 
@@ -276,9 +401,18 @@ function mergeBookmarks(local, remote, target) {
 	// find unique remote bookmarks
 	for (url in remote.bm) {
 		var bookmark = remote.bm[url];
+		
+		// ignore empty bookmarks
+		if (!bookmark.title || !bookmark.url) continue;
+
 		if (!(url in local.bm)) {
 			// unique remote bookmark
+
+			// log this
 			console.log('Unique remote bookmark: '+bookmark.url);
+			console.log(bookmark);
+
+			// copy bookmark
 			syncRBookmark(target, bookmark, local);
 		} else {
 			mergeProperties(bookmark, local.bm[url]);
@@ -293,6 +427,7 @@ function mergeBookmarks(local, remote, target) {
 			console.log('Unique local bookmark: '+bm.url);
 			syncLBookmark(target, bm);
 		} else {
+
 			// TODO merge changes (changed title etc.)
 			// bookmark exists on both sides
 			/*// bookmark exists at remote
@@ -313,6 +448,11 @@ function mergeBookmarks(local, remote, target) {
 	// find unique remote folders (for example, Google Bookmarks)
 	for (title in remote.f) {
 		var rsubfolder = remote.f[title];
+
+		// ignore bogus folders
+		if (!rsubfolder.title || !rsubfolder.bm || !rsubfolder.f)
+			continue;
+
 		if (!(title in local.f)) {
 			// unique remote folder
 			console.log('Unique remote folder:');
@@ -346,12 +486,12 @@ function syncRFolder(target, rfolder, lparentfolder) {
 	}
 
 	// if there aren't any bookmarks in this folder (and thus also no folders)
-	if (bookmark_count == 0) {
+	/*if (bookmark_count == 0) {
 		target.f_del(undefined, rfolder);
 		delete rfolder.parentNode.f[rfolder.title];
 		delete lfolder.parentNode.f[lfolder.title];
 		console.log('Removed empty folder: '+rfolder.title);
-	}
+	}*/
 
 	// for recursion
 	return bookmark_count;
@@ -380,6 +520,7 @@ function syncLFolder(target, folder) {
 	// remove folder if empty
 	if (bookmark_count == 0) {
 		// TODO, check whether this works
+		// Google Bookmarks should do this, that's why it is commented out.
 		//delLFolder(target, folder);
 	}
 	return bookmark_count;
@@ -404,7 +545,8 @@ function delRBookmark(target, bookmark, lfolder) {
 }
 function pushRBookmark(target, bookmark, lfolder) {
 	console.log('New remote bookmark: '+bookmark.url);
-	call_all('bm_add', target, [bookmark, lfolder]);
+	bookmark.parentNode = lfolder;
+	addBookmark(target, bookmark);
 	return 1;
 }
 

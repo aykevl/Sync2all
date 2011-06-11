@@ -153,6 +153,7 @@ gbm.finished_sync = function () {
 };
 
 gbm.save_state = function () {
+	console.log('gbm: saving state');
 	// maybe this is the wrong place?
 	gbm.initial_commit = false;
 
