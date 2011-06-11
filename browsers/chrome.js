@@ -49,7 +49,7 @@ gchr.finished_start = function () {
 
 	// send 'finished' signal
 	target_finished(gchr);
-	//gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
+	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
 };
 
 gchr.finished_sync = function () {
