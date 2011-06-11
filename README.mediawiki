@@ -12,7 +12,7 @@ The Google bookmarks support is more stable than that of Opera Link (has been te
 
 Creating, deleting and moving of bookmarks and folders is supported (but buggy, sometimes it gives an error and it will get duplicated at the next sync). Thanks to ChaosinaCan for is excellent Opera Link JavaScript library (see the bottom of this page).
 
-Deleting of bookmarks outside Chrome is now supported! They will not be re-created.
+Deleting and moving of bookmarks and folders outside Chrome is now supported! They will not be re-created. Even folders and bookmarks moved to a newly created folder (should) work.
 
 === Firefox Sync ===
 
