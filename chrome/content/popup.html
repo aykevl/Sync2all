@@ -10,7 +10,7 @@
 
 // send signal that this popup has been closed
 function popupClosed() {
-	// this function is somehow not called (?)
+	// this function is somehow not called (?). FIXME: make it work.
 
 	if (browser.name == 'chrome') {
 		chrome.extenson.sendRequest({action: 'popupClosed'});
@@ -33,15 +33,6 @@ function updateTargetDiv(target) {
 		}
 	}
 	document.getElementById(target.shortname+'_status').innerText = message;
-}
-
-// TODO change this to a more fine-grained system.
-function updatePopup() {
-	/*var target;
-	for (var i=0; target=background.remotes[i]; i++) {
-		updateTargetDiv(target);
-		document.getElementById(target.shortname+'_button_stop').disabled = !(target.enabled && !target.status);
-	}*/
 }
 
 function onMessage (request, sender, sendResponse) {
@@ -73,7 +64,10 @@ if (browser.name == 'chrome') {
 <style>
 body {
 	text-align: right;
+	background-color: white;
 }
+
+/* TODO: better style */
 .target {
 	border: 5px #aaaaff outset;
 	background: #ccccff;
