@@ -36,5 +36,13 @@ function use_target (target) {
 		// remove the parent folder when the contents has been deletet
 		this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
 	}
+	target.onRequest = function (request, sender, sendResponse) {
+		// handle request
+		if (request.action.substr(0, target.shortname.length+1) == target.shortname+'_') {
+			target['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
+		}
+	}
+	chrome.extension.onRequest.addListener(target.onRequest);
+};
 
-}
+

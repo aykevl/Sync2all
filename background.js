@@ -54,7 +54,10 @@ function update_ui() {
 function popupCreated() {
 	console.log('Popup created.');
 	is_popup_open = true;
-	call_all('updateStatus', current_browser);
+	var link;
+	for (var i=0; link=remotes[i]; i++) {
+		link.updateStatus();
+	}
 }
 
 function popupClosed() {

@@ -34,7 +34,7 @@ opl.init = function () {
 	}
 }
 
-opl.start = function () {
+opl.start = opl.msg_start = function () {
 
 	opl.updateStatus(statuses.DOWNLOADING);
 
@@ -285,13 +285,13 @@ opl.calculate_actions = function (state, folder) {
 	}
 }
 
-opl.disable = function () {
+opl.msg_disable = opl.disable = function () {
 	if (localStorage.opl_state)
 		delete localStorage['opl_state'];
 	opl.stop();
 }
 
-opl.stop = function () {
+opl.msg_stop = opl.stop = function () {
 	if (!opl.enabled || opl.status) {
 		return; // FIXME error handling
 	}
@@ -312,15 +312,8 @@ opl.requestTokenCallback = function (e) {
 	chrome.extension.onRequest.addListener(opl.onRequest);
 };
 
-opl.onRequest = function (request, sender, sendResponse) {
-	// handle request
-	if (request.action == 'opl_verifier') {
-		opl.onVerifier(request);
-		sendResponse({}); // Mark this as being received.
-	}
-};
 
-opl.onVerifier = function (request) {
+opl.msg_verifier = function (request) {
 
 	if (opl.authorized) return; // strange
 

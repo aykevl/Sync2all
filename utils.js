@@ -107,7 +107,7 @@ function use_rqueue(obj) {
 		if (this.r_queue.length == 0) {
 			console.log('Finished uploading');
 			this.r_queue.running = false;
-			this.updateStatus(); // update popup with 'finished' count
+			this.updateStatus(statuses.READY); // update popup with 'finished' count
 
 			// save current state when everything has been uploaded
 			if (this.initial_commit) {
@@ -117,7 +117,7 @@ function use_rqueue(obj) {
 		}
 
 		// update the popup with the new 'left' count
-		this.updateStatus();
+		this.updateStatus(statuses.UPLOADING);
 
 		var req      = this.r_queue[0][0];
 		var params   = this.r_queue[0][1];
@@ -149,6 +149,7 @@ function use_queue (obj) {
 	};
 
 	obj.queue_start = function () {
+		this.updateStatus(statuses.UPLOADING);
 		this.queue.running = true;
 		this.queue_next();
 	};
@@ -163,6 +164,8 @@ function use_queue (obj) {
 			if (this.initial_commit) {
 				this.save_state();
 			}
+			
+			this.updateStatus(statuses.READY);
 
 			// queue has been finished!!!
 			return;

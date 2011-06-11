@@ -51,7 +51,7 @@ gbm.init = function (enable) {
 	}
 };
 
-gbm.start = function () {
+gbm.msg_start = gbm.start = function () {
 
 	if (gbm.status) return; // FIXME error handling
 
@@ -86,6 +86,12 @@ gbm.start = function () {
 }
 
 gbm.finished_start = function () {
+
+	if (!has_contents(gbm.bookmarks)) {
+		if (confirm('Are you sure you want to remove all bookmarks?')) {
+			return;
+		}
+	}
 
 	// get actions
 	if (localStorage['gbm_state']) {
@@ -185,8 +191,11 @@ gbm.calculate_actions = function (state, folder) {
 
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
-			console.log('Bookmark deleted: '+url);
-			gbm.actions.push(['bm_del', id]);
+			// Ignore already removed bookmarks.
+			if (current_browser.ids[id]) {
+				console.log('Bookmark deleted: '+url);
+				gbm.actions.push(['bm_del', id]);
+			}
 		}
 	}
 	for (title in state.f) {
@@ -211,7 +220,8 @@ gbm.calculate_actions = function (state, folder) {
 
 
 // remove memory-eating status information and stop
-gbm.disable = function () {
+// This will be called from the popup.
+gbm.msg_disable = function () {
 	delete localStorage['gbm_state'];
 	gbm.stop();
 };

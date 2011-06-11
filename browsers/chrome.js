@@ -21,6 +21,7 @@ chrome.extension.onRequest.addListener(onRequest);
 gchr = {};
 
 gchr.name = 'Google Chrome';
+gchr.shortname = 'gchr';
 
 // include libraries
 use_target(gchr);

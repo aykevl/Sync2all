@@ -11,10 +11,7 @@
 // send signal that this popup has been closed
 function popupClosed() {
 	// this function is somehow not called (?). FIXME: make it work.
-
-	if (browser.name == 'chrome') {
-		chrome.extenson.sendRequest({action: 'popupClosed'});
-	}
+	sendMessage({action: 'popupClosed'});
 }
 
 function updateTargetDiv(target) {
@@ -33,6 +30,8 @@ function updateTargetDiv(target) {
 		}
 	}
 	document.getElementById(target.shortname+'_status').innerText = message;
+	document.getElementById(target.shortname+'_button_stop').disabled = (!target.enabled || target.status)?true:false;
+	document.getElementById(target.shortname+'_button_start').disabled = (target.enabled && target.status)?true:false;
 }
 
 function onMessage (request, sender, sendResponse) {
@@ -43,19 +42,27 @@ function onMessage (request, sender, sendResponse) {
 	sendResponse(undefined);
 }
 
-/* Detect browser and do browser-specific initialisation */
+function init_popup() {
+	/* Detect browser and do browser-specific initialisation */
 
-if (browser.name == 'chrome') {
-	// Chrome initialisation data
-	chrome.extension.onRequest.addListener(onMessage);
-	chrome.extension.sendRequest({action: 'popupCreated'});
+	if (browser.name == 'chrome') {
+		// Chrome initialisation data
+		chrome.extension.onRequest.addListener(onMessage);
+		chrome.extension.sendRequest({action: 'popupCreated'});
 
-} else if (browser.name == 'opera') {
-	// Opera initialisation
-	var bgPort;
-	opera.extension.onmessage = function (x) {
-		bgPort = event.source;
-	};
+	} else if (browser.name == 'opera') {
+		// Opera initialisation
+		var bgPort;
+		opera.extension.onmessage = function (x) {
+			bgPort = event.source;
+		};
+	}
+}
+
+function sendMessage (msg) {
+	if (browser.name == 'chrome') {
+		chrome.extension.sendRequest(msg);
+	}
 }
 
 
@@ -78,18 +85,18 @@ body {
 </style>
 </head>
 
-<body onload="updatePopup();" onUnload="popupClosed();">
+<body onload="init_popup();" onUnload="popupClosed();">
 
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
-	<button id='gbm_button_start' onclick="background.gbm.start();" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-	<button id='gbm_button_stop' onclick="background.gbm.disable();" title="Stop synchronizing with Google Bookmarks">Disable</button>
+	<button id='gbm_button_start' onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
+	<button id='gbm_button_stop' onclick="sendMessage({action: 'gbm_stop'});" title="Stop synchronizing with Google Bookmarks">Disable</button>
 </div>
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_button_start" onclick="background.opl.start();" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-	<button id="opl_button_stop" onclick="background.opl.stop();" title="Stop synchronizing with Opera Link">Disable</button>
+	<button id="opl_button_start" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
+	<button id="opl_button_stop" onclick="sendMessage({action: 'opl_stop'});" title="Stop synchronizing with Opera Link">Disable</button>
 </div>
 
 </body>

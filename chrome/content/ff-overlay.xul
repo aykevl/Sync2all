@@ -15,7 +15,7 @@
 				label="&sync2allToolbarButton.label;" tooltiptext="&sync2allToolbarButton.tooltip;"
 				type="panel">
 			<panel id="sync2all-popup">
-				<iframe id="sync2all-popup-iframe" flex="1" src="chrome://sync2all/content/popup.html" width="300px" height="500px"/>
+				<iframe id="sync2all-popup-iframe" flex="1" src="chrome://sync2all/content/popup.html" width="300px" height="150px"/>
 			</panel>
 		</toolbarbutton>
   </toolbarpalette>
