@@ -18,6 +18,24 @@ Deleting and moving of bookmarks and folders outside Chrome is now supported! Th
 
 Not yet because it is very hard to decode the encrypted bookmarks (And I won't even think of encrypting them...). See https://bitbucket.org/philikon/weaveclient-chromium/. But I am working on a Firefox extension (then it uses the native Firefox bookmarks and synchronizes with Google Bookmarks or Opera Link).
 
+== Supported browsers ==
+
+=== Chrome ===
+(Or Iron, Chromium, Flock...)
+
+Supported. This was the first browser I made the extension on. Initially, I wanted to write a Chrome extension that would sync with Google Bookmarks, but I have extended the extension by moving the browser-specific and Google Bookmarks-specific code in separate modules.
+
+The only thing that works in other browsers is the popup...
+
+=== Firefox ===
+
+I'm working on it. The biggest problem now is how to use separate files in XPCOM components. Or when Jetpack has a way to interact with the bookmarks service, I will use that (much easier to keep cross-browser).
+
+=== Opera ===
+
+Work in progress. It is currently only useful to make such an extension for syncing Opera (Link) with Google Bookmarks. It would be much easier to just use Opera's built-in bookmarks system, but that is currently not possible.
+
+
 == Credits ==
 
 * M. Martins for how Google Bookmarks work: http://www.mmartins.com/mmartins/googlebookmarksapi/
