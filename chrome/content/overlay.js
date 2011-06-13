@@ -20,4 +20,3 @@ var sync2all = {
 
 window.addEventListener("load", function () { sync2all.onLoad(); }, false);
 
-alert('load');

@@ -4,26 +4,28 @@
 <head>
 	<meta name="encoding" content="utf-8" />
 
-<script src="/utils.js"></script>
-<script src="/globals.js"></script>
+<script src="utils.js"></script>
+<script src="globals.js"></script>
 <script type="text/javascript">
 
+Sync2all.popup = {};
+
 // send signal that this popup has been closed
-function popupClosed() {
+Sync2all.popup.popupClosed = function () {
 	// this function is somehow not called (?). FIXME: make it work.
-	sendMessage({action: 'popupClosed'});
+	Sync2all.popup.sendMessage({action: 'popupClosed'});
 }
 
-function updateTargetDiv(target) {
+Sync2all.popup.updateTargetDiv = function (target) {
 	var message = 'Not synchronized.';
 	if (target.enabled) {
-		if (target.status == statuses.READY) {
+		if (target.status == Sync2all.statuses.READY) {
 			message = 'Synchronized.';
-		} else if (target.status == statuses.DOWNLOADING) {
+		} else if (target.status == Sync2all.statuses.DOWNLOADING) {
 			message = 'Downloading...';
-		} else if (target.status == statuses.MERGING) {
+		} else if (target.status == Sync2all.statuses.MERGING) {
 			message = 'Syncing...';
-		} else if (target.status == statuses.UPLOADING) {
+		} else if (target.status == Sync2all.statuses.UPLOADING) {
 			message = 'Uploading ('+target.left+' left)...';
 		} else {
 			message = 'Enabled, but unknown status (BUG! status='+target.status+')';
@@ -34,33 +36,34 @@ function updateTargetDiv(target) {
 	document.getElementById(target.shortname+'_button_start').disabled = (target.enabled && target.status)?true:false;
 }
 
-function onMessage (request, sender, sendResponse) {
+Sync2all.popup.onMessage = function (request, sender, sendResponse) {
 	if (!request) return;
 	console.log(request);
 	if (request.action != 'updateUi') return; // not for me
-	updateTargetDiv(request);
+	Sync2all.popup.updateTargetDiv(request);
 	sendResponse(undefined);
 }
 
-function init_popup() {
+Sync2all.popup.init_popup = function () {
 	/* Detect browser and do browser-specific initialisation */
 
-	if (browser.name == 'chrome') {
+	if (Sync2all.browser.name == 'chrome') {
 		// Chrome initialisation data
-		chrome.extension.onRequest.addListener(onMessage);
+		chrome.extension.onRequest.addListener(Sync2all.popup.onMessage);
 		chrome.extension.sendRequest({action: 'popupCreated'});
 
-	} else if (browser.name == 'opera') {
+	} else if (Sync2all.browser.name == 'opera') {
 		// Opera initialisation
 		var bgPort;
 		opera.extension.onmessage = function (x) {
 			bgPort = event.source;
 		};
+	} else if (Sync2all.browser.name == 'firefox') {
 	}
 }
 
-function sendMessage (msg) {
-	if (browser.name == 'chrome') {
+Sync2all.popup.sendMessage = function (msg) {
+	if (Sync2all.browser.name == 'chrome') {
 		chrome.extension.sendRequest(msg);
 	}
 }
@@ -85,18 +88,18 @@ body {
 </style>
 </head>
 
-<body onload="init_popup();" onUnload="popupClosed();">
+<body onload="Sync2all.popup.init_popup();" onUnload="Sync2all.popup.popupClosed();">
 
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
-	<button id='gbm_button_start' onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-	<button id='gbm_button_stop' onclick="sendMessage({action: 'gbm_stop'});" title="Stop synchronizing with Google Bookmarks">Disable</button>
+	<button id='gbm_button_start' onclick="Sync2all.popup.sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
+	<button id='gbm_button_stop' onclick="Sync2all.popup.sendMessage({action: 'gbm_stop'});" title="Stop synchronizing with Google Bookmarks">Disable</button>
 </div>
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_button_start" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-	<button id="opl_button_stop" onclick="sendMessage({action: 'opl_stop'});" title="Stop synchronizing with Opera Link">Disable</button>
+	<button id="opl_button_start" onclick="Sync2all.popup.sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
+	<button id="opl_button_stop" onclick="Sync2all.popup.sendMessage({action: 'opl_stop'});" title="Stop synchronizing with Opera Link">Disable</button>
 </div>
 
 </body>

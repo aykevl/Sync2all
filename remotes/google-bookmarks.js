@@ -42,7 +42,7 @@ gbm.lastSync      = localStorage['gbm_lastSync'];
 
 
 gbm.init = function (enable) {
-	gbm.status = statuses.READY;
+	gbm.status = Sync2all.statuses.READY;
 
 	gbm.enabled = localStorage['gbm_enabled'];
 	if (gbm.enabled) {
@@ -63,7 +63,7 @@ gbm.msg_start = gbm.start = function () {
 	}
 
 	// set status
-	gbm.updateStatus(statuses.DOWNLOADING);
+	gbm.updateStatus(Sync2all.statuses.DOWNLOADING);
 
 	// initialize variables
     gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
@@ -109,13 +109,13 @@ gbm.finished_start = function () {
 	}
 
 	// set status
-	gbm.updateStatus(statuses.MERGING);
+	gbm.updateStatus(Sync2all.statuses.MERGING);
 
 	// send 'finished' signal
 	target_finished(gbm);
 
 	// set status (again)
-	gbm.updateStatus(statuses.READY);
+	gbm.updateStatus(Sync2all.statuses.READY);
 };
 
 /*gbm.get_cbl_ids = function (folder) {
@@ -227,7 +227,7 @@ gbm.msg_disable = function () {
 };
 
 // don't synchronize
-gbm.stop = function () {
+gbm.stop = gbm.msg_stop = function () {
 
 	if (gbm.status) return; // FIXME error handling
 	if (!gbm.enabled) return; // already stopped

@@ -1,5 +1,5 @@
 {
-	"name": "Sync2All",
+	"name": "Sync2all",
 	"version": "0.1",
 	"description": "Synchronizes the browser bookmarks with bookmarks on the web: Google Bookmarks and Opera Link.",
 	"browser_action": {

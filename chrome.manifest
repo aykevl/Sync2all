@@ -3,5 +3,11 @@ skin      sync2all   classic/1.0   chrome/skin/
 locale    sync2all   en-US         chrome/locale/en-US/
 
 
-overlay   chrome://browser/content/browser.xul   chrome://sync2all/content/ff-overlay.xul
-style chrome://global/content/customizeToolbar.xul chrome://sync2all/skin/overlay.css
+overlay   chrome://browser/content/browser.xul         chrome://sync2all/content/ff-overlay.xul
+style     chrome://global/content/customizeToolbar.xul chrome://sync2all/skin/overlay.css
+
+# XPCOM component (background page)
+interfaces components/nsISync2allService.xpt
+component {5d20fa2b-38c7-4167-b8f5-d9f26bcbb1bc} components/nsISync2allService.js
+contract @github.com/sync2all;1 {5d20fa2b-38c7-4167-b8f5-d9f26bcbb1bc}
+category profile-after-change Sync2allService @github.com/sync2all;1

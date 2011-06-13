@@ -23,7 +23,7 @@ opl.init = function () {
 	opera.link.loadToken();
 
 	opl.enabled = localStorage['opl_enabled'];
-	opl.status = statuses.READY;
+	opl.status = Sync2all.statuses.READY;
 
 	opl.authorized = false;
 
@@ -36,7 +36,7 @@ opl.init = function () {
 
 opl.start = opl.msg_start = function () {
 
-	opl.updateStatus(statuses.DOWNLOADING);
+	opl.updateStatus(Sync2all.statuses.DOWNLOADING);
 
 	// mark enabled
 	if (!opl.enabled) {
@@ -54,7 +54,7 @@ opl.start = opl.msg_start = function () {
 	opl.initial_commit = true;
 
 	// start downloading
-	opl.updateStatus(statuses.DOWNLOADING);
+	opl.updateStatus(Sync2all.statuses.DOWNLOADING);
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
@@ -97,13 +97,13 @@ opl.finished_start = function () {
 	}
 
 	// set status to merging
-	opl.updateStatus(statuses.MERGING);
+	opl.updateStatus(Sync2all.statuses.MERGING);
 
 	// mark as ready
 	target_finished(opl); // DEBUG
 	
 	// set status to finished
-	opl.updateStatus(statuses.READY);
+	opl.updateStatus(Sync2all.statuses.READY);
 };
 
 // called when sync has been finished.
@@ -300,7 +300,7 @@ opl.msg_stop = opl.stop = function () {
 	opl.enabled = false;
 	remotes_enabled.remove(opl);
 
-	opl.updateStatus(statuses.READY);
+	opl.updateStatus(Sync2all.statuses.READY);
 }
 
 opl.requestTokenCallback = function (e) {
@@ -319,7 +319,7 @@ opl.msg_verifier = function (request) {
 
 	var verifier = request.verifier;
 	if (!verifier) { // check for validity
-		opl.status = statuses.READY;
+		opl.status = Sync2all.statuses.READY;
 		opl.stop();
 		return;
 	}
@@ -340,7 +340,7 @@ opl.requestTokenError = function (e) {
 	delete localStorage.oauth_secret;
 
 	// disable Opera Link
-	opl.status = statuses.READY;
+	opl.status = Sync2all.statuses.READY;
 	opl.stop();
 };
 

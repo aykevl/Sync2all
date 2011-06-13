@@ -1,0 +1,9 @@
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(5d20fa2b-38c7-4167-b8f5-d9f26bcbb1bc)]
+interface nsISync2allService: nsISupports
+{
+    string reverseIt(in string s);
+};
+

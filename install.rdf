@@ -3,7 +3,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>sync2all@github.com</em:id>
     <em:type>2</em:type>
-    <em:name>Sync2All</em:name>
+    <em:name>Sync2all</em:name>
     <em:version>0.1</em:version>
     <em:creator>Ayke van Laëthem</em:creator>
     <em:contributor></em:contributor>
