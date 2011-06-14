@@ -5,11 +5,25 @@
 	<meta name="encoding" content="utf-8" />
 
 <script src="utils.js"></script>
-<script src="globals.js"></script>
+<script type="text/javascript">
+// <!--
+// if browser is firefox
+if (this.Components && Components.classes) {
+	var Sync2allService = Components
+		.classes['@github.com/sync2all;1']
+		.getService(Components.interfaces.nsISync2allService).wrappedJSObject;
+} else {
+	// for other browsers
+	Sync2allService = this;
+	document.write('<script src="/chrome/content/globals.js"></script>');
+}
+//-->
+</script>
 <script type="text/javascript">
 
-Sync2all.popup = {};
 
+var Sync2all = {};
+Sync2all.popup = {};
 // send signal that this popup has been closed
 Sync2all.popup.popupClosed = function () {
 	// this function is somehow not called (?). FIXME: make it work.
@@ -19,13 +33,13 @@ Sync2all.popup.popupClosed = function () {
 Sync2all.popup.updateTargetDiv = function (target) {
 	var message = 'Not synchronized.';
 	if (target.enabled) {
-		if (target.status == Sync2all.statuses.READY) {
+		if (target.status == Sync2allService.statuses.READY) {
 			message = 'Synchronized.';
-		} else if (target.status == Sync2all.statuses.DOWNLOADING) {
+		} else if (target.status == Sync2allService.statuses.DOWNLOADING) {
 			message = 'Downloading...';
-		} else if (target.status == Sync2all.statuses.MERGING) {
+		} else if (target.status == Sync2allService.statuses.MERGING) {
 			message = 'Syncing...';
-		} else if (target.status == Sync2all.statuses.UPLOADING) {
+		} else if (target.status == Sync2allService.statuses.UPLOADING) {
 			message = 'Uploading ('+target.left+' left)...';
 		} else {
 			message = 'Enabled, but unknown status (BUG! status='+target.status+')';
@@ -47,27 +61,26 @@ Sync2all.popup.onMessage = function (request, sender, sendResponse) {
 Sync2all.popup.init_popup = function () {
 	/* Detect browser and do browser-specific initialisation */
 
-	if (Sync2all.browser.name == 'chrome') {
+	if (Sync2allService.browser.name == 'chrome') {
 		// Chrome initialisation data
 		chrome.extension.onRequest.addListener(Sync2all.popup.onMessage);
 		chrome.extension.sendRequest({action: 'popupCreated'});
 
-	} else if (Sync2all.browser.name == 'opera') {
+	} else if (Sync2allService.browser.name == 'opera') {
 		// Opera initialisation
 		var bgPort;
 		opera.extension.onmessage = function (x) {
 			bgPort = event.source;
 		};
-	} else if (Sync2all.browser.name == 'firefox') {
+	} else if (Sync2allService.browser.name == 'firefox') {
 	}
 }
 
 Sync2all.popup.sendMessage = function (msg) {
-	if (Sync2all.browser.name == 'chrome') {
+	if (Sync2allService.browser.name == 'chrome') {
 		chrome.extension.sendRequest(msg);
 	}
 }
-
 
 
 </script>

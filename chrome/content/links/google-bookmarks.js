@@ -42,7 +42,7 @@ gbm.lastSync      = localStorage['gbm_lastSync'];
 
 
 gbm.init = function (enable) {
-	gbm.status = Sync2all.statuses.READY;
+	gbm.status = statuses.READY;
 
 	gbm.enabled = localStorage['gbm_enabled'];
 	if (gbm.enabled) {
@@ -63,7 +63,7 @@ gbm.msg_start = gbm.start = function () {
 	}
 
 	// set status
-	gbm.updateStatus(Sync2all.statuses.DOWNLOADING);
+	gbm.updateStatus(statuses.DOWNLOADING);
 
 	// initialize variables
     gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
@@ -109,13 +109,13 @@ gbm.finished_start = function () {
 	}
 
 	// set status
-	gbm.updateStatus(Sync2all.statuses.MERGING);
+	gbm.updateStatus(statuses.MERGING);
 
 	// send 'finished' signal
 	target_finished(gbm);
 
 	// set status (again)
-	gbm.updateStatus(Sync2all.statuses.READY);
+	gbm.updateStatus(statuses.READY);
 };
 
 /*gbm.get_cbl_ids = function (folder) {

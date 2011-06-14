@@ -42,7 +42,10 @@ function use_target (target) {
 			target['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
 		}
 	}
-	chrome.extension.onRequest.addListener(target.onRequest);
+	if (browser.name == 'chrome') {
+		chrome.extension.onRequest.addListener(target.onRequest);
+	} else if (browser.name == 'firefox') {
+	}
 };
 
 

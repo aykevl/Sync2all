@@ -2,6 +2,29 @@ var SYNC2ALL_CONTRACTID = '@github.com/sync2all;1';
 var SYNC2ALL_CID = Components.ID('{5d20fa2b-38c7-4167-b8f5-d9f26bcbb1bc}');
 var SYNC2ALL_IID = Components.interfaces.nsISync2allService;
 
+var SYNC2ALL_SOURCES = [
+  // Generic libraries
+  'chrome://sync2all/content/globals.js',
+  'chrome://sync2all/content/utils.js',
+
+  // Specific libraries
+  'chrome://sync2all/content/browsers/firefox-localstorage.js',
+  'chrome://sync2all/content/oauth.js',
+  'chrome://sync2all/content/sha1.js',
+  'chrome://sync2all/content/operalink.js',
+  'chrome://sync2all/content/target.js',
+
+  // links
+  'chrome://sync2all/content/links/google-bookmarks.js',
+  'chrome://sync2all/content/links/opera-link.js',
+
+  // sync engine
+  'chrome://sync2all/content/background.js',
+];
+
+const loader = Components.classes['@mozilla.org/moz/jssubscript-loader;1']
+              .getService(Components.interfaces.mozIJSSubScriptLoader);
+
 var gSync2all;
 
 function nsSync2allService() {
@@ -36,6 +59,11 @@ nsSync2allService.prototype = {
     return this;
   }
 };
+
+var Sync2all_source;
+for (var i=0; Sync2all_source=SYNC2ALL_SOURCES[i]; i++) {
+	loader.loadSubScript(Sync2all_source, nsSync2allService.prototype);
+}
 
 var nsSync2allServiceModule = {
   registerSelf: function(compMgr, fileSpec, location, type) {

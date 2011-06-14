@@ -1,13 +1,13 @@
 {
 	"name": "Sync2all",
-	"version": "0.1",
-	"description": "Synchronizes the browser bookmarks with bookmarks on the web: Google Bookmarks and Opera Link.",
+	"version": "0.2",
+	"description": "Synchronizes bookmarks (and in the future other browsing data such as history and cookies) to other browsers. Currently supported: Google Bookmarks and Opera Link.",
 	"browser_action": {
-		"default_icon": "chrome/skin/icon.png",
+		"default_icon": "/chrome/skin/icon.png",
 		"popup": "/chrome/content/popup.html"
 	},
 	"background_page": "background.html",
-	"options_page": "options.html",
+	"options_page": "/chrome/content/options.html",
 	"permissions": [
 		"bookmarks",
 		"tabs",
@@ -19,7 +19,7 @@
 	"content_scripts": [
 		{
 			"matches": ["https://auth.opera.com/service/oauth/authorize"],
-			"js":      ["remotes/opera-link_authorize.js"]
+			"js":      ["/chrome/content/links/opera-link_authorize.js"]
 		}
 	]
 }

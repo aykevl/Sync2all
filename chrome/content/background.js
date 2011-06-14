@@ -1,6 +1,13 @@
 
-var current_browser = gchr; // currently only supports Google Chrome
-var remotes = [gbm, opl];
+var current_browser;
+var remotes;
+if (browser.name == 'chrome') {
+	current_browser = gchr; // currently only supports Google Chrome
+	remotes = [gbm, opl];
+} else if (browser.name == 'firefox') {
+	current_browser = fx;
+	remotes = [gbm, opl];
+}
 var remotes_enabled = [];
 var remotes_by_name = {gbm: gbm, opl: opl};
 var local   = gchr; // TODO make more flexible in the future (for Firefox support)
@@ -14,9 +21,6 @@ var g_bookmark_ids;
 var is_popup_open = false;
 
 
-// debugging flag, don't change Google Bookmarks (but may change local bookmarks)
-var DO_NOTHING = false;
-
 /* = Nodes =
 
    == Bookmark ==
@@ -25,7 +29,7 @@ var DO_NOTHING = false;
 	id:         // local id
 	timestamp:  // integer, timestamp
 	parentNode: // it's parent folder
-	url:        // 
+	url:        // self-explanatory (identifies it as a bookmark too)
    }
 
    == Folder ==
