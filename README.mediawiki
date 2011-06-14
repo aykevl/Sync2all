@@ -29,7 +29,7 @@ The only thing that works in other browsers is the popup...
 
 === Firefox ===
 
-I'm working on it. The biggest problem now is how to use separate files in XPCOM components. Or when Jetpack has a way to interact with the bookmarks service, I will use that (much easier to keep cross-browser).
+I'm working on it. Jetpack would be much easier, but that (currently) doesn't have a good way to interact with the bookmarks (Places API). The background page was hard at first, but I use an XPCOM component now.
 
 === Opera ===
 
