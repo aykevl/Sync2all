@@ -29,6 +29,7 @@
 							<label id="sync2all-gbm-status" value="Loading..." disabled="true"/>
 						</hbox>
 						<hbox align="end">
+							<spacer flex="1"/>
 							<button id="sync2all-gbm-button-start" label="(Re)synchronize"/>
 							<button id="sync2all-gbm-button-stop"  label="Disable"/>
 						</hbox>
@@ -41,6 +42,7 @@
 							<label id="sync2all-opl-status" value="Loading..." disabled="true"/>
 						</hbox>
 						<hbox align="end">
+							<spacer flex="1"/>
 							<button id="sync2all-opl-button-start" label="(Re)synchronize"/>
 							<button id="sync2all-opl-button-stop"  label="Disable"/>
 						</hbox>
