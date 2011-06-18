@@ -1,10 +1,10 @@
 
-Array.prototype.remove = function (element) {
-	var index = this.indexOf(element);
+function Array_remove(array, element) {
+	var index = array.indexOf(element);
 	if (index == -1) {
 		throw "Element "+element+" not found in array";
 	}
-	this.splice(index, 1);
+	return array.splice(index, 1);
 }
 
 // See http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
@@ -97,7 +97,7 @@ function use_rqueue(obj) {
 		this.r_queue.push([req, params, callback]);
 		if (!this.r_queue.running) {
 			this.r_queue.running = true;
-			update_ui();
+			this.updateStatus(statuses.UPLOADING);
 			this.r_queue_next();
 		}
 	};

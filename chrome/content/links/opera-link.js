@@ -36,7 +36,7 @@ opl.init = function () {
 
 opl.start = opl.msg_start = function () {
 
-	opl.updateStatus(statuses.DOWNLOADING);
+	opl.updateStatus(statuses.AUTHORIZING);
 
 	// mark enabled
 	if (!opl.enabled) {
@@ -54,7 +54,6 @@ opl.start = opl.msg_start = function () {
 	opl.initial_commit = true;
 
 	// start downloading
-	opl.updateStatus(statuses.DOWNLOADING);
 	opera.link.testAuthorization(opl.authorizationTested);
 };
 
@@ -298,7 +297,7 @@ opl.msg_stop = opl.stop = function () {
 
 	delete localStorage.opl_enabled;
 	opl.enabled = false;
-	remotes_enabled.remove(opl);
+	Array_remove(remotes_enabled, opl);
 
 	opl.updateStatus(statuses.READY);
 }
@@ -367,6 +366,7 @@ opl.authorizationTested = function (authorized) {
 };
 
 opl.loadBookmarks = function () {
+	opl.updateStatus(statuses.DOWNLOADING);
 	opera.link.bookmarks.getAll(opl.bookmarksLoaded);
 };
 

@@ -22,9 +22,44 @@
 
 	<!--
 		Browsers
-		Update when porting to other browsers!
 	-->
-	<script type="text/javascript" src="/chrome/content/browsers/chrome.js"></script> 
+	<script type="text/javascript">
+		document.write('<script type="text/javascript" src="/chrome/content/browsers/'+browser.name+'.js"></'+'script>');
+	</script>
+
+	<!-- Opera code -->
+	<script>
+
+if (browser.name == 'opera') {
+	window.addEventListener("load", function(){
+		var theButton;
+		var ToolbarUIItemProperties = {
+			title: "Sync2all",
+			icon: "/chrome/skin/icon.png",
+			popup: {
+				href: "/chrome/content/popup.html",
+				width: 300,
+				height: 150
+			}
+		}
+		theButton = opera.contexts.toolbar.createItem(ToolbarUIItemProperties);
+		opera.contexts.toolbar.addItem(theButton);
+	}, false);
+
+	function onMessage(event) {
+		console.log('bericht in main:'+event.data);
+	}
+	opera.extension.onmessage = onMessage;
+
+	function onConnect (event) {
+		if (event.origin.indexOf("popup.html") > -1 && event.origin.indexOf('widget://') > -1) {
+			event.source.postMessage('here is the port');
+		} 
+	}
+	opera.extension.onconnect = onConnect;
+}
+
+	</script>
 
 	<!-- sync engine -->
 	<script type="text/javascript" src="/chrome/content/background.js"></script>

@@ -9,7 +9,39 @@ function use_target (target) {
 			target.status = status;
 		}
 		if (!is_popup_open) return;
-		chrome.extension.sendRequest({action: 'updateUi', shortname: target.shortname, left: (target.queue||target.r_queue).length, status: target.status, enabled: target.enabled}, function () {});
+
+		// make make human-readable message
+		var message = 'Not synchronized.';
+		if (target.enabled) {
+			if (target.status == statuses.READY) {
+				message = 'Synchronized.';
+			} else if (target.status == statuses.AUTHORIZING) {
+				message = 'Authorizing...';
+			} else if (target.status == statuses.DOWNLOADING) {
+				message = 'Downloading...';
+			} else if (target.status == statuses.MERGING) {
+				message = 'Syncing...';
+			} else if (target.status == statuses.UPLOADING) {
+				message = 'Uploading ('+(target.queue||target.r_queue).length+' left)...';
+			} else {
+				message = 'Enabled, but unknown status (BUG! status='+target.status+')';
+			}
+		}
+		var btn_start = !target.enabled || !target.status && target.enabled;
+		var btn_stop  = target.enabled && !target.status;
+
+		// send message to specific browsers
+		if (browser.name == 'chrome') {
+			chrome.extension.sendRequest({action: 'updateUi', shortname: target.shortname, message: message, btn_start: btn_start, btn_stop: btn_stop}, function () {});
+		} else if (browser.name == 'firefox') {
+			console.log('update '+target.name+' in firefox');
+			var popupdocument;
+			for (var i=0; popupdocument=popups[i]; i++) {
+				popupdocument.getElementById('sync2all-'+target.shortname+'-status').value = message;
+				popupdocument.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
+				popupdocument.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
+			}
+		}
 	}
 
 	target.mark_state_deleted = function (state) {

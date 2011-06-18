@@ -3,18 +3,21 @@ var SYNC2ALL_CID = Components.ID('{5d20fa2b-38c7-4167-b8f5-d9f26bcbb1bc}');
 var SYNC2ALL_IID = Components.interfaces.nsISync2allService;
 
 var SYNC2ALL_SOURCES = [
+
   // Generic libraries
   'chrome://sync2all/content/globals.js',
   'chrome://sync2all/content/utils.js',
 
   // Specific libraries
   'chrome://sync2all/content/browsers/firefox-localstorage.js',
+  'chrome://sync2all/content/browsers/firefox-console.js',
   'chrome://sync2all/content/oauth.js',
   'chrome://sync2all/content/sha1.js',
   'chrome://sync2all/content/operalink.js',
   'chrome://sync2all/content/target.js',
 
   // links
+  'chrome://sync2all/content/browsers/firefox.js',
   'chrome://sync2all/content/links/google-bookmarks.js',
   'chrome://sync2all/content/links/opera-link.js',
 

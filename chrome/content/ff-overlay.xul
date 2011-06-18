@@ -1,22 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://sync2all/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://sync2all/locale/overlay.dtd">
-<overlay id="sync2all-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<script src="overlay.js"/>
+<overlay id="sync2all-overlay"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<script src="ff-overlay.js"/>
 
 	<stringbundleset id="stringbundleset">
-		<stringbundle id="sync2all-strings" src="chrome://sync2all/locale/overlay.properties"/>
+		<stringbundle id="sync2all-strings"
+				src="chrome://sync2all/locale/overlay.properties"/>
 	</stringbundleset>
 
 
 	<toolbarpalette id="BrowserToolbarPalette">
 		<toolbarbutton id="sync2all-toolbar-button" 
-				label="&sync2allToolbarButton.label;" tooltiptext="&sync2allToolbarButton.tooltip;"
-				type="panel">
-			<panel id="sync2all-popup">
-				<iframe id="sync2all-popup-iframe" flex="1" src="chrome://sync2all/content/popup.html" width="300px" height="150px"/>
-			</panel>
+				label="&sync2allToolbarButton.label;"
+				tooltiptext="&sync2allToolbarButton.tooltip;"
+				type="menu">
+			<menupopup id="sync2all-popup"
+					onpopupshowing="Sync2allService.popupCreated(
+						document);"
+					onpopuphidden="Sync2allService.popupClosed(
+						document);">
+				<vbox>
+					<vbox id="sync2all-gbm">
+						<hbox>
+							<label value="Google Bookmarks"/>
+							<spacer flex="1"/>
+							<label id="sync2all-gbm-status" value="Loading..." disabled="true"/>
+						</hbox>
+						<hbox align="end">
+							<button id="sync2all-gbm-button-start" label="(Re)synchronize"/>
+							<button id="sync2all-gbm-button-stop"  label="Disable"/>
+						</hbox>
+					</vbox>
+					<menuseparator/>
+					<vbox id="sync2all-opl">
+						<hbox>
+							<label value="Opera Link"/>
+							<spacer flex="1"/>
+							<label id="sync2all-opl-status" value="Loading..." disabled="true"/>
+						</hbox>
+						<hbox align="end">
+							<button id="sync2all-opl-button-start" label="(Re)synchronize"/>
+							<button id="sync2all-opl-button-stop"  label="Disable"/>
+						</hbox>
+					</vbox>
+				</vbox>
+			</menupopup>
 		</toolbarbutton>
   </toolbarpalette>
 

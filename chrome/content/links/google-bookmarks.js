@@ -234,7 +234,7 @@ gbm.stop = gbm.msg_stop = function () {
 
 	delete localStorage['gbm_enabled'];
 	gbm.enabled = false;
-	remotes_enabled.remove(gbm);
+	Array_remove(remotes_enabled, gbm);
 
 	gbm.updateStatus();
 };
@@ -330,8 +330,7 @@ gbm.onRssLoaded = function () {
 	if (gbm.reqRss.readyState != 4) return;
 
 	// readyState = 4
-	downloading = false;
-	update_ui();
+	gbm.updateStatus(statuses.SYNCING);
 
 	if (gbm.reqRss.status != 200) {
 		alert('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
@@ -390,7 +389,7 @@ gbm.bm_del = function (target, bookmark) {
 	var gbookmark = gbm.urls[bookmark.url];
 
 	// delete this label
-	gbookmark.remove(bookmark);
+	Array_remove(gbookmark, bookmark);
 
 	// if there are no labels left (most often: yes, because most often
 	// bookmarks have only one label)
@@ -434,7 +433,7 @@ gbm.bm_mod_title = function (target, bm, oldtitle) {
 gbm.bm_mod_url = function (target, bm, oldurl) {
 	// nearly a copy of gbm.bm_del, unfortunately
 	oldgbookmark = gbm.urls[oldurl];
-	oldgbookmark.remove(bm);
+	Array_remove(oldgbookmark, bm);
 	if (!oldgbookmark.length) {
 		gbm.delete_bookmark(oldgbookmark.id);
 	} else {

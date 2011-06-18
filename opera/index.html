@@ -2,33 +2,6 @@
 <html lang="en">
   <head>
     <script>
-window.addEventListener("load", function(){
-	var theButton;
-	var ToolbarUIItemProperties = {
-		title: "Sync2all",
-		icon: "/chrome/skin/icon.png",
-		popup: {
-			href: "/chrome/content/popup.html",
-			width: 300,
-			height: 150
-		}
-	}
-	theButton = opera.contexts.toolbar.createItem(ToolbarUIItemProperties);
-	opera.contexts.toolbar.addItem(theButton);
-}, false);
-
-function onMessage(event) {
-	console.log('bericht in main:'+event.data);
-}
-opera.extension.onmessage = onMessage;
-
-function onConnect (event) {
-	if (event.origin.indexOf("popup.html") > -1 && event.origin.indexOf('widget://') > -1) {
-		event.source.postMessage('here is the port');
-	} 
-}
-opera.extension.onconnect = onConnect;
-
 
     </script>
   </head>

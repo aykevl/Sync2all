@@ -7,18 +7,20 @@ if (browser.name == 'chrome') {
 } else if (browser.name == 'firefox') {
 	current_browser = fx;
 	remotes = [gbm, opl];
+} else if (browser.name == 'opera') {
+	current_browser = opl;
+	remotes = [gbm];
 }
 var remotes_enabled = [];
 var remotes_by_name = {gbm: gbm, opl: opl};
-var local   = gchr; // TODO make more flexible in the future (for Firefox support)
 var remotes_finished;
+
+// global variables about the popup
+var popups = [];
+var is_popup_open = false;
 
 var g_bookmarks; // global bookmarks
 var g_bookmark_ids;
-
-
-// boolean value whether the popup is open
-var is_popup_open = false;
 
 
 /* = Nodes =
@@ -48,25 +50,29 @@ var lastSync      = 0; //localStorage['lastSync'];
 var syncing = false;     // if doing some work locally (or when syncing full)
 var downloading = false; // if downloading bookmarks*/
 
-// update the popup UI
-function update_ui() {
-	chrome.extension.sendRequest({action: 'updateUi'}, function () {});
-}
-
 // these functions are called when the popup is created or closed
 
-function popupCreated() {
+function popupCreated(popup) {
 	console.log('Popup created.');
+	if (browser.name == 'firefox') {
+		popups.push(popup);
+	}
 	is_popup_open = true;
+
 	var link;
 	for (var i=0; link=remotes[i]; i++) {
 		link.updateStatus();
-	}
-}
+	}}
 
-function popupClosed() {
+function popupClosed(popup) {
 	console.log('Popup closed.');
-	is_popup_open = false;
+	if (browser.name == 'firefox') {
+		Array_remove(popups, popup);
+		is_popup_open = popups.length;
+	} else {
+		is_popup_open = false;
+	}
+
 }
 
 
@@ -231,7 +237,6 @@ function dump_all() {
 
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
 function initSync () {
-	update_ui();
 
 	remotes_finished = [];
 
