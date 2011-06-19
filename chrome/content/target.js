@@ -11,14 +11,16 @@ function use_target (target) {
 		if (!is_popup_open) return;
 
 		// make make human-readable message
-		var message = 'Not synchronized.';
+		var message = 'Not synchronized';
 		if (target.enabled) {
 			if (target.status == statuses.READY) {
-				message = 'Synchronized.';
+				message = 'Synchronized';
 			} else if (target.status == statuses.AUTHORIZING) {
 				message = 'Authorizing...';
 			} else if (target.status == statuses.DOWNLOADING) {
 				message = 'Downloading...';
+			} else if (target.status == statuses.PARSING) {
+				message = 'Parsing bookmarks data...';
 			} else if (target.status == statuses.MERGING) {
 				message = 'Syncing...';
 			} else if (target.status == statuses.UPLOADING) {

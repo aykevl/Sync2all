@@ -3,8 +3,9 @@ var statuses = {
 	READY:       0,
 	AUTHORIZING: 1,
 	DOWNLOADING: 2,
-	MERGING:     3,
-	UPLOADING:   4,
+	PARSING:     3,
+	MERGING:     4,
+	UPLOADING:   5,
 }
 
 var browser = {};

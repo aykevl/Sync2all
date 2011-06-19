@@ -266,6 +266,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 	}
 
 	var bm_elements = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');
+	var bm_element;
 	for (var i=0; bm_element=bm_elements[i]; i++) {
 		var title     =          bm_element.getElementsByTagName('title'    )[0].firstChild.nodeValue;
 		var url       =          bm_element.getElementsByTagName('url'      )[0].firstChild.nodeValue;
@@ -330,7 +331,7 @@ gbm.onRssLoaded = function () {
 	if (gbm.reqRss.readyState != 4) return;
 
 	// readyState = 4
-	gbm.updateStatus(statuses.SYNCING);
+	gbm.updateStatus(statuses.PARSING);
 
 	if (gbm.reqRss.status != 200) {
 		alert('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
@@ -345,7 +346,9 @@ gbm.onRssLoaded = function () {
 gbm.parseRssBookmarks = function (xmlTree) {
 	try {
 		var channel = xmlTree.firstChild.firstChild;
-		gbm.sig     = channel.getElementsByTagName('signature')[0].firstChild.nodeValue;
+		var sig_element = channel.getElementsByTagName('signature')[0] ||
+			channel.getElementsByTagName('smh:signature')[0]; // firefox
+		gbm.sig     = sig_element.firstChild.nodeValue;
 	} catch (err) {
 		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;

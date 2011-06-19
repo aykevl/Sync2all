@@ -9,8 +9,7 @@ var SYNC2ALL_SOURCES = [
   'chrome://sync2all/content/utils.js',
 
   // Specific libraries
-  'chrome://sync2all/content/browsers/firefox-localstorage.js',
-  'chrome://sync2all/content/browsers/firefox-console.js',
+  'chrome://sync2all/content/browsers/firefox-fixes.js',
   'chrome://sync2all/content/oauth.js',
   'chrome://sync2all/content/sha1.js',
   'chrome://sync2all/content/operalink.js',
@@ -67,6 +66,19 @@ var Sync2all_source;
 for (var i=0; Sync2all_source=SYNC2ALL_SOURCES[i]; i++) {
 	loader.loadSubScript(Sync2all_source, nsSync2allService.prototype);
 }
+
+// Start sync after a while (1 second)
+// https://developer.mozilla.org/en/NsITimer#Example
+// TODO do this in the startup-notifications
+var Sync2all_event = {
+	notify: function (timer) {
+		nsSync2allService.prototype.onLoad();
+	}
+}
+var timer = Components.classes["@mozilla.org/timer;1"]
+           .createInstance(Components.interfaces.nsITimer);
+timer.initWithCallback(Sync2all_event, 1000,
+		Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 
 var nsSync2allServiceModule = {
   registerSelf: function(compMgr, fileSpec, location, type) {

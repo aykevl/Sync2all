@@ -371,6 +371,7 @@ opl.loadBookmarks = function () {
 };
 
 opl.bookmarksLoaded = function (result) {
+	opl.updateStatus(statuses.PARSING);
 	opl.parse_bookmarks(result.response, opl.bookmarks);
 	opl.finished_start();
 };

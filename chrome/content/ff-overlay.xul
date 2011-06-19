@@ -2,36 +2,43 @@
 <?xml-stylesheet href="chrome://sync2all/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://sync2all/locale/overlay.dtd">
 <overlay id="sync2all-overlay"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<script src="ff-overlay.js"/>
 
 	<stringbundleset id="stringbundleset">
 		<stringbundle id="sync2all-strings"
-				src="chrome://sync2all/locale/overlay.properties"/>
+			src="chrome://sync2all/locale/overlay.properties"/>
 	</stringbundleset>
 
 
 	<toolbarpalette id="BrowserToolbarPalette">
 		<toolbarbutton id="sync2all-toolbar-button" 
-				label="&sync2allToolbarButton.label;"
-				tooltiptext="&sync2allToolbarButton.tooltip;"
-				type="menu">
+			label="&sync2allToolbarButton.label;"
+			tooltiptext="&sync2allToolbarButton.tooltip;"
+			type="menu">
 			<menupopup id="sync2all-popup"
-					onpopupshowing="Sync2allService.popupCreated(
-						document);"
-					onpopuphidden="Sync2allService.popupClosed(
-						document);">
+				onpopupshowing="Sync2allService.popupCreated(
+					document);"
+				onpopuphidden="Sync2allService.popupClosed(
+					document);">
 				<vbox>
 					<vbox id="sync2all-gbm">
 						<hbox>
 							<label value="Google Bookmarks"/>
 							<spacer flex="1"/>
-							<label id="sync2all-gbm-status" value="Loading..." disabled="true"/>
+							<label id="sync2all-gbm-status" value="Loading..."
+								disabled="true"/>
 						</hbox>
 						<hbox align="end">
 							<spacer flex="1"/>
-							<button id="sync2all-gbm-button-start" label="(Re)synchronize"/>
-							<button id="sync2all-gbm-button-stop"  label="Disable"/>
+							<button id="sync2all-gbm-button-start"
+								label="(Re)synchronize"
+								disabled="true"
+								oncommand="Sync2allService.remotes_by_name.gbm.msg_start()"/>
+							<button id="sync2all-gbm-button-stop"
+								label="Disable"
+								disalbled="true"
+								oncommand="Sync2allService.gbm.msg_stop();"/>
 						</hbox>
 					</vbox>
 					<menuseparator/>
@@ -39,12 +46,19 @@
 						<hbox>
 							<label value="Opera Link"/>
 							<spacer flex="1"/>
-							<label id="sync2all-opl-status" value="Loading..." disabled="true"/>
+							<label id="sync2all-opl-status" value="Loading..."
+									disabled="true"/>
 						</hbox>
 						<hbox align="end">
 							<spacer flex="1"/>
-							<button id="sync2all-opl-button-start" label="(Re)synchronize"/>
-							<button id="sync2all-opl-button-stop"  label="Disable"/>
+							<button id="sync2all-opl-button-start"
+								label="(Re)synchronize"
+								disabled="true"
+								oncommand="Sync2allService.opl.msg_start()"/>
+							<button id="sync2all-opl-button-stop"
+								label="Disable"
+								disabled="true"
+								oncommand="Sync2allService.opl.msg_stop();"/>
 						</hbox>
 					</vbox>
 				</vbox>
