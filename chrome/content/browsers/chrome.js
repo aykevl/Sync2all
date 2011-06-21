@@ -18,7 +18,7 @@ chrome.extension.onRequest.addListener(onRequest);
 /* Chrome link below. */
 
 // prefix: gchr (Google CHRome)
-gchr = {};
+var gchr = {};
 
 gchr.name = 'Google Chrome';
 gchr.shortname = 'gchr';

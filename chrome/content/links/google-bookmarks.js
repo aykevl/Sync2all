@@ -6,7 +6,7 @@ See http://www.mmartins.com/mmartins/googlebookmarksapi/
 for details of the Google Bookmarks API
 */
 
-gbm = {};
+var gbm = {};
 
 gbm.name = 'Google Bookmarks';
 gbm.shortname = 'gbm';

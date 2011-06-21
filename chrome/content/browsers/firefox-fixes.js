@@ -53,9 +53,11 @@ function confirm(s) {
 	return promptService.confirm(null, "Sync2all prompt", s);
 }
 
-function setTimeout(func, interval) {
+function setTimeout(callback, interval) {
 	var timer = Components.classes["@mozilla.org/timer;1"]
 			   .createInstance(Components.interfaces.nsITimer);
-	timer.initWithCallback({notify: func}, interval,
+	// ensure callback isn't undefined (I had this error once... hard to debug!)
+	if (!callback) throw 'TypeError: callback is undefined';
+	timer.initWithCallback({notify: callback}, interval,
 			Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 }

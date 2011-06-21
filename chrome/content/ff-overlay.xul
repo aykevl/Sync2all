@@ -34,7 +34,7 @@
 							<button id="sync2all-gbm-button-start"
 								label="(Re)synchronize"
 								disabled="true"
-								oncommand="Sync2allService.remotes_by_name.gbm.msg_start()"/>
+								oncommand="Sync2allService.gbm.msg_start()"/>
 							<button id="sync2all-gbm-button-stop"
 								label="Disable"
 								disalbled="true"

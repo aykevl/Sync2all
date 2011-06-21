@@ -12,7 +12,6 @@ if (browser.name == 'chrome') {
 	remotes = [gbm];
 }
 var remotes_enabled = [];
-var remotes_by_name = {gbm: gbm, opl: opl};
 var remotes_finished;
 
 // global variables about the popup
@@ -241,6 +240,13 @@ function initSync () {
 	remotes_finished = [];
 
 	startSync = 0; // will be updated when targets are synchronized
+
+	// initialize when needed
+	if (current_browser.init) {
+		current_browser.init();
+	}
+
+	// and start the browser link
 	current_browser.start();
 }
 
