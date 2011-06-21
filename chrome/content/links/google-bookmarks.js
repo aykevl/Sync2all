@@ -205,9 +205,12 @@ gbm.calculate_actions = function (state, folder) {
 			// browser link should take care of it.
 			if (g_bookmark_ids[substate.id]) continue;
 
-			// mark all bookmarks inside it as deleted, and mark all folders as
-			// 'delete-if-empty'
-			gbm.mark_state_deleted(substate);
+			// if this folder exists in the browser...
+			if (current_browser.ids[substate]) {
+				// mark all bookmarks inside it as deleted, and mark all folders as
+				// 'delete-if-empty'
+				gbm.mark_state_deleted(substate);
+			}
 
 			// don't recurse, because folder.f[title] doesn't exist
 			// (g_bookmark_ids[substate.id] can't be used because
