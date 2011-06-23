@@ -14,7 +14,11 @@ var oauth;
 
 // fix opera.link for Google Chrome
 opera.link.authorizeFunction = function (url) {
-	chrome.tabs.create({url: url});
+	if (browser.name == 'chrome') {
+		chrome.tabs.create({url: url});
+	} else if (browser.name == 'firefox') {
+		getBrowser().addTab(url);
+	}
 }
 
 opl.init = function () {
@@ -26,6 +30,7 @@ opl.init = function () {
 	opl.status = statuses.READY;
 
 	opl.authorized = false;
+	opl.disable();
 
 	// start if enabled
 	if (opl.enabled) {

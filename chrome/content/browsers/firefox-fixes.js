@@ -19,7 +19,11 @@ if (!console) {
 		warn: function (s) {
 			//dump('WARN:\t'+s+'\n');
 			nsIConsoleService.logStringMessage(s);
-		}
+		},
+		trace: function () {
+			// isn't possible?
+			// Ignore for now.
+		},
 	};
 }
 

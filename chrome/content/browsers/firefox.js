@@ -14,6 +14,8 @@ var fx = {
 
 	start: function () {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.toolbarFolder};
+		fx.ids = {};
+		fx.ids[fx.bookmarks.id] = fx.bookmarks;
 		fx.getTree();
 		target_finished(fx);
 	},
@@ -42,10 +44,12 @@ var fx = {
 				var subfolder = {title: node.title, id: node.itemId,
 					bm: {}, f: {}};
 				folder.f[subfolder.title] = subfolder;
+				fx.ids[subfolder.id] = subfolder;
 				fx.getSubTree(subfolder);
 			} else if (node.type == node.RESULT_TYPE_URI) {
-				var bm = {title: node.title, id: node.itemId, url: node.uri};
+				var bm = {title: node.title, id: node.itemId, url: node.uri, parentNode: folder};
 				folder.bm[node.uri] = bm;
+				fx.ids[bm.id] = bm;
 			}
 		}
 
@@ -55,12 +59,16 @@ var fx = {
 	
 	f_add: function (link, folder) {
 		folder.id = fx.bmsvc.createFolder(folder.parentNode.id, folder.title, fx.bmsvc.DEFAULT_INDEX)
+		fx.ids[folder.id] = folder;
 	},
 
 	bm_add: function (link, bm) {
 		var uri = fx.ios.newURI(bm.url, null, null);
 		bm.id = fx.bmsvc.insertBookmark(bm.parentNode.id, uri, fx.bmsvc.DEFAULT_INDEX, bm.title);
+		fx.ids[bm.id] = bm;
 	},
+	commit: false, // not needed in firefox
+	finished_sync: false,
 }
 
 use_target(fx);

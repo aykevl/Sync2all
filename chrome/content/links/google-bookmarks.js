@@ -204,7 +204,7 @@ gbm.calculate_actions = function (state, folder) {
 		if (!folder.f[title]) {
 			// if this is true, the folder has been moved or renamed and the
 			// browser link should take care of it.
-			if (g_bookmark_ids[substate.id]) continue;
+			if (current_browser.ids[substate.id]) continue;
 
 			// if this folder exists in the browser...
 			if (current_browser.ids[substate]) {
@@ -214,7 +214,7 @@ gbm.calculate_actions = function (state, folder) {
 			}
 
 			// don't recurse, because folder.f[title] doesn't exist
-			// (g_bookmark_ids[substate.id] can't be used because
+			// (current_browser.ids[substate.id] can't be used because
 			// folder.f[title] is part of gbm.bookmarks
 			continue;
 		}
@@ -515,6 +515,9 @@ gbm.bookmark_get_labels = function (url) {
 	var gbookmark;
 	for (var i=0; gbookmark=gbm.urls[url][i]; i++) {
 		var folder = gbookmark.parentNode;
+		if (!folder) {
+			throw 'undefined folder, bm url='+url;
+		}
 		if (folder == g_bookmarks) {
 			label = gbm.rootNodeLabel;
 		} else {
