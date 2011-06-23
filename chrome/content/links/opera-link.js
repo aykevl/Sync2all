@@ -30,7 +30,6 @@ opl.init = function () {
 	opl.status = statuses.READY;
 
 	opl.authorized = false;
-	opl.disable();
 
 	// start if enabled
 	if (opl.enabled) {
