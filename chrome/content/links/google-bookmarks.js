@@ -29,7 +29,8 @@ gbm.defaults = {
 	'gbm_lastSync':      0,
 }
 for (default_key in gbm.defaults) {
-	if (localStorage[default_key] === undefined) {
+	if (localStorage[default_key] === undefined ||
+		localStorage[default_key] === null) {
 		localStorage[default_key] = gbm.defaults[default_key];
 	}
 }

@@ -2,16 +2,23 @@
 // Make a generic console. Outputs to the system console
 // TODO: dump to error console
 // TODO: use a 'debugging' flag
+var nsIConsoleService = Components.classes["@mozilla.org/consoleservice;1"]
+    .getService(Components.interfaces.nsIConsoleService);
+
 if (!console) {
 	var console = {
 		log: function (s) {
 			dump('INFO:\t'+s+'\n');
+			//Components.utils.reportMessage(s);
+			//nsIConsoleService.logStringMessage(s);
 		},
 		error: function (s) {
-			dump('ERR:\t'+s+'\n');
+			//dump('ERR:\t'+s+'\n');
+			Components.utils.reportError(s);
 		},
 		warn: function (s) {
-			dump('WARN:\t'+s+'\n');
+			//dump('WARN:\t'+s+'\n');
+			nsIConsoleService.logStringMessage(s);
 		}
 	};
 }

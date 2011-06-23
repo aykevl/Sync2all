@@ -5,13 +5,15 @@ var fx = {
 
 	init: function () {
 		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
-		                   .getService(Components.interfaces.nsINavHistoryService);
-		fx.bookmarksService = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
+		                              .getService(Components.interfaces.nsINavHistoryService);
+		fx.bmsvc = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
 		                     .getService(Components.interfaces.nsINavBookmarksService);
+		fx.ios = Components.classes["@mozilla.org/network/io-service;1"]
+		                    .getService(Components.interfaces.nsIIOService);
 	},
 
 	start: function () {
-		fx.bookmarks = {bm: {}, f: {}, id: fx.bookmarksService.toolbarFolder};
+		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.toolbarFolder};
 		fx.getTree();
 		target_finished(fx);
 	},
@@ -49,6 +51,15 @@ var fx = {
 
 		// close a container after using it!
 		fx_folder.containerOpen = false;
+	},
+	
+	f_add: function (link, folder) {
+		folder.id = fx.bmsvc.createFolder(folder.parentNode.id, folder.title, fx.bmsvc.DEFAULT_INDEX)
+	},
+
+	bm_add: function (link, bm) {
+		var uri = fx.ios.newURI(bm.url, null, null);
+		bm.id = fx.bmsvc.insertBookmark(bm.parentNode.id, uri, fx.bmsvc.DEFAULT_INDEX, bm.title);
 	},
 }
 

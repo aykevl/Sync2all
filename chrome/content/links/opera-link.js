@@ -99,7 +99,7 @@ opl.finished_start = function () {
 	opl.updateStatus(statuses.MERGING);
 
 	// mark as ready
-	target_finished(opl); // DEBUG
+	target_finished(opl);
 	
 	// set status to finished
 	opl.updateStatus(statuses.READY);

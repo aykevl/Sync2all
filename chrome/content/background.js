@@ -88,7 +88,8 @@ function call_all(funcname, target, params) { // function will not be called on 
 		func = remote[funcname];
 		if (func == false) continue; // marked as not available;
 		if (func == undefined) {
-			console.log('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
+			console.warn('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
+			remote[funcname] = false; // prevent future logs causing lots of data
 			continue;
 		}
 
@@ -302,7 +303,7 @@ function apply_action (link, action) {
 			arg = current_browser.ids[arg];
 		}
 		if (!arg) {
-			console.log('WARNING: action could not be applied (link: '+link.name+'):');
+			console.warn('WARNING: action could not be applied (link: '+link.name+'):');
 			console.log(action);
 			return; // WARNING: errors may not be catched!
 		}
