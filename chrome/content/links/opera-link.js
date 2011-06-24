@@ -12,13 +12,14 @@ use_queue(opl);
 
 var oauth;
 
-// fix opera.link for Google Chrome
+// fix opera.link for specific browsers
 opera.link.authorizeFunction = function (url) {
 	if (browser.name == 'chrome') {
 		chrome.tabs.create({url: url});
 	} else if (browser.name == 'firefox') {
 		getBrowser().addTab(url);
 	}
+	// Opera is the default, so no fixing required
 }
 
 opl.init = function () {
@@ -306,13 +307,18 @@ opl.msg_stop = opl.stop = function () {
 	opl.updateStatus(statuses.READY);
 }
 
+// Callback for when the request tokens have been got.
 opl.requestTokenCallback = function (e) {
 	// save temporary tokens tokens
 	opl.requestToken = e.token;
 	opl.requestTokenSecret = e.secret;
 
 	// listen to the verifier from the content script
-	chrome.extension.onRequest.addListener(opl.onRequest);
+	if (browser.name == 'chrome') {
+		chrome.extension.onRequest.addListener(opl.onRequest);
+	} else if (browser.name == 'opera') {
+		console.log('TODO: opera content scripts');
+	}
 };
 
 
@@ -359,6 +365,8 @@ opl.accessTokenError = function (e) {
 	alert('There was an error while connecting to Opera Link. See the log for details.');
 };
 
+// callback after it has been tested whether the user is logged in.
+// #authorized Whether or not the user is authorized
 opl.authorizationTested = function (authorized) {
 	if (authorized) {
 		opl.authorized = true;

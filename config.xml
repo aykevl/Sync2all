@@ -4,6 +4,8 @@
 	<description>Synchronizes bookmarks (and in the future other browsing data such as history and cookies) to other browsers. Currently supported: Google Bookmarks and Opera Link.</description>
 	<author href="https://profiles.google.com/u/0/aykevanlaethem" email="aykevanlaethem@gmail.com">Ayke van Laëthem</author>
 	<access origin="https://link.api.opera.com/" subdomains="true"/>
+	<access origin="https://auth.opera.com/" subdomains="true"/>
+	<access origin="https://google.com/" subdomains="true"/>
 	<icon src="/chrome/skin/icon64.png"/>
 	<content src="/background.html"/>
 </widget>
