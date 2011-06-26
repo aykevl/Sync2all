@@ -27,13 +27,19 @@ Supported. This was the first browser I made the extension on. Initially, I want
 
 === Firefox ===
 
-I'm working on it. It uses an XPCOM component as background page.
+First version works!. It has lots of bugs and a lot of functionality is not supported, but that it works is the most important thing. I wouldn't recommend to use it except when you want to debug and/or help developing the extension. And always make a backup of your bookmarks before you loose them (or make a complete mess of it).
+
+Opera Link does currently not work in Firefox, because I need to be able to open a tab and use something like content scripts (or something else, I don't know) to get OAuth working. Google Bookmarks is much easier.
+
+It uses an XPCOM component as background page.
 
 === Opera ===
 
 Work in progress. It is currently only useful to make such an extension for syncing Opera (Link) with Google Bookmarks. It would be much easier to just use Opera's built-in bookmarks system, but that is currently not possible.
 
 == Installation ==
+
+Download the .zip file (the big 'Download' button on the Github page -- this page) and rename the .zip to .crx (Chrome) or .xpi (Firefox) and open it with the browser. That works for Chrome, but doesn't for Firefox for some reason (says the file is corrupt?).
 
 
 == Credits ==
