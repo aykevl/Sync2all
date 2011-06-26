@@ -4,7 +4,7 @@
     <em:id>sync2all@github.com</em:id>
     <em:type>2</em:type>
     <em:name>Sync2all</em:name>
-    <em:version>0.2</em:version>
+    <em:version>0.3</em:version>
     <em:creator>Ayke van Laëthem</em:creator>
     <em:contributor></em:contributor>
     <em:description>Synchronizes bookmarks (and in the future other browsing data such as history and cookies) to other browsers. Currently supported: Google Bookmarks and Opera Link.</em:description>
@@ -12,7 +12,7 @@
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
-        <em:minVersion>4.0</em:minVersion>
+        <em:minVersion>5.0</em:minVersion>
         <em:maxVersion>6.0</em:maxVersion>
       </Description>
     </em:targetApplication>

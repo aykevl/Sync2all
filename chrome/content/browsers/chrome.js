@@ -164,7 +164,7 @@ gchr.f_add  = function (source, folder) {
 							gchr.queue_next();
 						});
 			}, folder);
-}
+};
 
 gchr.f_del = function (source, folder) {
 	// remove own references
@@ -177,7 +177,7 @@ gchr.f_del = function (source, folder) {
 				chrome.bookmarks.removeTree(folder.id);
 				gchr.queue_next();
 			}, folder);
-}
+};
 
 gchr.bm_add = function (source, bm, lfolder) {
 	if (!lfolder) lfolder = bm.parentNode;

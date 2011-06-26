@@ -143,9 +143,6 @@ function use_queue (obj) {
 	
 	obj.queue_add = function (callback, data) {
 		this.queue.push([callback, data]);
-		/*if (!this.queue.running) {
-			this.queue_start();
-		}*/ // will be started by commit();
 	};
 
 	obj.queue_start = function () {

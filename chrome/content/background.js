@@ -17,6 +17,7 @@ var remotes_finished;
 // global variables about the popup
 var popups = [];
 var is_popup_open = false;
+var update_batch = false;
 
 var g_bookmarks; // global bookmarks
 var g_bookmark_ids;
@@ -79,16 +80,25 @@ function onLoad() {
 	initSync();
 }
 
-function call_all(funcname, target, params) { // function will not be called on target, this indicates the target where it is already noted
+function call_all(funcname, link, params) {
+	// link should be defined
+	if (!link && link != null) {
+		console.err('BUG: link is not defined in call_all()');
+	}
+
+	// first parameter should be the link
+	if (params) params.unshift(link); // add link at the start
+
 	var remote;
-	if (params) params.unshift(target); // add target at the start
 	for (var i=0; remote=remotes_finished[i]; i++) {
-		if (remote == target) continue; // if this is the target where the call comes from
+		// if this is the link where the call comes from
+		// Report changes when the link is syncing, it needs to know that
+		if (remote == link && !link.has_own_data) continue;
 
 		func = remote[funcname];
 		if (func == false) continue; // marked as not available;
 		if (func == undefined) {
-			console.warn('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
+			console.err('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
 			remote[funcname] = false; // prevent future logs causing lots of data
 			continue;
 		}
@@ -109,7 +119,12 @@ function call_all(funcname, target, params) { // function will not be called on 
 }
 
 function commit() {
-	call_all('commit');
+	// when update_batch is true, a batch of updates is in progress.
+	// It is better when we wait till that has finished before we commit
+	// everyting (for example, Google Bookmarks is efficienter in that case).
+	// When the batch has been finished, commit() will be called again.
+	if (update_batch) return;
+	call_all('commit', null);
 }
 
 // Bookmark-tree modifying:
@@ -255,6 +270,12 @@ function target_finished(link) {
 
 	remotes_finished.push(link);
 
+	// update internal data to use objects from g_bookmarks and not
+	// from it's own data.
+	if (link.update_data) {
+		link.update_data();
+	}
+
 	// apply actions
 	if (link.actions) {
 		var action;
@@ -262,11 +283,6 @@ function target_finished(link) {
 
 			apply_action(link, action);
 		}
-	}
-	// update internal data to use objects from g_bookmarks and not
-	// from it's own data.
-	if (link.update_data) {
-		link.update_data();
 	}
 
 	// merge bookmarks etc.
@@ -286,7 +302,7 @@ function target_finished(link) {
 	// is the syncing finished? Commit changes!
 	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
 		commit();
-		call_all('finished_sync');
+		call_all('finished_sync', null);
 	}
 }
 
@@ -562,10 +578,10 @@ function delRBookmark(target, bookmark, lfolder) {
 	// bookmark doesn't exist locally, so no removing required
 	return 0;
 }
-function pushRBookmark(target, bookmark, lfolder) {
+function pushRBookmark(link, bookmark, lfolder) {
 	console.log('New remote bookmark: '+bookmark.url);
 	bookmark.parentNode = lfolder;
-	addBookmark(target, bookmark);
+	addBookmark(link, bookmark);
 	return 1;
 }
 

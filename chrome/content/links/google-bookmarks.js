@@ -11,14 +11,22 @@ var gbm = {};
 gbm.name = 'Google Bookmarks';
 gbm.shortname = 'gbm';
 
-// imports
+
+/* imports */
+
 use_target(gbm);
 use_rqueue(gbm);
+
+
+/* constants */
 
 gbm.api_url = 'https://www.google.com/bookmarks/mark';
 gbm.labels;         // kind of label cache
 // Copied from GMarks, from the top of the file components/nsIGmarksCom_google.js
 gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarksbkmklet";
+// whether or not this link has it's own data structures and needs to be
+// notified of changes that it has posted itself
+gbm.has_own_data = true;
 
 
 // set default options
@@ -139,8 +147,9 @@ gbm.finished_start = function () {
 }*/
 
 gbm.update_data = function () {
+	console.log('gbm: updating data structures...');
 	gbm.update_urls(g_bookmarks);
-}
+};
 gbm.update_urls = function (folder) {
 	for (url in folder.bm) {
 		gbm.added_bookmark(folder.bm[url]);
@@ -150,11 +159,12 @@ gbm.update_urls = function (folder) {
 	}
 };
 
-// the (re)synchronisation has finished (all bookmarks are merged, committing is in progress)
+// the (re)synchronisation has finished (all bookmarks are merged,
+// committing is in progress)
 gbm.finished_sync = function () {
 
 	// clear unused memory
-	//delete gbm.bookmarks;
+	delete gbm.bookmarks;
 	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
 	delete gbm.labels;
 };
@@ -168,7 +178,7 @@ gbm.save_state = function () {
 	gbm.get_state(state, g_bookmarks);
 	localStorage['gbm_state'] = JSON.stringify(state);
 	delete state; // not really needed
-}
+};
 
 gbm.get_state = function (state, folder) {
 	state.id = folder.id;
@@ -384,8 +394,11 @@ gbm.added_bookmark = function (bm) {
 
 
 gbm.bm_add = function (target, bookmark) {
-
 	gbm.added_bookmark(bookmark);
+
+	// if this is a known change
+	if (target == gbm) return;
+
 	gbm.changed[bookmark.url] = bookmark;
 	
 };
@@ -398,21 +411,20 @@ gbm.bm_del = function (target, bookmark) {
 	// delete this label
 	Array_remove(gbookmark, bookmark);
 
+	// if this is a known change
+	if (target == gbm) return;
+
 	// if there are no labels left (most often: yes, because most often
 	// bookmarks have only one label)
-	if (!gbookmark.length) {
-		// no labels, delete this bookmark
-		gbm.delete_bookmark(gbookmark.id);
-	} else {
-		// has still at least one label, upload again (changing the
-		// bookmark)
-		gbm.upload_bookmark(bookmark);
-	}
+	gbm.changed[bookmark.url] = bookmark;
 }
 
 gbm.f_add = false; // doesn't need implementing
 
 gbm.f_del = function (target, folder) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	for (url in folder.bm) {
 		gbm.bm_del(target, folder.bm[url]);
 	}
@@ -422,10 +434,16 @@ gbm.f_del = function (target, folder) {
 };
 
 gbm.bm_mv = function (target, bm, oldParent) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	gbm.changed[bm.url] = bm;
 }
 
 gbm.f_mv = function (target, folder, oldParent) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	gbm.upload_all(folder); // FIXME there is a better way, see below, but it doesn't work. Make it work.
 	/*
 	var oldlabel = oldParent == g_bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
@@ -434,10 +452,16 @@ gbm.f_mv = function (target, folder, oldParent) {
 };
 
 gbm.bm_mod_title = function (target, bm, oldtitle) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	gbm.changed[bm.url] = bm;
 };
 
 gbm.bm_mod_url = function (target, bm, oldurl) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	// nearly a copy of gbm.bm_del, unfortunately
 	oldgbookmark = gbm.urls[oldurl];
 	Array_remove(oldgbookmark, bm);
@@ -452,12 +476,16 @@ gbm.bm_mod_url = function (target, bm, oldurl) {
 
 // title changed
 gbm.f_mod_title = function (target, folder, oldtitle) {
+	// if this is a known change
+	if (target == gbm) return;
+
 	gbm.upload_all(folder);
 };
 
 // do an upload (for when an bookmark has been created/updated/label deleted)
 // this needs a bookmark object because it uploads the latest title of the bookmark
 gbm.upload_bookmark = function (bookmark) {
+	console.log('gbm: upload_bookmark');
 	var labels = gbm.bookmark_get_labels(bookmark.url);
 	gbm.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
 			function (request) {
@@ -467,6 +495,7 @@ gbm.upload_bookmark = function (bookmark) {
 
 // this doesn't need a dictionary of changes, because they will be removed anyway
 gbm.delete_bookmark = function (id) {
+	console.log('gbm: delete_bookmark');
 	gbm.add_to_queue({dlq: id});
 };
 
@@ -480,13 +509,19 @@ gbm.upload_all = function (folder) {
 };
 
 gbm.commit = function () {
-	//return; // DEBUG FIXME TODO
 	var has_changes = false;
 	for (url in gbm.changed) {
 		has_changes = true;
 
-		// gbm.changed contains the real urls, as in g_bookmarks
-		gbm.upload_bookmark(gbm.changed[url]);
+		var gbookmark = gbm.urls[url];
+		if (!gbookmark.length) {
+			// no labels, delete this bookmark
+			gbm.delete_bookmark(gbookmark.id);
+		} else {
+			// has still at least one label, upload  (changing the
+			// bookmark).
+			gbm.upload_bookmark(gbm.changed[url]);
+		}
 	}
 	if (!has_changes && gbm.initial_commit) {
 		gbm.save_state();

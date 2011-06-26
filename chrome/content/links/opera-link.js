@@ -511,6 +511,7 @@ opl.itemUpdated = function (result) {
 
 opl.bm_add = function (target, bm, folder) {
 	if (!folder) var folder = bm.parentNode;
+	if (bm.opl_id) return; // already uploaded
 	opl.queue_add(
 			function (bm) {
 				if (!folder.opl_id && folder != g_bookmarks) {
