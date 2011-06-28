@@ -129,7 +129,7 @@ var fx = {
 			// moved to a synchronized folder
 			if (type == fx.bmsvc.TYPE_BOOKMARK) {
 				console.log('fx: bookmark moved into synchronized tree');
-				var url = fx.bmsvc.getBookmarkURI(id).resolve(null);
+				var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
 				var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
 					parentNode: fx.ids[newParent], id: id};
 				fx.ids[bm.id] = bm;
@@ -161,7 +161,19 @@ var fx = {
 	},
 
 	bm_add: function (link, bm) {
-		var uri = fx.ios.newURI(bm.url, null, null);
+		var url = bm.url;
+		if (url.substr(0, 9) == 'chrome://') {
+			// newURI() doesn't like chrome URIs
+			return; // FIXME handle this
+			url = '_'+url;
+		}
+		try {
+			var uri = fx.ios.newURI(bm.url, null, null);
+		} catch (err) {
+			// invalid URI
+			console.error(err);
+			return;
+		}
 		bm.id = fx.bmsvc.insertBookmark(bm.parentNode.id, uri, fx.bmsvc.DEFAULT_INDEX, bm.title);
 		fx.ids[bm.id] = bm;
 	},
@@ -171,6 +183,14 @@ var fx = {
 	},
 	commit: false, // not needed in firefox
 	finished_sync: false,
+
+	// fix custom chrome:// uri's
+	fix_fx_uri: function (uri) {
+		if (uri.substr(0, 10) == '_chrome://') {
+			return uri.substr(1);
+		}
+		return uri;
+	}
 }
 
 use_target(fx);

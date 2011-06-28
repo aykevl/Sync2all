@@ -96,6 +96,11 @@ gbm.msg_start = gbm.start = function () {
 
 gbm.finished_start = function () {
 
+	if (!gbm.enabled) {
+		// something went wrong, for example, wrong authentication
+		return;
+	}
+
 	if (!has_contents(gbm.bookmarks)) {
 		if (confirm('Are you sure you want to remove all bookmarks?')) {
 			return;
@@ -235,22 +240,24 @@ gbm.calculate_actions = function (state, folder) {
 
 // remove memory-eating status information and stop
 // This will be called from the popup.
-gbm.msg_disable = function () {
+gbm.msg_disable = gbm.disable = function () {
 	delete localStorage['gbm_state'];
 	gbm.stop();
 };
 
-// don't synchronize
-gbm.stop = gbm.msg_stop = function () {
-
+// Stop synchronizing, but leave status information
+// This function will be called by the user, gbm.stop() by this link
+gbm.msg_stop = function () {
 	if (gbm.status) return; // FIXME error handling
 	if (!gbm.enabled) return; // already stopped
-
+	gbm.stop();
+};
+gbm.stop = function () {
 	delete localStorage['gbm_enabled'];
 	gbm.enabled = false;
 	Array_remove(remotes_enabled, gbm);
 
-	gbm.updateStatus();
+	gbm.updateStatus(statuses.READY);
 };
 
 gbm.onXmlLoaded = function () {
@@ -261,22 +268,28 @@ gbm.onXmlLoaded = function () {
 	if (gbm.reqXml.status != 200) {
 		alert('Failed to retrieve bookmarks (XML). Is there an internet connection?');
 	} else {
+		// parse XML.
+		if (gbm.parseXmlBookmarks(gbm.reqXml.responseXML)) {
+			// something went wrong
+			return;
+		}
+
+		// XML parsing finished successfully, so download RSS now (for the signature)
 		gbm.reqRss = new XMLHttpRequest();
 		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1&start=0", true); // will always give at least 25 bookmarks
 		gbm.reqRss.onreadystatechange = gbm.onRssLoaded;
 		gbm.reqRss.send(null);
-
-		// parse XML while the page is loading
-		gbm.parseXmlBookmarks(gbm.reqXml.responseXML);
 	}
 }
 
+// parse the XML Google Bookmarks. Return true when there is an error.
 gbm.parseXmlBookmarks = function (xmlTree) {
 	try {
 		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
 	} catch (err) {
-		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
-		return;
+		gbm.disable();
+		alert("Failed to parse bookmarks ("+err+") -- are you logged in?\nGoogle Bookmarks link is now disabled.");
+		return true;
 	}
 
 	var bm_elements = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');

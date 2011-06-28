@@ -17,10 +17,16 @@ opera.link.authorizeFunction = function (url) {
 	if (browser.name == 'chrome') {
 		chrome.tabs.create({url: url});
 	} else if (browser.name == 'firefox') {
-		getBrowser().addTab(url);
+		if (is_popup_open) {
+			current_window.getBrowser().addTab(url);
+		} else {
+			console.log('Popup not open, so don\'t know in which window I \
+					should open the tab. Opera Link is now disabled.');
+			opl.stop();
+		}
 	}
 	// Opera is the default, so no fixing required
-}
+};
 
 opl.init = function () {
 	// initialize opera.link
@@ -37,11 +43,11 @@ opl.init = function () {
 		remotes_enabled.push(opl);
 		opl.start();
 	}
-}
+};
 
 opl.start = opl.msg_start = function () {
 
-	opl.updateStatus(statuses.AUTHORIZING);
+	opl.updateStatus(statuses.DOWNLOADING);
 
 	// mark enabled
 	if (!opl.enabled) {
@@ -51,7 +57,7 @@ opl.start = opl.msg_start = function () {
 	}
 
 	// initialize variables
-	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title, only childrens
+	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title nor parentNode, only childrens
 	opl.lastSync  = 0;
 	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
@@ -59,7 +65,8 @@ opl.start = opl.msg_start = function () {
 	opl.initial_commit = true;
 
 	// start downloading
-	opera.link.testAuthorization(opl.authorizationTested);
+	//opera.link.testAuthorization(opl.authorizationTested);
+	opl.loadBookmarks();
 };
 
 // own loading and parsing has been done, now calculate the last bits before
@@ -196,6 +203,11 @@ opl.calculate_actions = function (state, folder) {
 	/* check for removed and moved items */
 
 	for (var i=0; item=state[i]; i++) {
+		if (!item.opl_id) {
+			console.error('saved item has no opl_id (bug somewhere else!):');
+			console.log(item);
+			continue;
+		}
 
 		var isfolder = false; // whether this item is a folder
 
@@ -289,17 +301,23 @@ opl.calculate_actions = function (state, folder) {
 	}
 }
 
+// Completely disables Opera Link
 opl.msg_disable = opl.disable = function () {
 	if (localStorage.opl_state)
 		delete localStorage['opl_state'];
 	opl.stop();
 }
 
-opl.msg_stop = opl.stop = function () {
+// called from popup by the user. Check first and then stop this link
+opl.msg_stop = function () {
 	if (!opl.enabled || opl.status) {
 		return; // FIXME error handling
 	}
+	opl.stop();
+};
 
+// Stop Opera Link, but leave status information
+opl.stop = function () {
 	delete localStorage.opl_enabled;
 	opl.enabled = false;
 	Array_remove(remotes_enabled, opl);
@@ -318,6 +336,8 @@ opl.requestTokenCallback = function (e) {
 		chrome.extension.onRequest.addListener(opl.onRequest);
 	} else if (browser.name == 'opera') {
 		console.log('TODO: opera content scripts');
+	} else if (browser.name == 'firefox') {
+		// TODO
 	}
 };
 
@@ -367,7 +387,7 @@ opl.accessTokenError = function (e) {
 
 // callback after it has been tested whether the user is logged in.
 // #authorized Whether or not the user is authorized
-opl.authorizationTested = function (authorized) {
+/*opl.authorizationTested = function (authorized) {
 	if (authorized) {
 		opl.authorized = true;
 		opl.loadBookmarks();
@@ -375,7 +395,7 @@ opl.authorizationTested = function (authorized) {
 		// authorize now
 		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
 	}
-};
+};*/
 
 opl.loadBookmarks = function () {
 	opl.updateStatus(statuses.DOWNLOADING);
@@ -383,6 +403,26 @@ opl.loadBookmarks = function () {
 };
 
 opl.bookmarksLoaded = function (result) {
+	if (result.status == 401) { // unauthorized
+		// authorize now
+		opl.updateStatus(statuses.AUTHORIZING);
+		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
+		return;
+	}
+	if (result.status >= 400) {
+		// other error
+
+		alert('There is a problem with Opera Link. Opera Link is now disabled. See the log for details.');
+
+		// here is the log
+		console.log('result of bookmarksLoaded:');
+		console.log(result);
+
+		// stop syncing the next time
+		opl.stop();
+	}
+
+	// there is no problem with Opera Link
 	opl.updateStatus(statuses.PARSING);
 	opl.parse_bookmarks(result.response, opl.bookmarks);
 	opl.finished_start();

@@ -15,7 +15,11 @@ var remotes_enabled = [];
 var remotes_finished;
 
 // global variables about the popup
-var popups = [];
+if (browser.name == 'firefox') {
+	// window of popup
+	var current_window;
+	var current_document;
+}
 var is_popup_open = false;
 var update_batch = false;
 
@@ -52,25 +56,29 @@ var downloading = false; // if downloading bookmarks*/
 
 // these functions are called when the popup is created or closed
 
-function popupCreated(popup) {
+function popupCreated(window, document) {
 	console.log('Popup created.');
-	if (browser.name == 'firefox') {
-		popups.push(popup);
-	}
 	is_popup_open = true;
+
+	if (browser.name == 'firefox') {
+		// needed for opening a new tab
+		current_window = window;
+		current_document = document;
+	}
 
 	var link;
 	for (var i=0; link=remotes[i]; i++) {
 		link.updateStatus();
 	}}
 
-function popupClosed(popup) {
+function popupClosed() {
 	console.log('Popup closed.');
+	is_popup_open = false;
+
 	if (browser.name == 'firefox') {
-		Array_remove(popups, popup);
-		is_popup_open = popups.length;
-	} else {
-		is_popup_open = false;
+		// save resources (may leak the whole window!)
+		delete current_window;
+		delete current_document;
 	}
 
 }

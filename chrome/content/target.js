@@ -36,12 +36,10 @@ function use_target (target) {
 		if (browser.name == 'chrome') {
 			chrome.extension.sendRequest({action: 'updateUi', shortname: target.shortname, message: message, btn_start: btn_start, btn_stop: btn_stop}, function () {});
 		} else if (browser.name == 'firefox') {
-			console.log('update '+target.name+' in firefox');
-			var popupdocument;
-			for (var i=0; popupdocument=popups[i]; i++) {
-				popupdocument.getElementById('sync2all-'+target.shortname+'-status').value = message;
-				popupdocument.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
-				popupdocument.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
+			if (is_popup_open) {
+				current_document.getElementById('sync2all-'+target.shortname+'-status').value = message;
+				current_document.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
+				current_document.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
 			}
 		}
 	}
