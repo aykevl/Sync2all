@@ -323,22 +323,6 @@ opl.stop = function () {
 	Array_remove(remotes_enabled, opl);
 
 	opl.updateStatus(statuses.READY);
-}
-
-// Callback for when the request tokens have been got.
-opl.requestTokenCallback = function (e) {
-	// save temporary tokens tokens
-	opl.requestToken = e.token;
-	opl.requestTokenSecret = e.secret;
-
-	// listen to the verifier from the content script
-	if (browser.name == 'chrome') {
-		chrome.extension.onRequest.addListener(opl.onRequest);
-	} else if (browser.name == 'opera') {
-		console.log('TODO: opera content scripts');
-	} else if (browser.name == 'firefox') {
-		// TODO
-	}
 };
 
 
@@ -357,6 +341,24 @@ opl.msg_verifier = function (request) {
 	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, verifier, opl.accessTokenCallback, opl.accessTokenError);
 };
 
+
+// Callback for when the request tokens have been got.
+opl.requestTokenCallback = function (e) {
+	// save temporary tokens tokens
+	opl.requestToken = e.token;
+	opl.requestTokenSecret = e.secret;
+
+	// listen to the verifier from the content script
+	if (browser.name == 'chrome') {
+		chrome.extension.onRequest.addListener(opl.onRequest);
+	} else if (browser.name == 'opera') {
+		console.log('TODO: opera content scripts');
+	} else if (browser.name == 'firefox') {
+		// TODO
+	}
+};
+
+
 opl.requestTokenError = function (e) {
 	// report error
 	console.log('error getting request token:');
@@ -368,18 +370,27 @@ opl.requestTokenError = function (e) {
 	delete localStorage.oauth_token;
 	delete localStorage.oauth_secret;
 
+	// re-load (non-existing) token, effectively clearing the token
+	opl.loadToken();
+
 	// disable Opera Link
 	opl.status = statuses.READY;
 	opl.stop();
 };
 
 opl.accessTokenCallback = function (e) {
+	// save the token to localStorage
 	opera.link.saveToken();
+
+	// mark this link as being authorized
 	opl.authorized = true;
+
+	// start loading the bookmarks
 	opl.loadBookmarks();
 };
 
 opl.accessTokenError = function (e) {
+	// report the error
 	console.log('error getting access token:');
 	console.log(e);
 	alert('There was an error while connecting to Opera Link. See the log for details.');
