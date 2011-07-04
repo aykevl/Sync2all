@@ -34,7 +34,7 @@ opl.init = function () {
 	opera.link.loadToken();
 
 	opl.enabled = localStorage['opl_enabled'];
-	opl.status = statuses.READY;
+	opl.updateStatus(statuses.READY);
 
 	opl.authorized = false;
 
@@ -383,7 +383,7 @@ opl.requestTokenCallback = function (e) {
 
 opl.requestTokenError = function (e) {
 	// report error
-	console.log('error getting request token:');
+	console.error('error getting request token:');
 	console.log(e);
 	console.log('Old tokens have been removed, so you might want to try again.');
 	alert('There was an error while connecting to Opera Link. See the log for details.\n\nOpera Link is now disabled.');
@@ -393,10 +393,10 @@ opl.requestTokenError = function (e) {
 	delete localStorage.oauth_secret;
 
 	// re-load (non-existing) token, effectively clearing the token
-	opl.loadToken();
+	opera.link.loadToken();
 
 	// disable Opera Link
-	opl.status = statuses.READY;
+	opl.updateStatus(statuses.READY);
 	opl.stop();
 };
 
