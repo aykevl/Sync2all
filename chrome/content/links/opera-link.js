@@ -420,7 +420,7 @@ opl.bookmarksLoaded = function (result) {
 		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
 		return;
 	}
-	if (result.status >= 400) {
+	if (result.status >= 400 || result.status < 100) {
 		// other error
 
 		alert('There is a problem with Opera Link. Opera Link is now disabled. See the log for details.');
@@ -431,10 +431,31 @@ opl.bookmarksLoaded = function (result) {
 
 		// stop syncing the next time
 		opl.stop();
+
+		// don't parse, will lead to errors:
+		return; // BUGFIX: would otherwise remove all bookmarks!!!
 	}
 
 	// there is no problem with Opera Link
+
 	opl.updateStatus(statuses.PARSING);
+
+	// check whether there is an error
+	if (!result.response.length) {
+		// log useful information
+		console.log('result of bookmarksLoaded:');
+		console.log(result);
+
+		// confirm whether the user wants to remove all bookmarks
+		if (!confirm('Are you sure you want to remove all bookmarks?'+
+				'\nWhen you haven\'t removed all bookmarks this is a bug.')) {
+			// yes, (s)he wants to (!?!)
+			console.log('doesn\'t want to remove all bookmarks');
+			opl.stop();
+			return;
+		}
+	}
+
 	opl.parse_bookmarks(result.response, opl.bookmarks);
 	opl.finished_start();
 };
@@ -590,12 +611,12 @@ opl.f_add = function (target, folder) {
 }
 
 opl.bm_del = opl.f_del = function (target, node) {
-	if (!node.opl_id) {
-		console.log(node);
-		throw 'No opl_id in bookmark node';
-	}
 	opl.queue_add(
 			function (node) {
+				if (!node.opl_id) {
+					throw 'No opl_id in bookmark node:';
+					console.log(node);
+				}
 				opera.link.bookmarks.deleteItem(node.opl_id, opl.itemDeleted);
 			}, node);
 }

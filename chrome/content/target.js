@@ -24,7 +24,7 @@ function use_target (target) {
 			} else if (target.status == statuses.MERGING) {
 				message = 'Syncing...';
 			} else if (target.status == statuses.UPLOADING) {
-				message = 'Uploading ('+(target.queue||target.r_queue).length+' left)...';
+				message = 'Uploading ('+((target.queue||target.r_queue).length+1)+' left)...';
 			} else {
 				message = 'Enabled, but unknown status (BUG! status='+target.status+')';
 			}
