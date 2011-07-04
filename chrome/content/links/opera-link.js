@@ -494,8 +494,8 @@ opl.parse_bookmarks = function (array, folder) {
 			}
 
 			// is this the trash?
-			if (item.properties.title == 'Trash' && folder == opl.bookmarks) {
-				// yes, ignore
+			if (item.properties.type == 'trash') {
+				// yes, ignore the folder
 				continue; // don't sync trashed bookmarks
 			}
 
