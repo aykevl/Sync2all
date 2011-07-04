@@ -19,3 +19,16 @@ if (typeof chrome != 'undefined' && chrome.extension) {
 	// unkonwn browser
 	console.log('ERROR: browser niet herkend.');
 }
+
+
+// global variables about the popup
+if (browser.name == 'firefox') {
+	// window of popup
+	var current_window;
+	var current_document;
+} else if (browser.name == 'opera') {
+	var popup_port;
+}
+var is_popup_open = false;
+var update_batch = false;
+

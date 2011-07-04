@@ -1,27 +1,23 @@
 
 var current_browser;
 var remotes;
+var links = [gbm, opl];
 if (browser.name == 'chrome') {
 	current_browser = gchr; // currently only supports Google Chrome
 	remotes = [gbm, opl];
+	links.push(gchr);
 } else if (browser.name == 'firefox') {
 	current_browser = fx;
 	remotes = [gbm, opl];
+	links.push(fx);
 } else if (browser.name == 'opera') {
 	current_browser = opl;
 	remotes = [gbm];
+
+	// opl is already in links
 }
 var remotes_enabled = [];
 var remotes_finished;
-
-// global variables about the popup
-if (browser.name == 'firefox') {
-	// window of popup
-	var current_window;
-	var current_document;
-}
-var is_popup_open = false;
-var update_batch = false;
 
 var g_bookmarks; // global bookmarks
 var g_bookmark_ids;
@@ -67,7 +63,8 @@ function popupCreated(window, document) {
 	}
 
 	var link;
-	for (var i=0; link=remotes[i]; i++) {
+	for (var i=0; link=links[i]; i++) {
+		if (!link.updateStatus) continue;
 		link.updateStatus();
 	}}
 

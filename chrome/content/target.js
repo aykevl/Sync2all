@@ -32,15 +32,19 @@ function use_target (target) {
 		var btn_start = !target.enabled || !target.status && target.enabled;
 		var btn_stop  = target.enabled && !target.status;
 
+		var message = {action: 'updateUi', shortname: target.shortname, message: message, btn_start: btn_start, btn_stop: btn_stop};
+
 		// send message to specific browsers
 		if (browser.name == 'chrome') {
-			chrome.extension.sendRequest({action: 'updateUi', shortname: target.shortname, message: message, btn_start: btn_start, btn_stop: btn_stop}, function () {});
+			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
 			if (is_popup_open) {
 				current_document.getElementById('sync2all-'+target.shortname+'-status').value = message;
 				current_document.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
 				current_document.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
 			}
+		} else if (browser.name == 'opera') {
+			opera.extension.broadcastMessage(message);
 		}
 	}
 

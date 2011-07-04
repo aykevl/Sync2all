@@ -7,6 +7,7 @@
 <script type="text/javascript">
 
 var Sync2allService;
+var bgPort; // opera
 
 // firefox
 if (typeof (Components) != 'undefined' && Components.classes) {
@@ -56,9 +57,20 @@ function init_popup () {
 
 	} else if (Sync2allService.browser.name == 'opera') {
 		// Opera initialisation
-		var bgPort;
-		opera.extension.onmessage = function (x) {
-			bgPort = event.source;
+		opera.extension.onmessage = function (event) {
+			var message = event.data
+			if (message.action == 'popup_give_port') {
+				bgPort = event.source;
+				return;
+			}
+
+			if (message.action == 'updateUi') {
+				updateTarget(message);
+				return;
+			}
+
+			// other events
+			console.log('message in popup: '+message.action);
 		};
 	} else if (Sync2allService.browser.name == 'firefox') {
 		// ignore, information will be loaded when the popup is really opened
@@ -68,6 +80,8 @@ function init_popup () {
 function sendMessage (msg) {
 	if (Sync2allService.browser.name == 'chrome') {
 		chrome.extension.sendRequest(msg);
+	} else if (Sync2allService.browser.name == 'opera') {
+		bgPort.sendMessage('abc');
 	}
 }
 
@@ -99,14 +113,14 @@ body {
 
 <div id="target_gbm" class="target">
 	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
-	<button id='gbm_button_start' onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-	<button id='gbm_button_stop' onclick="sendMessage({action: 'gbm_stop'});" title="Stop synchronizing with Google Bookmarks">Disable</button>
+	<button id='gbm_button_start' disabled="true" onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
+	<button id='gbm_button_stop'  disabled="true" onclick="sendMessage({action: 'gbm_stop'});"  title="Stop synchronizing with Google Bookmarks">Disable</button>
 </div>
 
 <div id="target_opl" class="target">
 	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_button_start" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-	<button id="opl_button_stop" onclick="sendMessage({action: 'opl_stop'});" title="Stop synchronizing with Opera Link">Disable</button>
+	<button id="opl_button_start" disabled="true" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
+	<button id="opl_button_stop"  disabled="true" onclick="sendMessage({action: 'opl_stop'});"  title="Stop synchronizing with Opera Link">Disable</button>
 </div>
 
 </body>
