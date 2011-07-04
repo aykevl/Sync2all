@@ -95,3 +95,108 @@ function use_target (target) {
 };
 
 
+function use_queue (obj) {
+	// variables
+	obj.queue = [];
+
+	// functions
+	
+	obj.queue_add = function (callback, data) {
+		this.queue.push([callback, data]);
+	};
+
+	obj.queue_start = function () {
+		this.updateStatus(statuses.UPLOADING);
+		this.queue.running = true;
+		this.queue_next();
+	};
+
+	obj.queue_next = function () {
+		var queue_item = this.queue.shift();
+		if (!queue_item) {
+
+			// save current state when everything has been uploaded
+			// this occurs also when there is nothing in the queue when the
+			// first commit happens.
+			this.may_save_state();
+
+			// queue has been finished!!!
+			this.queue.running = false;
+			this.updateStatus(statuses.READY);
+
+			// if this is the browser
+			if (this == current_browser) {
+				// save all states when they are ready
+				call_all('may_save_state');
+			}
+
+			// don't go further
+			return;
+		}
+		var callback = queue_item[0];
+		var data     = queue_item[1];
+		callback(data);
+
+	};
+}
+
+// implement a queue of XMLHttpRequests for a given object
+function use_rqueue(obj) {
+
+	// variables
+	obj.r_queue= []; // remote queue (list of [payload, callback])
+
+	// functons
+
+	obj.r_queue_add = function (url, payload, callback) {
+		var req = new XMLHttpRequest();
+		req.open("POST", url, true);
+		var params = '';
+		for (key in payload) {
+			params += (params?'&':'')+key+'='+encodeURIComponent(payload[key]);
+		}
+		this.r_queue_add_req(req, params, callback);
+	};
+
+	obj.r_queue_add_req = function (req, params, callback) {
+		this.r_queue.push([req, params, callback]);
+		if (!this.r_queue.running) {
+			this.r_queue.running = true;
+			this.updateStatus(statuses.UPLOADING);
+			this.r_queue_next();
+		}
+	};
+
+	obj.r_queue_next = function () {
+
+		if (this.r_queue.length == 0) {
+			console.log('Finished uploading');
+			this.r_queue.running = false;
+			this.updateStatus(statuses.READY); // update popup with 'finished' count
+
+			// save current state when everything has been uploaded
+			if (this.initial_commit) {
+				this.save_state();
+			}
+			return;
+		}
+
+		// update the popup with the new 'left' count
+		this.updateStatus(statuses.UPLOADING);
+
+		var req      = this.r_queue[0][0];
+		var params   = this.r_queue[0][1];
+		var callback = this.r_queue[0][2];
+		this.r_queue.shift();
+		var obj = this;
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return; // not loaded
+			// request completed
+			if (req.status != 200) return;
+			if (callback) callback(req);
+			obj.r_queue_next(); // do the next push
+		}
+		req.send(params);
+	};
+}
+
