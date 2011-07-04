@@ -512,6 +512,7 @@ function syncRFolder(target, rfolder, lparentfolder) {
 
 	// TODO create (tmp?) folder
 	var lfolder = {bm: {}, f: {}, title: rfolder.title, parentNode: lparentfolder};
+	mergeProperties(rfolder, lfolder); // copy opl_id etc
 	lparentfolder.f[lfolder.title] = lfolder;
 	call_all('f_add', target, [lfolder]);
 

@@ -175,14 +175,9 @@ gbm.finished_sync = function () {
 };
 
 gbm.save_state = function () {
-	console.log('gbm: saving state');
-	// maybe this is the wrong place?
-	gbm.initial_commit = false;
-
 	var state = {bm: [], f: {}};
 	gbm.get_state(state, g_bookmarks);
 	localStorage['gbm_state'] = JSON.stringify(state);
-	delete state; // not really needed
 };
 
 gbm.get_state = function (state, folder) {
@@ -537,7 +532,7 @@ gbm.commit = function () {
 		}
 	}
 	if (!has_changes && gbm.initial_commit) {
-		gbm.save_state();
+		gbm.may_save_state();
 	}
 	gbm.changed = {};
 };

@@ -62,7 +62,7 @@ opl.start = opl.msg_start = function () {
 	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
 	opl.ids       = {};
-	opl.initial_commit = true;
+	opl.has_saved_state = false;
 
 	// start downloading
 	//opera.link.testAuthorization(opl.authorizationTested);
@@ -125,29 +125,51 @@ opl.finished_sync = function () {
 }
 
 opl.save_state = function () {
-	console.log('opl: saving state');
-	// maybe this is the wrong place?
-	opl.initial_commit = false;
-
 	var state = [];
 	opl.get_state(state, g_bookmarks);
 	localStorage['opl_state'] = JSON.stringify(state);
 }
 
 opl.get_state = function (state, folder) {
+	// save all bookmarks in this folder
 	for (url in folder.bm) {
-		state.push({id: folder.bm[url].id, opl_id: folder.bm[url].opl_id});
+		// get bookmark
+		var bm = folder.bm[url];
+
+		// check whether there are bugs somewhere
+		if (!bm.id || !bm.opl_id) {
+			console.warn('invalid bookmark while saving state');
+			console.log(bm);
+		}
+
+		// save the state of this bookmark
+		state.push({id: bm.id, opl_id: bm.opl_id});
 	}
+
+	// save all subfolders of this folder
 	for (title in folder.f) {
 		// do it here and not at the start of opl.get_state, because the root of
 		// Opera Link has no ID.
+
+		// get the subfolder
+		var subfolder = folder.f[title];
+		
+		// check whether it is valid
+		if (!subfolder.id || !subfolder.opl_id) {
+			console.warn('invalid folder while saving state:');
+			console.log(subfolder);
+		}
+
+		// save this folder
 		var substate = {
-				opl_id: folder.f[title].opl_id,
-				id: folder.f[title].id,
+				opl_id: subfolder.opl_id,
+				id: subfolder.id,
 				children: [], // folders should always have children
 			};
 		state.push(substate);
-		opl.get_state(substate.children, folder.f[title]);
+
+		// recurse into subfolders
+		opl.get_state(substate.children, subfolder);
 	}
 }
 

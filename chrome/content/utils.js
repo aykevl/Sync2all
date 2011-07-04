@@ -158,13 +158,19 @@ function use_queue (obj) {
 			// save current state when everything has been uploaded
 			// this occurs also when there is nothing in the queue when the
 			// first commit happens.
-			if (this.initial_commit) {
-				this.save_state();
-			}
-			
-			this.updateStatus(statuses.READY);
+			this.may_save_state();
 
 			// queue has been finished!!!
+			this.queue.running = false;
+			this.updateStatus(statuses.READY);
+
+			// if this is the browser
+			if (this == current_browser) {
+				// save all states when they are ready
+				call_all('may_save_state');
+			}
+
+			// don't go further
 			return;
 		}
 		var callback = queue_item[0];

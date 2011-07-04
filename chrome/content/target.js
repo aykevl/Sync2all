@@ -78,6 +78,20 @@ function use_target (target) {
 		chrome.extension.onRequest.addListener(target.onRequest);
 	} else if (browser.name == 'firefox') {
 	}
+
+	target.may_save_state = function () {
+		if (current_browser.queue.running ||
+			target.has_saved_state ||
+			(target.queue || target.r_queue).running ||
+			!target.save_state) {
+			return;
+		}
+
+		target.has_saved_state = true;
+
+		console.log(target.shortname+': saving state');
+		target.save_state();
+	};
 };
 
 
