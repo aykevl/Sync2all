@@ -458,10 +458,6 @@ opl.bookmarksLoaded = function (result) {
 		return; // BUGFIX: would otherwise remove all bookmarks!!!
 	}
 
-	// there is no problem with Opera Link
-
-	opl.updateStatus(statuses.PARSING);
-
 	// check whether there is an error
 	if (!result.response.length) {
 		// log useful information
@@ -471,14 +467,23 @@ opl.bookmarksLoaded = function (result) {
 		// confirm whether the user wants to remove all bookmarks
 		if (!confirm('Are you sure you want to remove all bookmarks?'+
 				'\nWhen you haven\'t removed all bookmarks this is a bug.')) {
-			// yes, (s)he wants to (!?!)
 			console.log('doesn\'t want to remove all bookmarks');
 			opl.stop();
 			return;
+		} else {
+			// yes, (s)he wants to (!?!)
 		}
 	}
 
+	// there is no problem with Opera Link
+
+	// updat the status in the popup
+	opl.updateStatus(statuses.PARSING);
+
+	// parse the bookmarks
 	opl.parse_bookmarks(result.response, opl.bookmarks);
+
+	// send signal to sync engine to start merging
 	opl.finished_start();
 };
 
