@@ -13,10 +13,12 @@ use_queue(opl);
 var oauth;
 
 // fix opera.link for specific browsers
-opera.link.authorizeFunction = function (url) {
-	if (browser.name == 'chrome') {
+if (browser.name == 'chrome') {
+	opera.link.authorizeFunction = function (url) {
 		chrome.tabs.create({url: url});
-	} else if (browser.name == 'firefox') {
+	};
+} else if (browser.name == 'firefox') {
+	opera.link.authorizeFunction = function (url) {
 		if (is_popup_open) {
 			current_window.getBrowser().addTab(url);
 		} else {
@@ -24,37 +26,30 @@ opera.link.authorizeFunction = function (url) {
 					should open the tab. Opera Link is now disabled.');
 			opl.stop();
 		}
-	}
-	// Opera is the default, so no fixing required
-};
+	};
+}
+// Opera is the default, so no fixing required
 
 opl.init = function () {
 	// initialize opera.link
 	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
 	opera.link.loadToken();
 
-	opl.enabled = localStorage['opl_enabled'];
-	opl.updateStatus(statuses.READY);
-
 	opl.authorized = false;
 
 	// start if enabled
-	if (opl.enabled) {
-		remotes_enabled.push(opl);
-		opl.start();
+	if (localStorage['opl_enabled']) {
+		opl.enable();
 	}
 };
 
+// (re)start
 opl.start = opl.msg_start = function () {
 
-	opl.updateStatus(statuses.DOWNLOADING);
+	// enable if needed
+	opl.enable();
 
-	// mark enabled
-	if (!opl.enabled) {
-		localStorage.opl_enabled = true;
-		opl.enabled = true;
-		remotes_enabled.push(opl);
-	}
+	opl.updateStatus(statuses.DOWNLOADING);
 
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title nor parentNode, only childrens

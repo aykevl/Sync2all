@@ -268,7 +268,7 @@ function initSync () {
 	}
 
 	// and start the browser link
-	current_browser.start();
+	current_browser.enable();
 }
 
 function target_finished(link) {

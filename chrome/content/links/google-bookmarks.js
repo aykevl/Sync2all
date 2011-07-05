@@ -53,23 +53,18 @@ gbm.lastSync      = localStorage['gbm_lastSync'];
 gbm.init = function (enable) {
 	gbm.status = statuses.READY;
 
-	gbm.enabled = localStorage['gbm_enabled'];
-	if (gbm.enabled) {
-		remotes_enabled.push(gbm);
-		gbm.start();
+	if (localStorage['gbm_enabled']) {
+		gbm.enable();
 	}
 };
 
-gbm.msg_start = gbm.start = function () {
+// (re) start
+gbm.start = gbm.msg_start = function () {
 
 	if (gbm.status) return; // FIXME error handling
 
 	// mark enabled
-	if (!gbm.enabled) {
-		localStorage['gbm_enabled'] = true;
-		gbm.enabled = true;
-		remotes_enabled.push(gbm);
-	}
+	gbm.enable(); // doesn't do anything when already enabled
 
 	// set status
 	gbm.updateStatus(statuses.DOWNLOADING);

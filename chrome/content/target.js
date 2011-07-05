@@ -96,6 +96,18 @@ function use_target (target) {
 		console.log(target.shortname+': saving state');
 		target.save_state();
 	};
+
+	// like target.start, but only called when it is not already enabled
+	target.enable = function () {
+		// don't re-enable
+		if (target.enabled) return;
+
+		// mark enabled
+		localStorage[target.shortname+'_enabled'] = true;
+		target.enabled = true;
+		remotes_enabled.push(target);
+		target.start();
+	};
 };
 
 
