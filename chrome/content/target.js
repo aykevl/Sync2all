@@ -103,9 +103,19 @@ function use_target (target) {
 		if (target.enabled) return;
 
 		// mark enabled
-		localStorage[target.shortname+'_enabled'] = true;
+		// This also prevents that this link is started twice unneeded
 		target.enabled = true;
-		remotes_enabled.push(target);
+		// don't do these things for the browser link, they are only meant for
+		// the links to extern sources
+		if (target != current_browser) {
+			localStorage[target.shortname+'_enabled'] = true;
+			remotes_enabled.push(target);
+		}
+
+		// clear variables
+		target.has_saved_state = false;
+
+		// now start the target. Should be done when it is enabled
 		target.start();
 	};
 };
@@ -131,14 +141,14 @@ function use_queue (obj) {
 		var queue_item = this.queue.shift();
 		if (!queue_item) {
 
+			// queue has been finished!!!
+			this.queue.running = false;
+			this.updateStatus(statuses.READY);
+
 			// save current state when everything has been uploaded
 			// this occurs also when there is nothing in the queue when the
 			// first commit happens.
 			this.may_save_state();
-
-			// queue has been finished!!!
-			this.queue.running = false;
-			this.updateStatus(statuses.READY);
 
 			// if this is the browser
 			if (this == current_browser) {

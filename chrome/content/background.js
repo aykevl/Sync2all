@@ -301,7 +301,7 @@ function target_finished(link) {
 	} else {
 		// this is a real target link
 	}
-	
+
 	// is the syncing finished? Commit changes!
 	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
 		commit();
