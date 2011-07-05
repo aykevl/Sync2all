@@ -53,7 +53,6 @@ var downloading = false; // if downloading bookmarks*/
 // these functions are called when the popup is created or closed
 
 function popupCreated(window, document) {
-	console.log('Popup created.');
 	is_popup_open = true;
 
 	if (browser.name == 'firefox') {
@@ -69,7 +68,6 @@ function popupCreated(window, document) {
 	}}
 
 function popupClosed() {
-	console.log('Popup closed.');
 	is_popup_open = false;
 
 	if (browser.name == 'firefox') {

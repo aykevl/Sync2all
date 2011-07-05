@@ -149,6 +149,10 @@ function use_queue (obj) {
 			// don't go further
 			return;
 		}
+
+		// send amount of lasting uploads to the popup
+		this.updateStatus();
+
 		var callback = queue_item[0];
 		var data     = queue_item[1];
 		callback(data);
