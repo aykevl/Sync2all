@@ -194,6 +194,9 @@ function use_rqueue(obj) {
 			this.r_queue.running = false;
 			this.updateStatus(statuses.READY); // update popup with 'finished' count
 
+			// save my own state when it is finished
+			this.may_save_state();
+
 			// save current state when everything has been uploaded
 			if (this.initial_commit) {
 				this.save_state();
