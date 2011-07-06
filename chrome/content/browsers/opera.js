@@ -8,8 +8,8 @@ window.addEventListener("load", function(){
 		icon: "/chrome/skin/icon.png",
 		popup: {
 			href: "/chrome/content/popup.html",
-			width: 350,
-			height: 150,
+			width: 250,
+			height: 180,
 		}
 	}
 	theButton = opera.contexts.toolbar.createItem(ToolbarUIItemProperties);

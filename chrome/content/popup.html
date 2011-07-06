@@ -99,9 +99,21 @@ body {
 .target {
 	border: 5px #aaaaff outset;
 	background: #ccccff;
-	white-space: nowrap;
 	margin: 0.3em;
 	padding: 0.3em;
+}
+.target .status {
+	font-style: italic;
+	color: #333333;
+	font-size: 80%;
+	white-space: nowrap;
+}
+.target .name {
+	float: left;
+	white-space: nowrap;
+}
+.target .buttons {
+	white-space: nowrap;
 }
 </style>
 </head>
@@ -112,15 +124,21 @@ body {
 <body onload="init_popup();" onUnload="popupClosed();">
 
 <div id="target_gbm" class="target">
-	<strong>Google Bookmarks:</strong> <span id="gbm_status">Loading...</span><br />
-	<button id='gbm_button_start' disabled="true" onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-	<button id='gbm_button_stop'  disabled="true" onclick="sendMessage({action: 'gbm_stop'});"  title="Stop synchronizing with Google Bookmarks">Disable</button>
+	<strong class="name">Google Bookmarks</strong><br />
+	<span class="status" id="gbm_status">Loading...</span><br />
+	<div class="buttons">
+		<button id='gbm_button_start' disabled="true" onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
+		<button id='gbm_button_stop'  disabled="true" onclick="sendMessage({action: 'gbm_stop'});"  title="Stop synchronizing with Google Bookmarks">Disable</button>
+	</div>
 </div>
 
 <div id="target_opl" class="target">
-	<strong>Opera Link:</strong> <span id="opl_status">Loading...</span><br />
-	<button id="opl_button_start" disabled="true" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-	<button id="opl_button_stop"  disabled="true" onclick="sendMessage({action: 'opl_stop'});"  title="Stop synchronizing with Opera Link">Disable</button>
+	<strong class="name">Opera Link</strong><br />
+	<span class="status" id="opl_status">Loading...</span><br />
+	<div class="buttons">
+		<button id="opl_button_start" disabled="true" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
+		<button id="opl_button_stop"  disabled="true" onclick="sendMessage({action: 'opl_stop'});"  title="Stop synchronizing with Opera Link">Disable</button>
+	</div>
 </div>
 
 </body>
