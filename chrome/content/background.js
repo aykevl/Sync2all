@@ -271,6 +271,17 @@ function initSync () {
 
 function target_finished(link) {
 
+	// check for possible bugs
+	if (link.actions && link.actions.length > 10) {
+		if (!confirm('There have been many changes in '+link.name+' ('+
+				link.actions.length+' deletes/moves). '+
+				'Are you sure you want to apply them?\n\n'+
+				'This might be a bug in this extension.')) {
+			link.stop();
+			return;
+		}
+	}
+
 	remotes_finished.push(link);
 
 	// update internal data to use objects from g_bookmarks and not
