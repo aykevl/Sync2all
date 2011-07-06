@@ -61,6 +61,11 @@ function popupCreated(window, document) {
 		current_document = document;
 	}
 
+	if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
+		// display input
+		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
+	}
+
 	var link;
 	for (var i=0; link=links[i]; i++) {
 		if (!link.updateStatus) continue;

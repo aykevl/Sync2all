@@ -369,7 +369,7 @@ opl.requestTokenCallback = function (e) {
 	if (browser.name == 'chrome') {
 		chrome.extension.onRequest.addListener(opl.onRequest);
 	} else if (browser.name == 'opera') {
-		console.log('TODO: opera content scripts');
+		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
 	} else if (browser.name == 'firefox') {
 		// TODO
 	}
