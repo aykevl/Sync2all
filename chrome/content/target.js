@@ -122,21 +122,29 @@ function use_target (target) {
 
 
 function use_queue (obj) {
-	// variables
+
+	/* variables */
+
 	obj.queue = [];
 
-	// functions
-	
+
+	/* functions */
+
+
+	// add a function to the queue
 	obj.queue_add = function (callback, data) {
 		this.queue.push([callback, data]);
 	};
 
+	// start walking through the queue if it isn't already started
 	obj.queue_start = function () {
+		if (this.queue.running) return;
 		this.updateStatus(statuses.UPLOADING);
 		this.queue.running = true;
 		this.queue_next();
 	};
 
+	// execute the next function in the queue
 	obj.queue_next = function () {
 		var queue_item = this.queue.shift();
 		if (!queue_item) {
