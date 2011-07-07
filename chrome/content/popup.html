@@ -108,10 +108,7 @@ body {
 	border: 5px #aaaaff outset;
 	background: #ccccff;
 	padding: 0.3em;
-	margin-bottom: 0.3em;
-}
-#target_opl {
-	margin-bottom: 0;
+	margin: 0.3em;
 }
 
 .target .status {
@@ -145,6 +142,12 @@ body {
 </head>
 
 <script>
+/* Some css hacking */
+if (Sync2allService.browser.name == 'opera') {
+	document.write('<style>\
+.target { margin: 0; margin-bottom: 0.3em; } \
+#target_opl { margin-bottom: 0; } </style>');
+}
 </script>
 
 <body onload="init_popup();" onUnload="popupClosed();">
