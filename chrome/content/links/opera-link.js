@@ -132,9 +132,17 @@ opl.get_state = function (state, folder) {
 		var bm = folder.bm[url];
 
 		// check whether there are bugs somewhere
-		if (!bm.id || !bm.opl_id) {
-			console.warn('invalid bookmark while saving state');
-			console.log(bm);
+		if (browser.name == 'opera') {
+			// opera doesn't have a bookmarks api, so there is no 'id' variable
+			if (!bm.opl_id) {
+				console.warn('invalid bookmark while saving state:');
+				console.log(bm);
+			}
+		} else {
+			if (!bm.id || !bm.opl_id) {
+				console.warn('invalid bookmark while saving state:');
+				console.log(bm);
+			}
 		}
 
 		// save the state of this bookmark

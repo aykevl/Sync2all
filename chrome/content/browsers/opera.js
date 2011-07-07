@@ -18,6 +18,15 @@ window.addEventListener("load", function(){
 
 function onMessage(event) {
 	console.log('bericht in main:'+event.data);
+	var action = event.data.action;
+
+	// send message to the right link
+	var link;
+	for (var i=0; link=links[i]; i++) {
+		if (action.substr(0, link.shortname.length+1) == link.shortname+'_') {
+			link['msg_'+action.substr(action.indexOf('_')+1)](event.data);
+		}
+	}
 }
 opera.extension.onmessage = onMessage;
 

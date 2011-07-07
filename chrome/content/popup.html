@@ -73,7 +73,7 @@ function init_popup () {
 			// tiny hack -- shouldn't be here but I don't know where else
 			if (message.action == 'opl-verifierInput-on') {
 				// enable entering of the verifier code
-				document.getElementById('opl-verifier-input').style.display = 'inline';
+				document.getElementById('opl-verifier').style.display = 'inline';
 				return;
 			}
 
@@ -89,8 +89,16 @@ function sendMessage (msg) {
 	if (Sync2allService.browser.name == 'chrome') {
 		chrome.extension.sendRequest(msg);
 	} else if (Sync2allService.browser.name == 'opera') {
-		bgPort.sendMessage('abc');
+		bgPort.postMessage(msg);
 	}
+}
+
+
+// when the 'Ok' button near the verifier input has been clicked
+function onVerifierOk() {
+	var verifier = document.getElementById('opl-verifier-input').value;
+	var message = {action: 'opl_verifier', verifier: verifier};
+	sendMessage(message);
 }
 
 
@@ -134,7 +142,7 @@ body {
 	margin-right: 2px;
 	font-size: 90%;
 }
-#opl-verifier-input {
+#opl-verifier {
 	/* hide by default */
 	display: none;
 }
@@ -164,8 +172,8 @@ if (Sync2allService.browser.name == 'opera') {
 <div id="target_opl" class="target">
 	<div class="name">Opera Link</div><br />
 	<div class="statusline">
-		<div id="opl-verifier-input">
-			<input type="text" title="Enter the verifier code here" placeholder="verifier..."><button title="Connect now">Ok</button>
+		<div id="opl-verifier">
+			<input type="text" title="Enter the verifier code here" placeholder="verifier..." id="opl-verifier-input"><button title="Connect now" onclick="onVerifierOk();">Ok</button>
 		</div>
 		<span class="status" id="opl_status">Loading...</span><br />
 	</div>
