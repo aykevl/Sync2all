@@ -32,3 +32,5 @@ if (browser.name == 'firefox') {
 var is_popup_open = false;
 var update_batch = false;
 
+var debug = false;
+
