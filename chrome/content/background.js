@@ -91,7 +91,7 @@ function onLoad() {
 function call_all(funcname, link, params) {
 	// link should be defined
 	if (!link && link != null) {
-		console.err('BUG: link is not defined in call_all()');
+		console.error('BUG: link is not defined in call_all()');
 	}
 
 	// first parameter should be the link
@@ -106,7 +106,7 @@ function call_all(funcname, link, params) {
 		func = remote[funcname];
 		if (func == false) continue; // marked as not available;
 		if (func == undefined) {
-			console.err('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
+			console.warn('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
 			remote[funcname] = false; // prevent future logs causing lots of data
 			continue;
 		}
