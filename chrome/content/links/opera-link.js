@@ -248,12 +248,26 @@ opl.calculate_actions = function (state, folder) {
 			// more data, for example descriptions and favicons).
 			if (opl.ids[item.opl_id]) {
 				// this node does still exist, mark it as moved.
+
 				var node = opl.ids[item.opl_id];
 
+				// get the destination (local) folder
+				var movedTo_id = opl.ownId_to_lId[node.parentNode.opl_id];
+				if (current_browser.ids[movedTo_id]) {
+					var movedTo = current_browser.ids[movedTo_id];
+				}
+
 				if (node.url) { // if this is a bookmark
-					opl.actions.push(['bm_mv', item.id, opl.ownId_to_lId[node.parentNode.opl_id]]);
+					// check whether this bookmark has already been moved
+					// If not, add an action
+					if (movedTo && !movedTo.bm[node.url]) {
+						opl.actions.push(['bm_mv', item.id, l_node]);
+					}
 				} else {
-					opl.actions.push(['f_mv',  item.id, opl.ownId_to_lId[node.parentNode.opl_id]]);
+					// check whether this folder has already been moved local
+					if (movedTo && !movedTo.f[node.title]) {
+						opl.actions.push(['f_mv',  item.id, l_node]);
+					}
 				}
 			} else {
 				// node doesn't exist, remove it.
