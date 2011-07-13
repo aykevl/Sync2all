@@ -44,7 +44,7 @@ opl.init = function () {
 };
 
 // (re)start
-opl.start = opl.msg_start = function () {
+opl.start = function () {
 
 	// enable if needed
 	opl.enable();
@@ -348,12 +348,12 @@ opl.msg_disable = opl.disable = function () {
 }
 
 // called from popup by the user. Check first and then stop this link
-opl.msg_stop = function () {
+/*opl.msg_stop = function () {
 	if (!opl.enabled || opl.status) {
 		return; // FIXME error handling
 	}
 	opl.stop();
-};
+};*/
 
 // Stop Opera Link, but leave status information
 opl.stop = function () {
@@ -367,7 +367,10 @@ opl.stop = function () {
 
 opl.msg_verifier = function (request) {
 
-	if (opl.authorized) return; // strange
+	if (opl.authorized) return; // strange, shouldn't happen
+
+	// log status
+	console.log('Got verifier code: '+request.verifier);
 
 	var verifier = request.verifier;
 	if (!verifier) { // check for validity
@@ -383,6 +386,10 @@ opl.msg_verifier = function (request) {
 
 // Callback for when the request tokens have been got.
 opl.requestTokenCallback = function (e) {
+
+	// log status
+	console.log('Got request token, asking user to authorize...');
+
 	// save temporary tokens tokens
 	opl.requestToken = e.token;
 	opl.requestTokenSecret = e.secret;

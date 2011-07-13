@@ -86,7 +86,7 @@ function use_target (target) {
 	target.may_save_state = function () {
 		if (current_browser.queue.running ||
 			target.has_saved_state ||
-			(target.queue || target.r_queue).running ||
+			target.status ||
 			!target.save_state) {
 			return;
 		}
@@ -98,7 +98,7 @@ function use_target (target) {
 	};
 
 	// like target.start, but only called when it is not already enabled
-	target.enable = function () {
+	target.enable = target.msg_enable = function () {
 		// don't re-enable
 		if (target.enabled) return;
 

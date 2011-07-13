@@ -282,7 +282,7 @@ function target_finished(link) {
 				link.actions.length+' deletes/moves). '+
 				'Are you sure you want to apply them?\n\n'+
 				'This might be a bug in this extension.')) {
-			link.stop();
+			link.disable(); // removes status information too
 			return;
 		}
 	}

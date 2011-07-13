@@ -59,7 +59,7 @@ gbm.init = function (enable) {
 };
 
 // (re) start
-gbm.start = gbm.msg_start = function () {
+gbm.start = function () {
 
 	if (gbm.status) return; // FIXME error handling
 
