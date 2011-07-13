@@ -228,9 +228,10 @@ opl.calculate_actions = function (state, folder) {
 	/* check for removed and moved items */
 
 	for (var i=0; item=state[i]; i++) {
-		if (!item.opl_id) {
-			console.error('saved item has no opl_id (bug somewhere else!):');
+		if (!item.opl_id || !item.id) {
+			console.error('saved item has no id or opl_id (bug somewhere else!); item, folder:');
 			console.log(item);
+			console.log(folder);
 			continue;
 		}
 
