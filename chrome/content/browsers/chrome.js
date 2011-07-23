@@ -246,6 +246,22 @@ gchr.bm_mv = gchr.f_mv = function (target, node, oldParent) {
 			}, node);
 }
 
+gchr.bm_mod_title = gchr.f_mod_title = function (target, node, oldtitle) {
+	gchr.queue_add(
+			function (node) {
+				chrome.bookmarks.update(node.id, {title: node.title},
+					function (result) { gchr.queue_next(); });
+			}, node);
+}
+
+gchr.bm_mod_url = function (target, node, oldurl) {
+	gchr.queue_add(
+			function (node) {
+				chrome.bookmarks.update(node.id, {url: node.url},
+					function (result) { gchr.queue_next(); });
+			}, node);
+}
+
 gchr.commit = function () {
 	gchr.queue_start();
 }

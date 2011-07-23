@@ -58,6 +58,7 @@ opl.start = function () {
 	// local IDs mapped to own bookmark objects, should be deleted after merging
 	opl.ids       = {};
 	opl.has_saved_state = false;
+	delete opl.verifier;
 
 	// start downloading
 	//opera.link.testAuthorization(opl.authorizationTested);
@@ -369,19 +370,22 @@ opl.stop = function () {
 opl.msg_verifier = function (request) {
 
 	if (opl.authorized) return; // strange, shouldn't happen
+	if (opl.verifier) return;  // shouldn't happen too, but it happens (???)
 
 	// log status
 	console.log('Got verifier code: '+request.verifier);
 
-	var verifier = request.verifier;
-	if (!verifier) { // check for validity
+
+	opl.verifier = request.verifier;
+	if (!opl.verifier) { // check for validity
 		opl.status = statuses.READY;
 		opl.stop();
 		return;
 	}
 
+
 	// use verifier
-	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, verifier, opl.accessTokenCallback, opl.accessTokenError);
+	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, opl.verifier, opl.accessTokenCallback, opl.accessTokenError);
 };
 
 
@@ -683,9 +687,14 @@ opl.bm_mv = opl.f_mv = function (target, node, oldParent) {
 			}, node);
 };
 
-opl.f_mod_title = opl.f_mod_url = function (target, node, oldtitle) {
-	opl.sendChanges(node.opl_id, {title: node.title});
+opl.f_mod_title = opl.bm_mod_title = function (target, node, oldtitle) {
+	opl.sendChanges(node, {title: node.title});
 }
+
+opl.bm_mod_url = function (target, node, oldurl) {
+	opl.sendChanges(node, {uri: node.url});
+}
+
 
 opl.sendChanges = function (node, changes) {
 	opl.queue_add(

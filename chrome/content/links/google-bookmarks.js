@@ -397,6 +397,15 @@ gbm.added_bookmark = function (bm) {
 
 
 gbm.bm_add = function (target, bookmark) {
+
+	// check for urls that will be changed by Google
+	if (bookmark.url.substr(-1) == '#') {
+		// google doesn't allow URLs with only a hash on the end
+		var oldurl = bookmark.url;
+		bookmark.url = bookmark.url.substr(0, bookmark.url.length-1);
+		call_all('bm_mod_url', gbm, [bookmark, url]);
+	}
+
 	gbm.added_bookmark(bookmark);
 
 	// if this is a known change
