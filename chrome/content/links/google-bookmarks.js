@@ -376,17 +376,24 @@ gbm.added_bookmark = function (bm) {
 	gbm.urls[bm.url].push(bm);
 }
 
-
-gbm.bm_add = function (target, bookmark) {
-
-	// check for urls that will be changed by Google
+// check for things that will be modified by Google. Change the url of the
+// bookmark and notify other links.
+gbm.check_mods = function (bookmark) {
 	if (bookmark.url.substr(-1) == '#') {
 		// google doesn't allow URLs with only a hash on the end
 		var oldurl = bookmark.url;
 		bookmark.url = bookmark.url.substr(0, bookmark.url.length-1);
-		call_all('bm_mod_url', gbm, [bookmark, url]);
+		call_all('bm_mod_url', gbm, [bookmark, oldurl]);
 	}
+}
 
+
+gbm.bm_add = function (target, bookmark) {
+
+	// check for things that will be changed by Google
+	gbm.check_mods(bookmark);
+
+	// add to gbm.urls
 	gbm.added_bookmark(bookmark);
 
 	// if this is a known change
@@ -454,6 +461,8 @@ gbm.bm_mod_title = function (target, bm, oldtitle) {
 gbm.bm_mod_url = function (target, bm, oldurl) {
 	// if this is a known change
 	if (target == gbm) return;
+
+	gbm.check_mods(bm); // TODO will upload too much data. Investigate why.
 
 	// nearly a copy of gbm.bm_del, unfortunately
 	oldgbookmark = gbm.urls[oldurl];
