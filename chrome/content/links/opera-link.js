@@ -44,10 +44,15 @@ opl.init = function () {
 };
 
 // (re)start
-opl.start = function () {
+opl.start = opl.msg_start = function () {
+
+	if (opl.status) return;
 
 	// enable if needed
-	opl.enable();
+	if (!opl.enabled) {
+		opl.enable();
+		return;
+	}
 
 	opl.updateStatus(statuses.DOWNLOADING);
 
@@ -420,8 +425,8 @@ opl.requestTokenError = function (e) {
 	delete localStorage.oauth_token;
 	delete localStorage.oauth_secret;
 
-	// re-load (non-existing) token, effectively clearing the token
-	opera.link.loadToken();
+	// clear the in-memory tokens inside the Opera Link library
+	opera.link.dropToken();
 
 	// disable Opera Link
 	opl.updateStatus(statuses.READY);
@@ -466,6 +471,7 @@ opl.loadBookmarks = function () {
 opl.bookmarksLoaded = function (result) {
 	if (result.status == 401) { // unauthorized
 		// authorize now
+		opera.link.dropToken();
 		opl.updateStatus(statuses.AUTHORIZING);
 		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
 		return;

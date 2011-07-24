@@ -102,6 +102,14 @@ function use_target (target) {
 		// don't re-enable
 		if (target.enabled) return;
 
+		if (target.status) {
+			console.error('Target is not enabled but status is non-zero! (BUG!):');
+			console.log(target);
+			delete localStorage.opl_enabled; // just to be sure
+			alert('There is a bug in Opera Link. Opera Link is now disabled. See the log for details.');
+			return;
+		}
+
 		// mark enabled
 		// This also prevents that this link is started twice unneeded
 		target.enabled = true;

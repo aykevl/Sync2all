@@ -410,6 +410,14 @@ opera.link = new function OperaLink() {
 		this.storage.removeItem('oauth_secret');
 	}
 
+	/**
+	 * Drops the OAuth token and token secret.
+	 */
+	this.dropToken = function() {
+		delete accessor.token;
+		delete accessor.tokenSecret;
+	}
+
 
 	/**
 	 * Parses the response of a token request

@@ -59,12 +59,15 @@ gbm.init = function (enable) {
 };
 
 // (re) start
-gbm.start = function () {
+gbm.start = gbm.msg_start = function () {
 
 	if (gbm.status) return; // FIXME error handling
 
 	// mark enabled
-	gbm.enable(); // doesn't do anything when already enabled
+	if (!gbm.enabled) { // not needed for gbm? strange...
+		gbm.enable(); // doesn't do anything when already enabled
+		return;
+	}
 
 	// set status
 	gbm.updateStatus(statuses.DOWNLOADING);
