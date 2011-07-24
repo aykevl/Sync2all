@@ -287,7 +287,9 @@ function target_finished(link) {
 		}
 	}
 
-	remotes_finished.push(link);
+	if (remotes_finished.indexOf(link) < 0) {
+		remotes_finished.push(link);
+	}
 
 	// update internal data to use objects from g_bookmarks and not
 	// from it's own data.

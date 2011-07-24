@@ -133,6 +133,25 @@ function use_target (target) {
 		// now start the target. Should be done when it is enabled
 		target.start();
 	};
+
+	// Stop Opera Link, but leave status information
+	target.stop = function () {
+		delete localStorage[target.shortname+'_enabled'];
+		target.enabled = false;
+		Array_remove(remotes_enabled, target);
+		Array_remove(remotes_finished, target);
+
+		target.updateStatus(statuses.READY);
+	};
+
+	// remove memory-eating status information and stop
+	// This will be called from the popup.
+	target.msg_disable = target.disable = function () {
+		delete localStorage[target.shortname+'_state'];
+		target.stop();
+	};
+
+
 };
 
 

@@ -346,31 +346,6 @@ opl.calculate_actions = function (state, folder) {
 	}
 }
 
-// Completely disables Opera Link
-opl.msg_disable = opl.disable = function () {
-	if (localStorage.opl_state)
-		delete localStorage['opl_state'];
-	opl.stop();
-}
-
-// called from popup by the user. Check first and then stop this link
-/*opl.msg_stop = function () {
-	if (!opl.enabled || opl.status) {
-		return; // FIXME error handling
-	}
-	opl.stop();
-};*/
-
-// Stop Opera Link, but leave status information
-opl.stop = function () {
-	delete localStorage.opl_enabled;
-	opl.enabled = false;
-	Array_remove(remotes_enabled, opl);
-
-	opl.updateStatus(statuses.READY);
-};
-
-
 opl.msg_verifier = function (request) {
 
 	if (opl.authorized) return; // strange, shouldn't happen
@@ -543,14 +518,13 @@ opl.parse_bookmarks = function (array, folder) {
 				var subfolder = folder.f[item.properties.title];
 				if (subfolder.opl_id) {
 					// ignore empty
-					console.log('FIXME: duplicate folder title: '+
+					console.log('Duplicate folder title: '+
 							subfolder.title);
 
 					// if the other is empty, remove it
 					if (!has_contents(subfolder)) {
 						console.log('has no contents: '+subfolder.title);
-						// TODO remove this folder if I'm sure that that
-						// won't remove boomkarks.
+						opera.link.bookmarks.deleteItem(subfolder.opl_id, function(){});
 					} else if (!item.children) {
 						console.log('has no childs: '+item.properties.title);
 						opera.link.bookmarks.deleteItem(item.id, function(){});

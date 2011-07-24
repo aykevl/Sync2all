@@ -231,28 +231,6 @@ gbm.calculate_actions = function (state, folder) {
 }
 
 
-// remove memory-eating status information and stop
-// This will be called from the popup.
-gbm.msg_disable = gbm.disable = function () {
-	delete localStorage['gbm_state'];
-	gbm.stop();
-};
-
-// Stop synchronizing, but leave status information
-// This function will be called by the user, gbm.stop() by this link
-gbm.msg_stop = function () {
-	if (gbm.status) return; // FIXME error handling
-	if (!gbm.enabled) return; // already stopped
-	gbm.stop();
-};
-gbm.stop = function () {
-	delete localStorage['gbm_enabled'];
-	gbm.enabled = false;
-	Array_remove(remotes_enabled, gbm);
-
-	gbm.updateStatus(statuses.READY);
-};
-
 gbm.onXmlLoaded = function () {
 	if (gbm.reqXml.readyState != 4) return;
 
