@@ -91,9 +91,16 @@ function use_target (target) {
 			return;
 		}
 
+		if ((target.queue || target.r_queue).running) {
+			console.warn(target.shortname+': '+'Queue is running but status is zero!');
+			console.log(target);
+			return; // will be started when the queue is empty
+		}
+
 		target.has_saved_state = true;
 
-		console.log(target.shortname+': saving state');
+		console.log(target.shortname+': saving state:');
+		console.trace();
 		target.save_state();
 	};
 
@@ -146,7 +153,10 @@ function use_queue (obj) {
 
 	// start walking through the queue if it isn't already started
 	obj.queue_start = function () {
-		if (this.queue.running) return;
+		if (this.queue.running) {
+			console.warn('Queue is already running!');
+			return;
+		}
 		this.updateStatus(statuses.UPLOADING);
 		this.queue.running = true;
 		this.queue_next();

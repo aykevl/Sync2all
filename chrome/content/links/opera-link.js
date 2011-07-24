@@ -295,7 +295,6 @@ opl.calculate_actions = function (state, folder) {
 			// this folder does exist (is most often the case).
 			if (!opl.ids[item.opl_id]){
 				if (isfolder) {
-					console.log('opl: old f: '+item.opl_id);
 
 					// first check for folders and bookmarks moved out of this
 					// folder.
@@ -305,6 +304,7 @@ opl.calculate_actions = function (state, folder) {
 					// but check first whether the folder actually exists
 					if (item.id && current_browser.ids[item.id]) {
 						current_browser.ids[item.id].opl_id = item.opl_id;
+						console.log('opl: old f: '+current_browser.ids[item.id].title);
 						opl.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
