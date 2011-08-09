@@ -1,6 +1,6 @@
 {
-	"name": "Sync2all",
-	"version": "0.3",
+	"name": "Sync2all beta",
+	"version": "0.9",
 	"description": "Synchronizes bookmarks (and in the future other browsing data such as history and cookies) to other browsers. Currently supported: Google Bookmarks and Opera Link.",
 	"browser_action": {
 		"default_icon": "/chrome/skin/icon.png",
