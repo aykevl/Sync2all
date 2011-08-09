@@ -1,18 +1,19 @@
 = Google Chrome synchronization =
 
-This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link. '''This extension has still many bugs. So, if you want to use it, backup your bookmarks first (on both sides). One time all my bookmarks were removed, and luckily I had a backup.'''.
+This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link.
 
 == Supported protocols ==
 
 === Google Bookmarks ===
 
-The Google bookmarks support is more stable than that of Opera Link (has been tested more). It nearly 'just works' -- except, if you change labels outside Chrome, empty folders will remain in Chrome. I'm working on that. -- fixed?
+Works very well, although the two use a completely different system to store folder names. The extension uses slashes to split the path names.
 
 === Opera Link ===
 
-Creating, deleting and moving of bookmarks and folders is supported (but buggy, sometimes it gives an error and it will get duplicated at the next sync). Thanks to ChaosinaCan for is excellent Opera Link JavaScript library (see the bottom of this page).
+Opera Link works, thanks to ChaosinaCan (see Credits). It uses a system more common than that of Google Bookmarks.
 
-Deleting and moving of bookmarks and folders outside Chrome is now supported! They will not be re-created. Even folders and bookmarks moved to a newly created folder (should) work.
+The only drawback is, that it doesn't use the bookmarks bar.
+
 
 === Firefox Sync ===
 
@@ -23,7 +24,9 @@ Not yet because it is very hard to decode the encrypted bookmarks (And I won't e
 === Chrome ===
 (Or Iron, Chromium, Flock...)
 
-Supported. This was the first browser I made the extension on. Initially, I wanted to write a Chrome extension that would sync with Google Bookmarks, but I have extended the extension by moving the browser-specific and Google Bookmarks-specific code in separate modules.
+Supported. This was the first browser I made the extension on. Initially, I wanted to write a Chrome extension that would sync with Google Bookmarks, but I have extended the extension by moving the browser-specific and Google Bookmarks-specific code in separate modules (files, classes).
+
+It doesn't work yet the way I want: it only syncs the bookmarks bar, not the Other Bookmarks.
 
 === Firefox ===
 
@@ -35,16 +38,17 @@ It uses an XPCOM component as background page.
 
 === Opera ===
 
-Work in progress. It is currently only useful to make such an extension for syncing Opera (Link) with Google Bookmarks. It would be much easier to just use Opera's built-in bookmarks system, but that is currently not possible.
+I don't work on this anymore. It is currently only useful to make such an extension for syncing Opera (Link) with Google Bookmarks. It would be much easier to just use Opera's built-in bookmarks system, but that is currently not possible.
+
 
 == Installation ==
 
-Download the .zip file (the big 'Download' button on the Github page -- this page) and rename the .zip to .crx (Chrome) or .xpi (Firefox) and open it with the browser. That works for Chrome, but doesn't for Firefox for some reason (says the file is corrupt?).
+Download the .zip file (the big 'Download' button on the Github page -- this page) and rename the .zip to .crx (Chrome) or .xpi (Firefox) and open it with the browser. That works for Chrome, but doesn't for Firefox for some reason (says the file is corrupt?). EDIT: to let it work in Firefox, unzip the .zip file and zip the contents of that folder, not the folder itself.
 
 
 == Credits ==
 
 * M. Martins for how Google Bookmarks work: http://www.mmartins.com/mmartins/googlebookmarksapi/
-* Erik Hanson for a simple function to calculate human-readable relative dates (for example: x seconds ago): http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
+* Erik Hanson for a simple function to calculate human-readable relative dates (for example: x seconds ago). I don't use this function anymore, but here is the link: http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
 * ChaosinaCan for a JavaScript library that can access Opera Link: https://github.com/ChaosinaCan/OperaLink.js
 * Sebastiaan Deckers for a JavaScript function that calculates ISO 3339 timestamps (although I don't use it yet): http://cbas.pandion.im/2009/10/generating-rfc-3339-timestamps-in.html
