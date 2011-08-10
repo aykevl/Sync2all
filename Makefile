@@ -8,4 +8,4 @@ all:
 package:
 	touch ../Sync2all.zip
 	rm ../Sync2all.zip
-	zip ../Sync2all.zip ./*
+	zip -r ../Sync2all.zip ./*

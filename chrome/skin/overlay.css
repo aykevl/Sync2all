@@ -1,9 +1,9 @@
 /* This is just an example.  You shouldn't do this. */
 #sync2all-toolbar-button
 {
-  list-style-image: url("chrome://sync2all/skin/icon.png");
+  list-style-image: url("chrome://sync2all/skin/icon24.png");
 }
 [iconsize="small"] #sync2all-toolbar-button
 {
-  list-style-image: url("chrome://sync2all/skin/icon24.png");
+  list-style-image: url("chrome://sync2all/skin/icon16.png");
 }
