@@ -1,8 +1,2 @@
-<!ENTITY sync2all.label "Your localized menuitem">
-<!ENTITY sync2allContext.label "Your Menuitem">
-<!ENTITY sync2allContext.accesskey "Y">
-<!ENTITY sync2allToolbarButton.label "Your Toolbar Button">
-<!ENTITY sync2allToolbarButton.tooltip "This is your toolbar button!">
-<!ENTITY sync2allSidebar.label "Your Sidebar">
-<!ENTITY sync2allToolbar.name  "example">
-<!ENTITY sync2allToolbar.label "This is an example toolbar. You can hide it under View &gt; toolbars &gt; &sync2allToolbar.name;">
+<!ENTITY sync2allToolbarButton.label "Sync2all">
+<!ENTITY sync2allToolbarButton.tooltip "Sync2all: click for a popup">

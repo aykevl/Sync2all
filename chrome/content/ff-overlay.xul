@@ -40,7 +40,7 @@
 								oncommand="Sync2allService.gbm.msg_stop();"/>
 						</hbox>
 					</vbox>
-					<menuseparator/>
+					<!--<menuseparator/>
 					<vbox id="sync2all-opl">
 						<hbox>
 							<label value="Opera Link"/>
@@ -59,7 +59,7 @@
 								disabled="true"
 								oncommand="Sync2allService.opl.msg_stop();"/>
 						</hbox>
-					</vbox>
+					</vbox>-->
 				</vbox>
 			</menupopup>
 		</toolbarbutton>

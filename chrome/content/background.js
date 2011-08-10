@@ -1,20 +1,20 @@
 
 var current_browser;
+// TODO merge 'links' and 'remotes', or give them better names
 var remotes;
-var links = [gbm, opl];
+var links;
 if (browser.name == 'chrome') {
 	current_browser = gchr; // currently only supports Google Chrome
 	remotes = [gbm, opl];
-	links.push(gchr);
+	links = [gchr, gbm, opl];
 } else if (browser.name == 'firefox') {
 	current_browser = fx;
-	remotes = [gbm, opl];
-	links.push(fx);
+	remotes = [gbm]; // opl not supported yet
+	links = [fx, gbm];
 } else if (browser.name == 'opera') {
 	current_browser = opl;
 	remotes = [gbm];
-
-	// opl is already in links
+	links = [gbm, opl];
 }
 var remotes_enabled = [];
 var remotes_finished;
@@ -67,7 +67,7 @@ function popupCreated(window, document) {
 	}
 
 	var link;
-	for (var i=0; link=links[i]; i++) {
+	for (var i=0; link=remotes[i]; i++) {
 		if (!link.updateStatus) continue;
 		link.updateStatus();
 	}}

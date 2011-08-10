@@ -13,7 +13,7 @@ var fx = {
 	},
 
 	start: function () {
-		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.toolbarFolder};
+		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
 		fx.ids = {};
 		fx.ids[fx.bookmarks.id] = fx.bookmarks;
 		fx.getTree();
@@ -85,14 +85,11 @@ var fx = {
 		rmNode(fx, node);
 		commit();
 	},
-	onBeginUpdateBatch:  function ()
-	{	
-		update_batch = true;
+	onBeginUpdateBatch: function () {
+		fx.update_batch = true;
 	},
-	onEndUpdateBatch:    function ()
-	{
-		update_batch = false;
-		commit();
+	onEndUpdateBatch: function () {
+		fx.update_batch = false;
 	},
 	onBeforeItemRemoved: function (){},
 	onItemChanged:       function (){},
@@ -121,33 +118,47 @@ var fx = {
 		if (!property) return;
 		console.log(fx.ids[id].title+' changed property '+property+' to '+newValue);
 	},
-	onItemMoved: function (id, oldParent, oldIndex, newParent, newIndex, type) {
+	onItemMoved: function (id, oldParentId, oldIndex, newParentId, newIndex, type) {
 		console.log('onItemMoved');
-		if (!fx.ids[newParent]) return; // not moved into a place that is synchronized
-		console.log('newParent known');
-		if (!fx.ids[id]) {
-			// moved to a synchronized folder
-			if (type == fx.bmsvc.TYPE_BOOKMARK) {
-				console.log('fx: bookmark moved into synchronized tree');
-				var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
-				var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
-					parentNode: fx.ids[newParent], id: id};
-				fx.ids[bm.id] = bm;
-				addBookmark(fx, bm);
-			} else if (type == fx.bmsvc.TYPE_FOLDER) {
-				console.log('fx: folder moved into synchronized tree');
-				var folder = {title: fx.bmsvc.getItemTitle(id),
-					bm: {}, f: {}, parentNode: fx.ids[oldParent], id: id};
-				// FIXME childs...
-				fx.ids[folder.id] = folder;
-				addFolder(fx, folder);
-			}
+
+		move_event(fx, id, oldParentId, newParentId);
+
+		/*// get objects
+		var node = fx.ids[id];
+		var oldParent = fx.ids[oldParentId];
+		var newParent = fx.ids[newParentId];
+
+		if (!fx.ids[newParent]) {
+			// new parent is not known, should possibly be removed. TODO
+
 		} else {
-			if (!fx.ids[oldParent]) {
+			if (!fx.ids[id]) {
+				// moved to a synchronized folder
+				if (type == fx.bmsvc.TYPE_BOOKMARK) {
+					console.log('fx: bookmark moved into synchronized tree');
+					var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
+					var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
+						parentNode: fx.ids[newParent], id: id};
+					fx.ids[bm.id] = bm;
+					addBookmark(fx, bm);
+				} else if (type == fx.bmsvc.TYPE_FOLDER) {
+					console.log('fx: folder moved into synchronized tree');
+					var folder = {title: fx.bmsvc.getItemTitle(id),
+						bm: {}, f: {}, parentNode: fx.ids[oldParent], id: id};
+					// FIXME childs...
+					fx.ids[folder.id] = folder;
+					addFolder(fx, folder);
+				}
+			} else {
+				// the item is moved inside the synchronized tree
+				if (!fx.ids[oldParent]) {
+					// shouldn't happen. This means that the item but not the parent is synchronized.
+					console.error('Error: ...');
+				}
 			}
 		}
-		commit();
-	 },
+		commit();*/
+	},
 	onItemReplaced: function () {
 		// TODO
 	},
@@ -181,7 +192,11 @@ var fx = {
 		delete fx.ids[bm.id];
 		fx.bmsvc.removeItem(bm.id);
 	},
-	commit: false, // not needed in firefox
+	commit: function () {
+		// TODO place more things in the queue to speed things up
+		fx.queue_start(); // FIXME do in batch, see below
+		//fx.bmsvc.runInBatchMode(fx.queue_start, {value: 'none'}); // FIXME doesn't work
+	},
 	finished_sync: false,
 
 	// fix custom chrome:// uri's
@@ -190,7 +205,29 @@ var fx = {
 			return uri.substr(1);
 		}
 		return uri;
+	},
+
+	import_node: function (id) {
+		// get the node type
+		var type = fx.bmsvc.getItemType(id);
+
+		if (type == fx.bmsvc.TYPE_BOOKMARK) {
+			console.log('fx: bookmark moved into synchronized tree');
+			var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
+			var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
+				parentNode: fx.ids[newParent], id: id};
+			fx.ids[bm.id] = bm;
+			addBookmark(fx, bm);
+		} else if (type == fx.bmsvc.TYPE_FOLDER) {
+			console.log('fx: folder moved into synchronized tree');
+			var folder = {title: fx.bmsvc.getItemTitle(id),
+				bm: {}, f: {}, parentNode: fx.ids[oldParent], id: id};
+			// FIXME childs...
+			fx.ids[folder.id] = folder;
+			addFolder(fx, folder);
+		}
 	}
 }
 
 use_target(fx);
+use_queue(fx);

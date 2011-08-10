@@ -11,35 +11,35 @@ function use_target (target) {
 		if (!is_popup_open) return;
 
 		// make make human-readable message
-		var message = 'Not synchronized';
+		var msgtext = 'Not synchronized';
 		if (target.enabled) {
 			if (target.status == statuses.READY) {
-				message = 'Synchronized';
+				msgtext = 'Synchronized';
 			} else if (target.status == statuses.AUTHORIZING) {
-				message = 'Authorizing...';
+				msgtext = 'Authorizing...';
 			} else if (target.status == statuses.DOWNLOADING) {
-				message = 'Downloading...';
+				msgtext = 'Downloading...';
 			} else if (target.status == statuses.PARSING) {
-				message = 'Parsing bookmarks data...';
+				msgtext = 'Parsing bookmarks data...';
 			} else if (target.status == statuses.MERGING) {
-				message = 'Syncing...';
+				msgtext = 'Syncing...';
 			} else if (target.status == statuses.UPLOADING) {
-				message = 'Uploading ('+((target.queue||target.r_queue).length+1)+' left)...';
+				msgtext = 'Uploading ('+((target.queue||target.r_queue).length+1)+' left)...';
 			} else {
-				message = 'Enabled, but unknown status (BUG! status='+target.status+')';
+				msgtext = 'Enabled, but unknown status (BUG! status='+target.status+')';
 			}
 		}
 		var btn_start = !target.enabled || !target.status && target.enabled;
 		var btn_stop  = target.enabled && !target.status;
 
-		var message = {action: 'updateUi', shortname: target.shortname, message: message, btn_start: btn_start, btn_stop: btn_stop};
+		var message = {action: 'updateUi', shortname: target.shortname, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
 
 		// send message to specific browsers
 		if (browser.name == 'chrome') {
 			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
 			if (is_popup_open) {
-				current_document.getElementById('sync2all-'+target.shortname+'-status').value = message;
+				current_document.getElementById('sync2all-'+target.shortname+'-status').value = msgtext;
 				current_document.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
 				current_document.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
 			}
@@ -276,5 +276,108 @@ function use_rqueue(obj) {
 		}
 		req.send(params);
 	};
+}
+
+/** Called when something has been moved. This is an utility function for
+ * browser objects.
+ */
+function move_event (link, id, oldParentId, newParentId) {
+	// get info
+	var node      = link.ids[id];
+	var oldParent = link.ids[oldParentId];
+	var newParent = link.ids[newParentId];
+
+	// if the bookmark has been moved by Sync2all, ignore this event
+	if (node && newParent && node.parentNode == newParent) {
+		return;
+	}
+
+	// if node is moved to outside synced folder
+	if (!newParent) {
+		// if the node comes from outside the synced folder
+		if (!oldParent) {
+			if (!node) {
+				console.log('Bookmark/folder outside synchronized folder moved. Ignoring.');
+				return;
+			} else {
+				console.log('BUG: only the node is known, not the rest \
+						(including the parent!)');
+				return;
+			}
+		} else { // the 'else' is not really needed
+			if (!node) {
+				console.log('BUG: only the old parent is known, not the node \
+						nor the new parent');
+				return;
+			} else {
+				// newParent is not known, node and oldParent are known.
+				console.log('Move: new parent not found. Thus this bookmark/folder is \
+						moved to outside the synced folder.');
+
+				// remove the node
+				delete link.ids[node.id];
+				rmNode(link, node); // parent needed for bookmarks
+				commit()
+				return;
+			}
+		}
+	} else {
+		// the node is moved to inside the synced folder
+		if (!node) {
+			// the node is moved from outside the synced folder to therein.
+			if (!oldParent) { // check it twice, should also be undefined.
+
+				console.log('Move: node id and oldParent not found. I assume this \
+bookmark comes from outside the synchronized tree. So doing a crete now');
+				link.import_node(id);
+				commit();
+				return;
+			} else {
+				console.log('BUG: the node is not known, but the old parent \
+						and the new parent are.');
+				return;
+			}
+		} else {
+			if (!oldParent) {
+				console.log('BUG: only the old parent is not known. The node \
+						and the new parent are.');
+				return;
+			} else {
+				// the bookmark has been moved within the synced folder tree.
+				// Nothing strange has happened.
+			}
+		}
+	}
+
+	// newParent, node and oldParent are 'defined' variables. (i.e. not
+	// 'undefined').
+
+	if (newParent == oldParent) {
+		// node moved inside folder (so nothing has happened, don't know
+		// whether this is really needed, Chrome might catch this).
+		return;
+	}
+
+	
+	// Bookmark is moved inside synced folder.
+
+	node.parentNode = newParent;
+
+	if (node.url) {
+		// bookmark
+		console.log('Moved '+node.url+' from '+(oldParent?oldParent.title:'somewhere in the Other Bookmarks menu')+' to '+newParent.title);
+		newParent.bm[node.url] = node;
+		delete oldParent.bm[node.url];
+		call_all('bm_mv', link, [node, oldParent]);
+	} else {
+		// folder
+		if (newParent.f[node.title]) {
+			console.log('FIXME: duplicate folder overwritten (WILL FAIL AT SOME POINT!!!)');
+		}
+		newParent.f[node.title] = node;
+		delete oldParent.f[node.title];
+		call_all('f_mv', link, [node, oldParent]);
+	}
+	commit();
 }
 

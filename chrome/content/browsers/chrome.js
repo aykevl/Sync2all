@@ -142,7 +142,7 @@ gchr.remove_result = function () {
 }
 
 // import an array of BookmarkTreeNodes
-gchr.import_btns = function (results) {
+gchr.import_bms = function (results) {
 	var result;
 	for (var i=0; result=results[i]; i++) {
 		var folder = gchr.ids[result.parentId];
@@ -154,7 +154,7 @@ gchr.import_btns = function (results) {
 			// folder
 			var subfolder = {bm: {}, f: {}, title: result.title, parentNode: folder, id: result.id};
 			addFolder(gchr, subfolder);
-			chrome.bookmarks.getChildren(subfolder.id, gchr.import_btns);
+			chrome.bookmarks.getChildren(subfolder.id, gchr.import_bms);
 		}
 	}
 	commit(); // not the most ideal place
@@ -379,106 +379,19 @@ gchr.evt_onChanged = function (id, changeInfo) {
 
 gchr.evt_onMoved = function (id, moveInfo) {
 	console.log('evt_onMoved');
-	// get info
-	var node      = gchr.ids[id];
-	var newParent = gchr.ids[moveInfo.parentId];
-	var oldParent = gchr.ids[moveInfo.oldParentId];
 
-	// if the bookmark has been moved by Sync2all, ignore this event
-	if (node && newParent && node.parentNode == newParent) {
-		return;
-	}
-
-	// if node is moved to outside synced folder
-	if (!newParent) {
-		// if the node comes from outside the synced folder
-		if (!oldParent) {
-			if (!node) {
-				console.log('Bookmark/folder outside synchronized folder moved. Ignoring.');
-				return;
-			} else {
-				console.log('BUG: only the node is known, not the rest \
-						(including the parent!)');
-				return;
-			}
-		} else { // the 'else' is not really needed
-			if (!node) {
-				console.log('BUG: only the old parent is known, not the node \
-						nor the new parent');
-				return;
-			} else {
-				// newParent is not known, node and oldParent are known.
-				console.log('Move: new parent not found. Thus this bookmark/folder is \
-						moved to outside the synced folder.');
-
-				// remove the node
-				delete gchr.ids[node.id];
-				rmNode(gchr, node); // parent needed for bookmarks
-				commit()
-				return;
-			}
-		}
-	} else {
-		if (!node) {
-			if (!oldParent) {
-				// this bookmarks comes from the 'Other Bookmarks' menu (at least, its origin is unknown)
-				console.log('Move: node id and oldParent not found. I assume this\
-					bookmark comes from outside the synchronized tree. So doing a crete now');
-				gchr.queue_add(
-						function (id) {
-							chrome.bookmarks.get(id,
-									function (results) {
-										gchr.import_btns(results);
-										gchr.queue_next();
-									});
-						}, id);
-				commit();
-				return;
-			} else {
-				console.log('BUG: the node is not known, but the old parent \
-						and the new parent are.');
-				return;
-			}
-		} else {
-			if (!oldParent) {
-				console.log('BUG: only the old parent is not known. The node \
-						and the new parent are.');
-				return;
-			} else {
-				// the bookmark has been moved within the synced folder tree.
-				// Nothing strange has happened.
-			}
-		}
-	}
-
-	// newParent, node and oldParent are 'defined' variables. (i.e. not
-	// 'undefined').
-
-	if (newParent == oldParent) {
-		// node moved inside folder (so nothing has happened, don't know
-		// whether this is really needed, Chrome might catch this).
-		return;
-	}
-
-	
-	// Bookmark is moved inside synced folder.
-
-	node.parentNode = newParent;
-
-	if (node.url) {
-		// bookmark
-		console.log('Moved '+node.url+' from '+(oldParent?oldParent.title:'somewhere in the Other Bookmarks menu')+' to '+newParent.title);
-		newParent.bm[node.url] = node;
-		delete oldParent.bm[node.url];
-		call_all('bm_mv', gchr, [node, oldParent]);
-	} else {
-		// folder
-		if (newParent.f[node.title]) {
-			console.log('FIXME: duplicate folder overwritten (WILL FAIL AT SOME POINT!!!)');
-		}
-		newParent.f[node.title] = node;
-		delete oldParent.f[node.title];
-		call_all('f_mv', gchr, [node, oldParent]);
-	}
-	commit();
+	move_event(gchr, id, moveInfo.parentId, moveInfo.oldParentId);
 }
+
+
+gchr.import_node = function (id) {
+	gchr.queue_add(
+			function (id) {
+				chrome.bookmarks.get(id,
+						function (results) {
+							gchr.import_bms(results);
+							gchr.queue_next();
+						});
+			}, id);
+};
+
