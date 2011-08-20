@@ -535,6 +535,7 @@ gbm.add_to_queue = function (params, callback) {
 	params.zx   = new Date().getTime();
 	if (!gbm.sig) {
 		alert('No signature for Google Bookmarks (bug)!');
+		console.error('No signature for Google Bookmarks (bug)!');
 	}
 	params.sig  = gbm.sig;
 	params.prev = '';

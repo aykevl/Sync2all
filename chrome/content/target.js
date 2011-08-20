@@ -226,6 +226,7 @@ function use_rqueue(obj) {
 	obj.r_queue_add = function (url, payload, callback) {
 		var req = new XMLHttpRequest();
 		req.open("POST", url, true);
+		req.url = url; // only for me, not for the request
 		var params = '';
 		for (key in payload) {
 			params += (params?'&':'')+key+'='+encodeURIComponent(payload[key]);
@@ -270,7 +271,10 @@ function use_rqueue(obj) {
 		req.onreadystatechange = function () {
 			if (req.readyState != 4) return; // not loaded
 			// request completed
-			if (req.status != 200) return;
+
+			if (req.status != 200) {
+				console.error('Request failed, status='+req.status+', url='+req.url+', params='+params);
+			}
 			if (callback) callback(req);
 			obj.r_queue_next(); // do the next push
 		}

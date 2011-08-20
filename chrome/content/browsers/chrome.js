@@ -326,54 +326,7 @@ gchr.evt_onChanged = function (id, changeInfo) {
 	console.log('evt_onChanged');
 	var node = gchr.ids[id];
 	if (!node) return; // somewhere outside the synced folder (or bug)
-	if (changeInfo.url) {
-		// bookmark
-		
-		// has anything changed?
-		if (changeInfo.url == node.url && changeInfo.title == node.title) return; // changed by me?
-		if (changeInfo.url != node.url) {
-			console.log('Url of '+node.title+' changed from '+node.url+' to '+changeInfo.url);
-
-			var oldurl = node.url;
-
-			// delete old reference
-			delete node.parentNode.bm[node.url];
-			// change url
-			node.url = changeInfo.url;
-
-			// does that url already exist?
-			if (node.parentNode.bm[node.url]) {
-				console.log('"Duplicate URL '+node.url+', merging by removing other...');
-				rmBookmark(node.parentNode.bm[node.url]);
-			}
-
-			// add new reference
-			node.parentNode.bm[node.url] = node;
-
-			call_all('bm_mod_url', gchr, [node, oldurl]);
-		}
-
-		if (changeInfo.title != node.title) {
-			console.log('Title of url '+node.url+' changed from '+node.title+' to '+changeInfo.title);
-			var oldtitle = node.title;
-			node.title = changeInfo.title;
-			call_all('bm_mod_title', gchr, [node, oldtitle]);
-		}
-
-	} else {
-		// folder
-		// only title changes are possible
-		if (node.title == changeInfo.title) return; // nothing changed (or changed by me?)
-		
-		var oldtitle = node.title;
-		var newtitle = changeInfo.title;
-		node.title = newtitle;
-
-		var parentNode = node.parentNode;
-		delete parentNode.f[oldtitle];
-		parentNode.f[newtitle] = node;
-		call_all('f_mod_title', gchr, [node, oldtitle]);
-	}
+	onChanged(gchr, node, changeInfo);
 	commit();
 }
 

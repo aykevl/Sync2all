@@ -13,11 +13,11 @@ if (!console) {
 			//nsIConsoleService.logStringMessage(s);
 		},
 		error: function (s) {
-			//dump('ERR:\t'+s+'\n');
+			dump('ERR:\t'+s+'\n');
 			Components.utils.reportError(s);
 		},
 		warn: function (s) {
-			//dump('WARN:\t'+s+'\n');
+			dump('WARN:\t'+s+'\n');
 			nsIConsoleService.logStringMessage(s);
 		},
 		trace: function () {

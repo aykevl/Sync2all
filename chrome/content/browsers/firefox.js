@@ -116,7 +116,18 @@ var fx = {
 	onItemChanged: function (id, property, is_annotation, newValue) {
 		if (!fx.ids[id]) return; // not our item
 		if (!property) return;
-		console.log(fx.ids[id].title+' changed property '+property+' to '+newValue);
+		var node = fx.ids[id];
+		console.log(node.title+' changed property '+property+' to '+newValue);
+		if (property == 'title') {
+			if (newValue == node.title) return; // nothing has changed
+
+			var changeInfo = {title: newValue};
+			onChanged(fx, node, changeInfo);
+
+			commit();
+		} else {
+			console.warn('unknown property: '+property+'; '+typeof(property));
+		}
 	},
 	onItemMoved: function (id, oldParentId, oldIndex, newParentId, newIndex, type) {
 		console.log('onItemMoved');
