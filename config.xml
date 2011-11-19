@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<widget version="0.9" xmlns="http://www.w3.org/ns/widgets" id="sync2all@github.com">
+<widget version="0.10" xmlns="http://www.w3.org/ns/widgets" id="sync2all@github.com">
 	<name>Sync2all</name>
-	<description>Synchronizes bookmarks (and in the future other browsing data such as history and cookies) to other browsers. Currently supported: Google Bookmarks and Opera Link.</description>
+	<description>Synchronizes bookmarks to other browsers. Supports Google Bookmarks and Opera Link.</description>
 	<author href="https://profiles.google.com/u/0/aykevanlaethem" email="aykevanlaethem@gmail.com">Ayke van Laëthem</author>
 	<access origin="https://link.api.opera.com/" subdomains="true"/>
 	<access origin="https://auth.opera.com/" subdomains="true"/>
