@@ -32,7 +32,7 @@ It doesn't work yet the way I want: it only syncs the bookmarks bar, not the Oth
 
 First version works!. It has lots of bugs and a lot of functionality is not supported, but that it works is the most important thing. I wouldn't recommend to use it except when you want to debug and/or help developing the extension. And always make a backup of your bookmarks before you loose them (or make a complete mess of it).
 
-Opera Link does currently not work in Firefox, because I need to be able to open a tab and use something like content scripts (or something else, I don't know) to get OAuth working. Google Bookmarks is much easier.
+Opera Link works now too in Firefox! It doesn't work perfectly: the popup must be kept open till the authentication tab opens.
 
 It uses an XPCOM component as background page.
 
