@@ -3,7 +3,7 @@ var fx = {
 	shortname: 'fx',
 	name: 'Mozilla Firefox',
 
-	init: function () {
+	_init: function () {
 		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
 		                              .getService(Components.interfaces.nsINavHistoryService);
 		fx.bmsvc = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
@@ -61,13 +61,16 @@ var fx = {
 				fx.ids[subfolder.id] = subfolder;
 				fx.getSubTree(subfolder);
 			} else if (node.type == node.RESULT_TYPE_URI) {
-				if (folder.bm[node.uri]) {
+				if (fx.is_fx_uri(node.uri)) {
+					continue; // don't sync firefox-specific chrome:// uri's.
+				}
+				var bm = {title: node.title, id: node.itemId, url: fx.restore_chrome_uri(node.uri), parentNode: folder};
+				if (folder.bm[bm.url]) {
 					// duplicate
-					fx.bmsvc.removeItem(node.itemId);
+					fx.bmsvc.removeItem(bm.id);
 					continue;
 				}
-				var bm = {title: node.title, id: node.itemId, url: node.uri, parentNode: folder};
-				folder.bm[node.uri] = bm;
+				folder.bm[bm.url] = bm;
 				fx.ids[bm.id] = bm;
 			}
 		}
@@ -92,7 +95,6 @@ var fx = {
 		fx.update_batch = false;
 	},
 	onBeforeItemRemoved: function (){},
-	onItemChanged:       function (){},
 	onItemAdded:         function (id, parentId, index, type, uri, title) {
 		if (!title) {
 			// gecko < 6
@@ -100,9 +102,10 @@ var fx = {
 		}
 		if (!fx.ids[parentId]) return; // not here added
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
-			var url = uri.resolve('');
-			console.log('url: '+url);
-			var bm = {url: url, title: title, id: id, parentNode: fx.ids[parentId]};
+			if (uri.resolve(null) == null)  return; // not a valid url
+			if (fx.is_fx_uri(uri.resolve(null))) return; // a firefox-only url
+			var bm = {url: fx.restore_chrome_uri(uri.resolve(null)),
+					title: title, id: id, parentNode: fx.ids[parentId]};
 			fx.ids[bm.id] = bm;
 			addBookmark(fx, bm);
 		} else if (type == fx.bmsvc.TYPE_FOLDER) {
@@ -125,6 +128,7 @@ var fx = {
 			onChanged(fx, node, changeInfo);
 
 			commit();
+		} else if (property == 'favicon') {
 		} else {
 			console.warn('unknown property: '+property+'; '+typeof(property));
 		}
@@ -184,13 +188,8 @@ var fx = {
 
 	bm_add: function (link, bm) {
 		var url = bm.url;
-		if (url.substr(0, 9) == 'chrome://') {
-			// newURI() doesn't like chrome URIs
-			return; // FIXME handle this
-			url = '_'+url;
-		}
 		try {
-			var uri = fx.ios.newURI(bm.url, null, null);
+			var uri = fx.ios.newURI(fx.escape_chrome_uri(bm.url), null, null);
 		} catch (err) {
 			// invalid URI
 			console.error(err);
@@ -210,12 +209,25 @@ var fx = {
 	},
 	finished_sync: false,
 
-	// fix custom chrome:// uri's
-	fix_fx_uri: function (uri) {
-		if (uri.substr(0, 10) == '_chrome://') {
-			return uri.substr(1);
+	// To handle chrome:// urls, those urls have to be escaped.
+	escape_chrome_uri: function (url) {
+		if (url.substr(0, 9) == 'chrome://') {
+			// chromeuri:// urls hopefully don't exist.
+			return 'chrome-uri'+url.substr(6);
 		}
-		return uri;
+		return url;
+	},
+
+	// This function unescapes them.
+	restore_chrome_uri: function (url) {
+		if (url.substr(0, 13) == 'chrome-uri://') {
+			return 'chrome'+url.substr(10);
+		}
+		return url;
+	},
+	
+	is_fx_uri: function (url) {
+		return url.substr(0, 9) == 'chrome://';
 	},
 
 	import_node: function (id) {
@@ -224,7 +236,7 @@ var fx = {
 
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
 			console.log('fx: bookmark moved into synchronized tree');
-			var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
+			var url = fx.restore_chrome_uri(fx.bmsvc.getBookmarkURI(id).resolve(null));
 			var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
 				parentNode: fx.ids[newParent], id: id};
 			fx.ids[bm.id] = bm;

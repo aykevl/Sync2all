@@ -3,11 +3,27 @@
  */
 
 function use_target (target) {
+
+	// should be called only once
+	target.init = function () {
+		if (target._init) {
+			target._init(); // should also be called only once
+		}
+
+		if (target != current_browser) {
+			// start if enabled
+			if (localStorage[target.shortname+'_enabled']) {
+				target.enable();
+			}
+		}
+	};
+
 	target.updateStatus = function (status) {
 		// ??? to use my object (this), I have to use 'target' instead of 'this'.
 		if (status !== undefined) {
 			target.status = status;
 		}
+		if (target == current_browser) return; // not in popup
 		if (!is_popup_open) return;
 
 		// make make human-readable message
@@ -51,6 +67,7 @@ function use_target (target) {
 	target.mark_state_deleted = function (state) {
 
 		// remove the subfolders first
+		var title;
 		for (title in state.f) {
 			var substate = state.f[title];
 			this.mark_state_deleted(substate);
@@ -151,6 +168,8 @@ function use_target (target) {
 		target.stop();
 	};
 
+	target.status = statuses.READY; // only to initialize
+
 
 };
 
@@ -160,6 +179,7 @@ function use_queue (obj) {
 	/* variables */
 
 	obj.queue = [];
+	obj.queue.id = Math.random();
 
 
 	/* functions */
@@ -173,7 +193,7 @@ function use_queue (obj) {
 	// start walking through the queue if it isn't already started
 	obj.queue_start = function () {
 		if (this.queue.running) {
-			console.warn('Queue is already running!');
+			console.warn('Queue is already running! '+this.queue.id+this.queue.running);
 			return;
 		}
 		this.updateStatus(statuses.UPLOADING);
@@ -183,36 +203,55 @@ function use_queue (obj) {
 
 	// execute the next function in the queue
 	obj.queue_next = function () {
-		var queue_item = this.queue.shift();
-		if (!queue_item) {
+		try {
+			var queue_item = this.queue.shift();
+			if (!queue_item) {
 
-			// queue has been finished!!!
-			this.queue.running = false;
-			this.updateStatus(statuses.READY);
+				// queue has finished!
+				this.queue_stop();
 
-			// save current state when everything has been uploaded
-			// this occurs also when there is nothing in the queue when the
-			// first commit happens.
-			this.may_save_state();
-
-			// if this is the browser
-			if (this == current_browser) {
-				// save all states when they are ready
-				call_all('may_save_state');
+				// don't go further
+				return;
 			}
 
-			// don't go further
-			return;
+			// send amount of lasting uploads to the popup
+			this.updateStatus(statuses.UPLOADING);
+
+			var callback = queue_item[0];
+			var data     = queue_item[1];
+			callback(data);
+		} catch (err) {
+			console.error('queue_next');
+			console.trace();
+			throw (err);
 		}
 
-		// send amount of lasting uploads to the popup
-		this.updateStatus();
-
-		var callback = queue_item[0];
-		var data     = queue_item[1];
-		callback(data);
-
 	};
+
+	obj.queue_stop = function () {
+		// queue has been finished!!!
+		this.queue.running = false;
+		this.queue.length = 0; // for when the queue has been forced to stop, clear the queue
+
+		this.updateStatus(statuses.READY);
+		console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
+
+		// save current state when everything has been uploaded
+		// this occurs also when there is nothing in the queue when the
+		// first commit happens.
+		this.may_save_state();
+
+		// if this is the browser
+		if (this == current_browser) {
+			// save all states when they are ready
+			call_all('may_save_state');
+		}
+	};
+	obj.queue_error = function () {
+		// disable link on error
+		this.queue_stop();
+		this.stop();
+	}
 }
 
 // implement a queue of XMLHttpRequests for a given object
@@ -228,6 +267,7 @@ function use_rqueue(obj) {
 		req.open("POST", url, true);
 		req.url = url; // only for me, not for the request
 		var params = '';
+		var key;
 		for (key in payload) {
 			params += (params?'&':'')+key+'='+encodeURIComponent(payload[key]);
 		}

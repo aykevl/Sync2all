@@ -23,24 +23,23 @@ if (browser.name == 'chrome') {
 			current_window.getBrowser().addTab(url);
 		} else {
 			console.log('Popup not open, so don\'t know in which window I \
-					should open the tab. Opera Link is now disabled.');
+should open the tab. Opera Link is now disabled.');
 			opl.stop();
 		}
 	};
+	opl.fx_display_input = function () {
+		current_document.getElementById('sync2all-opl-verifier-container').style.display = '';
+	}
 }
 // Opera is the default, so no fixing required
 
-opl.init = function () {
+opl._init = function () {
 	// initialize opera.link
 	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
 	opera.link.loadToken();
 
 	opl.authorized = false;
-
-	// start if enabled
-	if (localStorage['opl_enabled']) {
-		opl.enable();
-	}
+	opl.verifier = null; // initialize variable
 };
 
 // (re)start
@@ -57,7 +56,7 @@ opl.start = opl.msg_start = function () {
 	opl.updateStatus(statuses.DOWNLOADING);
 
 	// initialize variables
-	opl.bookmarks = {bm: {}, f: {}}; // doesn't have a title nor parentNode, only childrens
+	opl.bookmarks = {bm: {}, f: {}, opl_id: null}; // doesn't have a title nor parentNode, only childrens
 	opl.lastSync  = 0;
 	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
@@ -66,6 +65,7 @@ opl.start = opl.msg_start = function () {
 
 	// start downloading
 	//opera.link.testAuthorization(opl.authorizationTested);
+
 	opl.loadBookmarks();
 };
 
@@ -385,6 +385,7 @@ opl.requestTokenCallback = function (e) {
 		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
 	} else if (browser.name == 'firefox') {
 		// TODO
+		opl.fx_display_input();
 	}
 };
 
@@ -401,7 +402,7 @@ opl.requestTokenError = function (e) {
 	delete localStorage.oauth_secret;
 
 	// clear the in-memory tokens inside the Opera Link library
-	opera.link.dropToken();
+	opera.link.deauthorize();
 
 	// disable Opera Link
 	opl.updateStatus(statuses.READY);
@@ -446,7 +447,7 @@ opl.loadBookmarks = function () {
 opl.bookmarksLoaded = function (result) {
 	if (result.status == 401) { // unauthorized
 		// authorize now
-		opera.link.dropToken();
+		opera.link.deauthorize();
 		opl.updateStatus(statuses.AUTHORIZING);
 		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
 		return;
@@ -508,7 +509,7 @@ opl.parse_bookmarks = function (array, folder) {
 			}
 
 			// is this the trash?
-			if (item.properties.type == 'trash') {
+			if (item.properties.type && item.properties.type == 'trash') {
 				// yes, ignore the folder
 				continue; // don't sync trashed bookmarks
 			}
@@ -583,8 +584,9 @@ opl.parse_bookmarks = function (array, folder) {
 // TODO merge these, because they are nearly the same
 opl.itemCreated = function (result) {
 	if (result.status != 200) {
-		console.log('ERROR creating bookmark/folder:');
-		console.log(result);
+		console.error('ERROR creating bookmark/folder:');
+		console.error(result);
+		opl.queue_error();
 		return;
 	}
 	opl.current_item.opl_id = result.response.id;
@@ -592,24 +594,27 @@ opl.itemCreated = function (result) {
 };
 opl.itemDeleted = function (result) {
 	if (!result.status == 204) {
-		console.log('ERROR deleting:');
+		console.error('ERROR deleting:');
 		console.log(result);
+		opl.queue_error();
 		return;
 	}
 	opl.queue_next();
 };
 opl.itemMoved = function (result) {
 	if (!result.status == 200) {
-		console.log('ERROR moving:');
+		console.error('ERROR moving:');
 		console.log(result);
+		opl.queue_error();
 		return;
 	}
 	opl.queue_next();
 };
 opl.itemUpdated = function (result) {
 	if (!result.status == 200) {
-		console.log('ERROR updating:');
+		console.error('ERROR updating:');
 		console.log(result);
+		opl.queue_error();
 		return;
 	}
 	opl.queue_next();
@@ -622,26 +627,41 @@ opl.bm_add = function (target, bm, folder) {
 	opl.queue_add(
 			function (bm) {
 				if (!folder.opl_id && folder != g_bookmarks) {
-					console.log('No parent ID! Bookmark:');
-					console.log(bm);
+					console.warn('No parent ID! Bookmark:');
+					console.warn(bm);
 					opl.queue_next();
 					return;
 				}
 				opl.current_item = bm;
 				// TODO: last visited timestamp, comments (from Google Bookmarks)
-				opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
+				console.log('bm_add');
+
+				// create(params, [parent,] callback);
+				if (folder.opl_id) {
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
+				} else {
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
+				}
 			}, bm);
 }
 
 opl.f_add = function (target, folder) {
 	opl.queue_add(function (folder) {
 				if (!folder.parentNode.opl_id && folder.parentNode != g_bookmarks) {
-					console.log('No parent ID! Folder:');
-					console.log(folder);
+					console.warn('No parent ID! Folder:');
+					console.warn(folder);
+					opl.queue_next();
 					return;
 				}
 				opl.current_item = folder;
-				opera.link.bookmarks.createFolder({title: folder.title}, folder.parentNode.opl_id, opl.itemCreated);
+				console.log('f_add');
+
+				// createFolder(params, [parent,] callback);
+				if (folder.parentNode.opl_id) {
+					opera.link.bookmarks.createFolder({title: folder.title}, folder.parentNode.opl_id, opl.itemCreated);
+				} else {
+					opera.link.bookmarks.createFolder({title: folder.title}, opl.itemCreated);
+				}
 			}, folder);
 }
 
@@ -683,6 +703,8 @@ opl.sendChanges = function (node, changes) {
 }
 
 opl.commit = function () {
+	console.warn('opl commit -- backtrace:');
+	console.trace();
 	opl.queue_start(); // start running
 }
 

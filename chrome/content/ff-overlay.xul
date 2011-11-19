@@ -37,10 +37,10 @@
 							<button id="sync2all-gbm-button-stop"
 								label="Disable"
 								disalbled="true"
-								oncommand="Sync2allService.gbm.msg_stop();"/>
+								oncommand="Sync2allService.gbm.msg_disable();"/>
 						</hbox>
 					</vbox>
-					<!--<menuseparator/>
+					<menuseparator/>
 					<vbox id="sync2all-opl">
 						<hbox>
 							<label value="Opera Link"/>
@@ -57,9 +57,17 @@
 							<button id="sync2all-opl-button-stop"
 								label="Disable"
 								disabled="true"
-								oncommand="Sync2allService.opl.msg_stop();"/>
+								oncommand="Sync2allService.opl.msg_disable();"/>
 						</hbox>
-					</vbox>-->
+						<hbox align="end" style="display: none;"
+						      id="sync2all-opl-verifier-container">
+							<spacer flex="1"/>
+							<textbox id="sync2all-opl-verifier-input" style="width: 5em;"/>
+							<button id="sync2all-opl-verifier-button"
+							        label="Ok" style="min-width: 1em;"
+							        oncommand="Sync2allService.opl.msg_verifier({verifier: document.getElementById('sync2all-opl-verifier-input').value});"/>
+						</hbox>
+					</vbox>
 				</vbox>
 			</menupopup>
 		</toolbarbutton>

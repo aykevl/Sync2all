@@ -9,5 +9,5 @@ files = {
 import urllib
 for (file, url) in files.items():
     print 'Fetching: '+url
-    open(file, 'w').write(urllib.urlopen(url).read())
+    open('chrome/content/'+file, 'w').write(urllib.urlopen(url).read())
 

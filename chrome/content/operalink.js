@@ -1,4 +1,5 @@
-/*
+/**
+ * @license
  * Copyright 2011 Joel Spadin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,8 @@
  * limitations under the License.
  */
 
-/*
+/**
+ * @overview
  * This library facilitates making requests to the Opera Link synchronization
  * server. It is intended for use in Opera extensions, but it can be used in any
  * situation where JavaScript security allows cross domain XML HTTP requests.
@@ -75,7 +77,8 @@ try {
 	opera;
 } catch (error) {
 	/**
-	 * @namespace Opera
+	 * @namespace
+	 * @desc Nothing to see here. Move along.
 	 */
 	opera = new function Opera() {};
 }
@@ -83,80 +86,85 @@ try {
 try {
 	widget;
 } catch (error) {
-	var widget = undefined;
+	widget = undefined;
 }
 
 
 /**
- * @namespace Handles communication and authentication with the Opera Link server.
- * @requires Add access to https://auth.opera.com and https://link.api.opera.com 
- * in your extension's config.xml. Requires oauth.js and sha.js.
+ * @namespace
+ * @desc Handles communication and authentication with the Opera Link server.
+ * Add access to https://auth.opera.com and https://link.api.opera.com 
+ * in your extension's config.xml. 
+ * @requires oauth.js 
+ * @requires sha.js
  */
 opera.link = new function OperaLink() {
 	
 	/**
-	 * @class A list of the response codes used by Opera Link
-	 * @static
+	 *	Enum of the response codes used by Opera Link
+	 * @readonly
+	 * @enum {number{
 	 */
 	this.response = {
 		/**
-		 * 200: The request completed successfully.
-		 * @constant
+		 * 200 : The request completed successfully.
 		 */
 		Ok: 200,
 		/**
 		 * 204 : The item was successfully deleted.
-		 * @constant
 		 */
 		Deleted: 204,
 		/**
 		 * 400 : The request is invalid and cannot be processed. The cause of this is
 		 * often missing a required parameter or trying to execute an invalid
 		 * method on an item.
-		 * @constant
 		 */
 		BadRequest: 400,
 		/**
 		 * 401 : The request cannot be allowed, possibly because your authentication
 		 * information is invalid or because too many requests sent in a short
 		 * period made the throttling ban them.
-		 * @constant
 		 */
 		Unauthorized: 401,
 		/**
 		 * 404 : The item you seek or wish to manipulate was not found
-		 * @constant
 		 */
 		NotFound: 404,
 		/**
 		 * 405 : The method you tried to use is not allowed
-		 * @constant
 		 */
 		MethodNotAllowed: 405,
 		/**
 		 * 500 : This is an unexpected server error.
-		 * @constant
 		 */
 		InternalServerError: 500,
 		/**
 		 * 501 : You are trying to execute a method that is not implemented. This can
 		 * happen when you execute a method that is not supported by the specific
 		 * datatype or if you misspelled a method name in the request.
-		 * @constant
 		 */
 		NotImplemented: 501
 	}
+
 	
 	/**
 	 * The location of the Opera Link REST API
-	 * @type String
+	 * @default 'https://link.api.opera.com/rest/'
+	 * @type String 
 	 */
 	this.apiurl = 'https://link.api.opera.com/rest/';
 	
 	/**
+	 * If true, the library will print information about requests using console.log.
+	 * @default false
+	 * @type Boolean
+	 */
+	this.debug = false;
+	
+	/**
 	 * If true, the results of actions that only return one object will be 
 	 * simplified from an array containing one object to just the one object.
-	 * Defaults to true.
+	 * @default true
 	 * @type Boolean
 	 */
 	this.simplifyResults = true;
@@ -166,12 +174,14 @@ opera.link = new function OperaLink() {
 	 * call this function instead of opera.extension.tabs.create to show the user
 	 * the authorization page. The function should take one parameter, the url
 	 * of the authorization page.
-	 * @type Function
+	 * @default null
+	 * @type Function(url)
 	 */
 	this.authorizeFunction = null;
 	
 	/**
 	 * Sets the storage object used by saveToken and loadToken
+	 * @default widget.preferences if available, otherwise localStorage
 	 * @type Storage
 	 */
 	this.storage = (widget && widget.preferences) ? widget.preferences : localStorage;
@@ -225,6 +235,9 @@ opera.link = new function OperaLink() {
 	
 		xhr.open(message.method, url, true);
 		xhr.send(null);
+		
+		if (this.debug)
+			console.debug('GET', url);
 	}
 	
 	/**
@@ -254,7 +267,32 @@ opera.link = new function OperaLink() {
 		xhr.open(message.method, message.action, true);
 		xhr.setRequestHeader('Authorization', authorizationHeader);
 		xhr.setRequestHeader('Content-Type', 'application/json');
-		xhr.send(requestBody);
+		try {
+			if (typeof(Components) != "undefined" && Components.classes ||
+					navigator.appCodeName == 'Mozilla' && navigator.vendor == '') { // detect Firefox
+				// some Firefox-only stuff. Firefox sends an extra charset parameter
+				// with the request, which Opera Link doesn't like. The only way to
+				// not send that extra parameter, is to send it as binary data.
+				// sendAsBinary can't handle non-ASCII characters, so those have to
+				// be encoded.
+				var requestBodyEscaped = '';
+				for (var i=0; i<requestBody.length; i++) {
+					var c = requestBody.charCodeAt(i);
+					if (c > 127) {
+						c = c.toString(16);
+						while (c.length < 4) c = '0'+c;
+						c = '\\u'+c;
+					}else {c = String.fromCharCode(c);}
+					requestBodyEscaped += c;
+				}
+				xhr.sendAsBinary(requestBodyEscaped);
+			} else {
+				xhr.send(requestBody);
+			}
+		} catch (e) { console.error(e); console.trace() }
+		
+		if (this.debug)
+			console.debug('POST', url, message.parameters);
 	}
 	
 	/**
@@ -276,6 +314,15 @@ opera.link = new function OperaLink() {
 	this.authorize = function(token, secret) {
 		accessor.token = token;
 		accessor.tokenSecret = secret;
+	}
+	
+	/**
+	 * Unsets the OAuth access token and token secret. To clear tokens that are
+	 * saved to storage, use clearSavedToken() instead.
+	 */
+	this.deauthorize = function() {
+		accessor.token = null;
+		accessor.tokenSecret = null;
 	}
 	
 	/**
@@ -410,14 +457,6 @@ opera.link = new function OperaLink() {
 		this.storage.removeItem('oauth_secret');
 	}
 
-	/**
-	 * Drops the OAuth token and token secret.
-	 */
-	this.dropToken = function() {
-		delete accessor.token;
-		delete accessor.tokenSecret;
-	}
-
 
 	/**
 	 * Parses the response of a token request
@@ -438,7 +477,8 @@ opera.link = new function OperaLink() {
 
 
 /**
- * @namespace Utility methods and methods common to all datatypes
+ * @namespace
+ * @desc Utility methods and methods common to all datatypes
  */
 opera.link.util = new function OperaLinkUtils() {
 	
@@ -502,6 +542,7 @@ opera.link.util = new function OperaLinkUtils() {
 	 * Returns an image data URL suitable for use when creating bookmarks
 	 * @param {HTMLImageElement} image The image to convert
 	 * @param {Number} [size] The size of the icon (defaults to 16)
+	 * @returns {String} A data URL of the icon formatted as image/png
 	 */
 	this.makeIcon = function(image, size) {
 		size = size || 16;
@@ -520,13 +561,15 @@ opera.link.util = new function OperaLinkUtils() {
 	 * fail silently without calling the callback function.
 	 * @param {String} src The location of the icon
 	 * @param {Function(dataurl)} callback A function which will be called with 
-	 *		the result of the request. The function should is passed one argument, 
+	 *		the result of the request. The function is passed one argument: 
 	 *		either the icon encoded as a data URL, or null if the request failed
+	 *	@param {Number} [size] The size of the icon (defaults to 16)
 	 */
-	this.getIcon = function(src, callback) {
+	this.getIcon = function(src, callback, size) {
 		var img = new Image();
+		size = size || 16
 		img.onload = function() {
-			callback(opera.link.util.makeIcon(img));
+			callback(opera.link.util.makeIcon(img, size));
 		}
 		img.onerror = function() {
 			callback(null);
@@ -537,7 +580,10 @@ opera.link.util = new function OperaLinkUtils() {
 	
 	
 	/**
-	 * Helper function to simplify results of requests that only return one item
+	 * Helper function to simplify results of requests that only return one item.
+	 * Replaces single element arrays with the one element.
+	 * @param {Object} data The result object
+	 * @param {Function(result)} callback The original callback function
 	 */
 	this.simplify = function(data, callback) {
 		if (opera.link.simplifyResults && data.response.length == 1) 
@@ -561,7 +607,8 @@ opera.link.util = new function OperaLinkUtils() {
 
 
 /**
- * @namespace Accesses and/or manipulates synchronized bookmarks
+ * @namespace
+ * @desc Accesses and/or manipulates synchronized bookmarks
  */
 opera.link.bookmarks = new function OperaLinkBookmarks() {
 	
@@ -580,15 +627,28 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 		util.get(type, item, null, callback);
 	}
 	
+	
 	/**
-	 * Gets an array of all bookmarks inside a folder
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * Gets an array of all bookmarks inside the root folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
-	 * @param {null|String} [parent] The id of the parent folder or null to use the root
+	 *//**
+	 *	Gets an array of all bookmarks inside a folder
+	 *	@param {String} id The id of the parent folder
+	 *	@param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
 	 */
-	this.getAll = function(callback, parent) {
+	this.getAll = function(callback) {
+		var parent = null;
+		if (typeof callback == 'string') {
+			parent = arguments[0];
+			callback = arguments[1];
+		}
+		
 		var item = parent ? parent + '/descendants' : 'descendants';
 		item = item.replace('//', '/');
 		util.get(type, item, null, callback);
@@ -597,13 +657,27 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 	/**
 	 * Creates a new bookmark
 	 * @param {Object} params The bookmark's properties
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * @param {Function} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new bookmark inside a folder
+	 * @param {Object} params The bookmark's properties
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.create = function(params, parent, callback) {
+	this.create = function(params) {
+		var parent = null;
+		var callback = arguments[1];
+		if (typeof callback == 'string') {
+			parent = arguments[1];
+			callback = arguments[2];
+		}
+		
 		params.item_type = 'bookmark';
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
@@ -612,14 +686,28 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 
 	/**
 	 * Creates a new bookmark folder
-	 * @param {Object} params The bookmark's properties
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * @param {Object} params The bookmark folder's properties
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new bookmark folder inside a folder
+	 * @param {Object} params The bookmark folder's properties
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.createFolder = function(params, parent, callback) {
+	this.createFolder = function(params) {
+		var parent = null;
+		var callback = arguments[1];
+		if (typeof callback == 'string') {
+			parent = arguments[1];
+			callback = arguments[2];
+		}
+		
 		params.item_type = 'bookmark_folder';
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
@@ -627,16 +715,27 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 	}
 	
 	/**
-	 * Create a new bookmark separator
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * Creates a new bookmark separator
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new bookmark separator inside a folder
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.createSeparator = function(parent, callback) {
+	this.createSeparator = function(callback) {
+		var parent = null;
+		if (typeof callback == 'string') {
+			parent = arguments[0];
+			callback = arguments[1];
+		}
+		
 		var params = {item_type: 'bookmark_separator'};
-		parent = parent || null;
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
 		});
@@ -706,7 +805,8 @@ opera.link.bookmarks = new function OperaLinkBookmarks() {
 }
 
 /**
- * @namespace Accesses and/or manipulates synchronized notes
+ * @namespace
+ * @desc Accesses and/or manipulates synchronized notes
  */
 opera.link.notes = new function OperaLinkNotes() {
 	
@@ -726,14 +826,26 @@ opera.link.notes = new function OperaLinkNotes() {
 	}
 	
 	/**
-	 * Gets an array of all notes inside a folder
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * Gets an array of all notes inside the root folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
-	 *	@param {null|String} [parent] The id of the parent folder or null to use the root
+	 *//**
+	 *	Gets an array of all notes inside a folder
+	 *	@param {String} id The id of the parent folder
+	 *	@param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
 	 */
-	this.getAll = function(callback, parent) {
+	this.getAll = function(callback) {
+		var parent = null;
+		if (typeof callback == 'string') {
+			parent = arguments[0];
+			callback = arguments[1];
+		}
+		
 		var item = parent ? parent + '/descendants' : 'descendants';
 		item = item.replace('//', '/');
 		util.get(type, item, null, callback);
@@ -742,13 +854,27 @@ opera.link.notes = new function OperaLinkNotes() {
 	/**
 	 * Creates a new note
 	 * @param {Object} params The note's properties
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * @param {Function} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new note inside a folder
+	 * @param {Object} params The note's properties
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.create = function(params, parent, callback) {
+	this.create = function(params) {
+		var parent = null;
+		var callback = arguments[1];
+		if (typeof callback == 'string') {
+			parent = arguments[1];
+			callback = arguments[2];
+		}
+		
 		params.item_type = 'note';
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
@@ -756,15 +882,29 @@ opera.link.notes = new function OperaLinkNotes() {
 	}
 
 	/**
-	 * Creates a new note folder
-	 * @param {Object} params The note's properties
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * Creates a new note folder folder
+	 * @param {Object} params The note folder's properties
+	 * @param {Function} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new note folder inside a folder
+	 * @param {Object} params The note folder's properties
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.createFolder = function(params, parent, callback) {
+	this.createFolder = function(params) {
+		var parent = null;
+		var callback = arguments[1];
+		if (typeof callback == 'string') {
+			parent = arguments[1];
+			callback = arguments[2];
+		}
+		
 		params.item_type = 'note_folder';
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
@@ -772,16 +912,27 @@ opera.link.notes = new function OperaLinkNotes() {
 	}
 	
 	/**
-	 * Create a new note separator
-	 * @param {null|String} parent The parent folder's id
-	 * @param {Function(result)} callback Function which is called with the result
-	 *		of the request. The function is passed one argument, an object with 
-	 *		two properties: "status", the response code, and "response", the JSON 
+	 * Creates a new note separator folder
+	 * @param {Function} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
+	 *		parsed response body.
+	 *//**
+	 * Creates a new note separator inside a folder
+	 * @param {String} parent The id of the parent folder
+	 * @param {Function(result)} callback A function which will be called with the result
+	 *		of the request. The callback function is passed one argument, an object 
+	 *		with two properties: "status", the response code, and "response", the JSON 
 	 *		parsed response body.
 	 */
-	this.createSeparator = function(parent, callback) {
+	this.createSeparator = function(callback) {
+		var parent = null;
+		if (typeof callback == 'string') {
+			parent = arguments[0];
+			callback = arguments[1];
+		}
+		
 		var params = {item_type: 'note_separator'};
-		parent = parent || null;
 		util.post('create', type, parent, params, function(data) { 
 			opera.link.util.simplify(data, callback);
 		});
@@ -851,7 +1002,8 @@ opera.link.notes = new function OperaLinkNotes() {
 }
 
 /**
- * @namespace Accesses and/or manipulates synchronized search engines
+ * @namespace
+ * @desc Accesses and/or manipulates synchronized search engines
  */
 opera.link.searchengines = new function OperaLinkSearchEngines() {
 	
@@ -925,7 +1077,8 @@ opera.link.searchengines = new function OperaLinkSearchEngines() {
 }
 
 /**
- * @namespace Access and/or manipulates synchronized speed dial entries
+ * @namespace
+ * @desc Access and/or manipulates synchronized speed dial entries
  */
 opera.link.speeddial = new function OperaLinkSpeedDial() {
 	
@@ -1001,7 +1154,8 @@ opera.link.speeddial = new function OperaLinkSpeedDial() {
 }
 
 /**
- * @namespace Access and/or manipulates synchronized URL filters
+ * @namespace 
+ * @desc Access and/or manipulates synchronized URL filters
  */
 opera.link.urlfilter = new function OperaLinkUrlFilter() {
 	

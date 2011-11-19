@@ -36,6 +36,7 @@ gbm.defaults = {
 	'gbm_folderSep':     '/',
 	'gbm_lastSync':      0,
 }
+var default_key;
 for (default_key in gbm.defaults) {
 	if (localStorage[default_key] === undefined ||
 		localStorage[default_key] === null) {
@@ -44,18 +45,10 @@ for (default_key in gbm.defaults) {
 }
 
 
-
-gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
-gbm.folderSep     = localStorage['gbm_folderSep'];
-gbm.lastSync      = localStorage['gbm_lastSync'];
-
-
-gbm.init = function (enable) {
-	gbm.status = statuses.READY;
-
-	if (localStorage['gbm_enabled']) {
-		gbm.enable();
-	}
+gbm._init = function (enable) {
+	gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
+	gbm.folderSep     = localStorage['gbm_folderSep'];
+	gbm.lastSync      = localStorage['gbm_lastSync'];
 };
 
 // (re) start
@@ -154,9 +147,11 @@ gbm.update_data = function () {
 	gbm.update_urls(g_bookmarks);
 };
 gbm.update_urls = function (folder) {
+	var url;
 	for (url in folder.bm) {
 		gbm.added_bookmark(folder.bm[url]);
 	}
+	var title;
 	for (title in folder.f) {
 		gbm.update_urls(folder.f[title]);
 	}
@@ -180,9 +175,11 @@ gbm.save_state = function () {
 
 gbm.get_state = function (state, folder) {
 	state.id = folder.id;
+	var url;
 	for (url in folder.bm) {
 		state.bm.push(folder.bm[url].id+'\n'+url);
 	}
+	var title;
 	for (title in folder.f) {
 		state.f[title] = {bm: [], f: {}};
 		gbm.get_state(state.f[title], folder.f[title]);
@@ -207,6 +204,7 @@ gbm.calculate_actions = function (state, folder) {
 			}
 		}
 	}
+	var title;
 	for (title in state.f) {
 		var substate = state.f[title];
 		if (!folder.f[title]) {
@@ -425,9 +423,11 @@ gbm.f_del = function (target, folder) {
 	// if this is a known change
 	if (target == gbm) return;
 
+	var url;
 	for (url in folder.bm) {
 		gbm.bm_del(target, folder.bm[url]);
 	}
+	var title;
 	for (title in folder.f) {
 		gbm.f_del(target, folder.f[title]);
 	}
@@ -502,9 +502,11 @@ gbm.delete_bookmark = function (id) {
 };
 
 gbm.upload_all = function (folder) {
+	var url;
 	for (url in folder.bm) {
 		gbm.changed[url] = folder.bm[url];
 	}
+	var title;
 	for (title in folder.f) {
 		gbm.upload_all(folder.f[title]);
 	}
@@ -512,6 +514,7 @@ gbm.upload_all = function (folder) {
 
 gbm.commit = function () {
 	var has_changes = false;
+	var url;
 	for (url in gbm.changed) {
 		has_changes = true;
 

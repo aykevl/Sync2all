@@ -5,24 +5,49 @@
 var nsIConsoleService = Components.classes["@mozilla.org/consoleservice;1"]
     .getService(Components.interfaces.nsIConsoleService);
 
+function o2s (o) {
+	if (typeof (o) === 'object') {
+		// dump the contents of the object
+		var s = ':{';
+		var key;
+		for (key in o) {
+			s += key+':'+o[key]+',';
+		}
+		s += '}';
+		return s;
+	}
+	return o;
+}
+
 if (!console) {
 	var console = {
 		log: function (s) {
+			s = o2s(s);
 			dump('INFO:\t'+s+'\n');
 			//Components.utils.reportMessage(s);
 			//nsIConsoleService.logStringMessage(s);
 		},
 		error: function (s) {
-			dump('ERR:\t'+s+'\n');
 			Components.utils.reportError(s);
+			s = o2s(s);
+			dump('ERR:\t'+s+'\n');
 		},
 		warn: function (s) {
+			s = o2s(s);
 			dump('WARN:\t'+s+'\n');
 			nsIConsoleService.logStringMessage(s);
 		},
 		trace: function () {
-			// isn't possible?
-			// Ignore for now.
+			// see http://eriwen.com/javascript/js-stack-trace/
+			try {
+				i.dont.exist += 1; // will raise an error
+			} catch (e) {
+				var lines = e.stack.split('\n');
+				lines.shift(); // remove the last -- that line is just a dummy error.
+				for (var i=0; i<lines.length; i++) {
+					dump('TRACE:\t'+i+'. '+lines[i]+'\n');
+				}
+			}
 		},
 	};
 }

@@ -9,8 +9,8 @@ if (browser.name == 'chrome') {
 	links = [gchr, gbm, opl];
 } else if (browser.name == 'firefox') {
 	current_browser = fx;
-	remotes = [gbm]; // opl not supported yet
-	links = [fx, gbm];
+	remotes = [gbm, opl];
+	links = [fx, gbm, opl];
 } else if (browser.name == 'opera') {
 	current_browser = opl;
 	remotes = [gbm];
@@ -59,6 +59,10 @@ function popupCreated(window, document) {
 		// needed for opening a new tab
 		current_window = window;
 		current_document = document;
+		if (opl.status == statuses.AUTHORIZING) {
+			// display input
+			opl.fx_display_input();
+		}
 	}
 
 	if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
@@ -297,9 +301,11 @@ function onChanged(link, node, changeInfo) {
 
 // whether this folder-node has contents (bookmarks or folders)
 function has_contents(folder) {
+	var url;
 	for (url in folder.bm) {
 		return true;
 	}
+	var title;
 	for (title in folder.f) {
 		return true;
 	}
@@ -323,9 +329,7 @@ function initSync () {
 	startSync = 0; // will be updated when targets are synchronized
 
 	// initialize when needed
-	if (current_browser.init) {
-		current_browser.init();
-	}
+	current_browser.init();
 
 	// and start the browser link
 	current_browser.enable();
@@ -477,6 +481,7 @@ function merge (link) {
 };
 
 function mergeProperties(from, to) {
+	var key;
 	for (key in from) {
 		if (key == 'bm' || key == 'f' || key == 'parentNode') continue;
 		if (to[key] === undefined) {
@@ -493,6 +498,7 @@ function mergeBookmarks(local, remote, target) {
 	mergeProperties(remote, local);
 
 	// unique local folders
+	var title;
 	for (title in local.f) {
 		var local_subfolder = local.f[title];
 
@@ -512,6 +518,7 @@ function mergeBookmarks(local, remote, target) {
 	}
 
 	// find unique remote bookmarks
+	var url;
 	for (url in remote.bm) {
 		var bookmark = remote.bm[url];
 		
@@ -533,6 +540,7 @@ function mergeBookmarks(local, remote, target) {
 	}
 
 	// resolve unique local bookmarks
+	var url;
 	for (url in local.bm) {
 		var bm = local.bm[url];
 		if (!(url in remote.bm)) {
@@ -559,6 +567,7 @@ function mergeBookmarks(local, remote, target) {
 	}
 
 	// find unique remote folders (for example, Google Bookmarks)
+	var title;
 	for (title in remote.f) {
 		var rsubfolder = remote.f[title];
 
@@ -587,12 +596,14 @@ function syncRFolder(target, rfolder, lparentfolder) {
 	call_all('f_add', target, [lfolder]);
 
 	// sync bookmarks
+	var url;
 	for (url in rfolder.bm) {
 		var rbookmark = rfolder.bm[url];
 		bookmark_count += syncRBookmark(target, rbookmark, lfolder);
 	}
 
 	// sync folders/labels
+	var title;
 	for (title in rfolder.f) {
 		var subrfolder = rfolder.f[title];
 		console.log(subrfolder);
@@ -619,13 +630,14 @@ function syncLFolder(target, folder) {
 
 	// sync folders
 	var subfolder;
+	var title;
 	for (title in folder.f) {
 		subfolder = folder.f[title];
 		bookmark_count += syncLFolder(target, subfolder);
 	}
 
 	// sync bookmarks
-	var bm;
+	var bm, url;
 	for (url in folder.bm) {
 		bm = folder.bm[url];
 		bookmark_count += syncLBookmark(target, bm);
