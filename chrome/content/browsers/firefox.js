@@ -52,8 +52,14 @@ var fx = {
 			if (node.type == node.RESULT_TYPE_FOLDER) {
 				if (folder.f[node.title]) {
 					// duplicate
-					// TODO move contents to old folder
-					continue;
+					var subfolder = folder.f[node.title];
+					if (!has_contents(subfolder)) {
+						console.log('fx: has no contents: '+subfolder.title);
+						fx.f_del(fx, subfolder.opl_id);
+					} else if (false) {
+						// TODO check for empty folder
+						continue;
+					}
 				}
 				var subfolder = {title: node.title, id: node.itemId,
 					bm: {}, f: {}, parentNode: folder};
@@ -184,6 +190,25 @@ var fx = {
 	f_add: function (link, folder) {
 		folder.id = fx.bmsvc.createFolder(folder.parentNode.id, folder.title, fx.bmsvc.DEFAULT_INDEX)
 		fx.ids[folder.id] = folder;
+	},
+
+	f_del: function (link, folder) {
+		// first, remove the contents of this folder
+
+		// remove URLs
+		var url;
+		for (url in folder.bm) {
+			fx.bm_del(fx, folder.bm[url]);
+		}
+		// remove folders
+		var title;
+		for (title in folder.f) {
+			fx.f_del(fx, folder.f[title]);
+		}
+
+		// now, remove the folder itself and remove references to it.
+		delete fx.ids[folder.id];
+		fx.bmsvc.removeItem(folder.id);
 	},
 
 	bm_add: function (link, bm) {

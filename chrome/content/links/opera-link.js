@@ -19,13 +19,7 @@ if (browser.name == 'chrome') {
 	};
 } else if (browser.name == 'firefox') {
 	opera.link.authorizeFunction = function (url) {
-		if (is_popup_open) {
-			current_window.getBrowser().addTab(url);
-		} else {
-			console.log('Popup not open, so don\'t know in which window I \
-should open the tab. Opera Link is now disabled.');
-			opl.stop();
-		}
+		Application.activeWindow.open(IOService.newURI(url, null, null));
 	};
 	opl.fx_display_input = function () {
 		current_document.getElementById('sync2all-opl-verifier-container').style.display = '';
@@ -524,10 +518,10 @@ opl.parse_bookmarks = function (array, folder) {
 
 					// if the other is empty, remove it
 					if (!has_contents(subfolder)) {
-						console.log('has no contents: '+subfolder.title);
+						console.log('opl: has no contents: '+subfolder.title);
 						opera.link.bookmarks.deleteItem(subfolder.opl_id, function(){});
 					} else if (!item.children) {
-						console.log('has no childs: '+item.properties.title);
+						console.log('opl: has no childs: '+item.properties.title);
 						opera.link.bookmarks.deleteItem(item.id, function(){});
 					}
 				} else {

@@ -26,6 +26,9 @@ if (browser.name == 'firefox') {
 	// window of popup
 	var current_window;
 	var current_document;
+	// load FUEL
+	var Application = Components.classes["@mozilla.org/fuel/application;1"].getService(Components.interfaces.fuelIApplication);
+	var IOService   = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 } else if (browser.name == 'opera') {
 	var popup_port;
 }
