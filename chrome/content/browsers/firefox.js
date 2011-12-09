@@ -55,7 +55,7 @@ var fx = {
 					var subfolder = folder.f[node.title];
 					if (!has_contents(subfolder)) {
 						console.log('fx: has no contents: '+subfolder.title);
-						fx.f_del(fx, subfolder.opl_id);
+						fx.f_del(fx, subfolder);
 					} else if (false) {
 						// TODO check for empty folder
 						continue;
