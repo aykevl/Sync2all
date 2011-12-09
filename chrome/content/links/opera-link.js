@@ -630,7 +630,12 @@ opl.bm_add = function (target, bm, folder) {
 				// TODO: last visited timestamp, comments (from Google Bookmarks)
 				console.log('bm_add');
 
-				// create(params, [parent,] callback);
+				if (!bm.title) {
+					// fix title. Opera Link needs a title
+					var oldtitle = bm.title;
+					bm.title = bm.url;
+					call_all('bm_mod_title', opl, [bm, oldtitle]);
+				}
 				if (folder.opl_id) {
 					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
 				} else {

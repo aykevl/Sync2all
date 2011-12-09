@@ -151,7 +151,7 @@ gchr.import_bms = function (results) {
 		if (result.url) {
 			// bookmark
 			var bm = {title: result.title, url: result.url, timestamp: result.dateAdded, parentNode: folder, id: result.id};
-			addBookmark(gchr, bm);
+			if (addBookmark(gchr, bm)) continue; // error
 		} else {
 			// folder
 			var subfolder = {bm: {}, f: {}, title: result.title, parentNode: folder, id: result.id};
@@ -291,7 +291,7 @@ gchr.evt_onCreated = function (id, node) {
 		gchr.ids[id] = bookmark;
 		//parentNode.bm[bookmark.url] = bookmark;
 		//call_all('bm_add', gchr, [bookmark]);
-		addBookmark(gchr, bookmark);
+		if (addBookmark(gchr, bookmark)) return; // error
 	} else {
 		// folder
 		console.log('Created new empty folder: '+node.title);

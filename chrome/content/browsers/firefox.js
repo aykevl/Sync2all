@@ -113,7 +113,7 @@ var fx = {
 			var bm = {url: fx.restore_chrome_uri(uri.resolve(null)),
 					title: title, id: id, parentNode: fx.ids[parentId]};
 			fx.ids[bm.id] = bm;
-			addBookmark(fx, bm);
+			if (addBookmark(fx, bm)) return; // error
 		} else if (type == fx.bmsvc.TYPE_FOLDER) {
 			var folder = {title: title, bm: {}, f: {},
 				parentNode: fx.ids[parentId], id: id};
@@ -255,7 +255,7 @@ var fx = {
 		return url.substr(0, 9) == 'chrome://';
 	},
 
-	import_node: function (id) {
+	/*import_node: function (id) {
 		// get the node type
 		var type = fx.bmsvc.getItemType(id);
 
@@ -274,7 +274,7 @@ var fx = {
 			fx.ids[folder.id] = folder;
 			addFolder(fx, folder);
 		}
-	}
+	}*/
 }
 
 use_target(fx);

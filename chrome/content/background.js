@@ -148,9 +148,9 @@ function addNode(source, node, parentNode) {
 	}
 	node.parentNode = parentNode;
 	if (node.url) {
-		addBookmark(source, node);
+		return addBookmark(source, node);
 	} else {
-		addFolder(source, node);
+		return addFolder(source, node);
 	}
 }
 function addBookmark(source, bm) {
@@ -158,8 +158,20 @@ function addBookmark(source, bm) {
 		console.log(bm);
 		throw 'Undefined parentNode';
 	}
+	if (fixBookmark(bm)) return true; // error
 	bm.parentNode.bm[bm.url] = bm;
 	call_all('bm_add', source, [bm]);
+}
+function fixBookmark(bm, url) { // url is the ID
+	// try to fix the url
+	if (!bm.url && url) bm.url = url;
+	// if it can't be fixed, remove
+	if (!bm.url) return true;
+	// if there's no title, set the url as the title
+	// Only Opera Link doesn't seem to support empty title, so fix it there.
+	/*if (!bm.title) {
+		bm.title = bm.url;
+	}*/
 }
 function addFolder(source, folder) {
 	folder.parentNode.f[folder.title] = folder;
@@ -522,8 +534,8 @@ function mergeBookmarks(local, remote, target) {
 	for (url in remote.bm) {
 		var bookmark = remote.bm[url];
 		
-		// ignore empty bookmarks
-		if (!bookmark.title || !bookmark.url) continue;
+		// fix and ignore bad bookmarks
+		if (fixBookmark(bookmark, url)) continue;
 
 		if (!(url in local.bm)) {
 			// unique remote bookmark
@@ -543,10 +555,18 @@ function mergeBookmarks(local, remote, target) {
 	var url;
 	for (url in local.bm) {
 		var bm = local.bm[url];
+
+		// repair and remove broken bookmarks
+		if (fixBookmark(bm)) {
+			delete local.bm[url];
+			continue;
+		}
+
 		if (!(url in remote.bm)) {
 			// unique local bookmark
 			console.log('Unique local bookmark: '+bm.url);
 			syncLBookmark(target, bm);
+
 		} else {
 
 			// TODO merge changes (changed title etc.)
@@ -672,7 +692,7 @@ function delRBookmark(target, bookmark, lfolder) {
 function pushRBookmark(link, bookmark, lfolder) {
 	console.log('New remote bookmark: '+bookmark.url);
 	bookmark.parentNode = lfolder;
-	addBookmark(link, bookmark);
+	addBookmark(link, bookmark); // TODO check for errors
 	return 1;
 }
 
