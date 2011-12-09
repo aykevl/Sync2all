@@ -668,8 +668,9 @@ opl.bm_del = opl.f_del = function (target, node) {
 	opl.queue_add(
 			function (node) {
 				if (!node.opl_id) {
-					throw 'No opl_id in bookmark node:';
+					console.error('No opl_id in bookmark node (bug somewhere else!):');
 					console.log(node);
+					opl.queue_next(); // WARNING this just skips this error
 				}
 				opera.link.bookmarks.deleteItem(node.opl_id, opl.itemDeleted);
 			}, node);

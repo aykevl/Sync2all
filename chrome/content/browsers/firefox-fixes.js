@@ -14,7 +14,12 @@ function o2s (o) {
 			s += key+':'+o[key]+',';
 		}
 		s += '}';
-		return s;
+		if (s.length > 1024*5) { // 5KB
+			// should prevent the console to be filled with useless data
+			return s.substr(0, 1024*5)+'..............';
+		} else {
+			return s;
+		}
 	}
 	return o;
 }

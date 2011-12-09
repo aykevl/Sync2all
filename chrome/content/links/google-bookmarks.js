@@ -264,10 +264,14 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 	var bm_elements = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');
 	var bm_element;
 	for (var i=0; bm_element=bm_elements[i]; i++) {
-		var title     =          bm_element.getElementsByTagName('title'    )[0].firstChild.nodeValue;
+		if (!bm_element.getElementsByTagName('title').length) {
+			// bookmark may have no title
+			var title = undefined;
+		} else {
+			var title =          bm_element.getElementsByTagName('title'    )[0].firstChild.nodeValue;
+		}
 		var url       =          bm_element.getElementsByTagName('url'      )[0].firstChild.nodeValue;
 		url = url.replace(/ /g, '%20');
-		//gbm.urls[value] = bookmark;
 		var timestamp = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000; // same kind of value as returned by (new Date()).getTime();
 		var id        =          bm_element.getElementsByTagName('id'       )[0].firstChild.nodeValue;
 
