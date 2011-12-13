@@ -18,7 +18,7 @@ function use_target (target, isBrowser) {
 			target._init(); // should also be called only once
 		}
 
-		if (target != current_browser) {
+		if (target != browser.link) {
 			// start if enabled
 			if (localStorage[target.shortname+'_enabled']) {
 				target.enable();
@@ -31,7 +31,7 @@ function use_target (target, isBrowser) {
 		if (status !== undefined) {
 			target.status = status;
 		}
-		if (target == current_browser) return; // not in popup
+		if (target == browser.link) return; // not in popup
 		if (!is_popup_open) return;
 
 		// make make human-readable message
@@ -109,7 +109,7 @@ function use_target (target, isBrowser) {
 	}
 
 	target.may_save_state = function () {
-		if (current_browser.queue.running ||
+		if (browser.link.queue.running ||
 			target.has_saved_state ||
 			target.status ||
 			!target.save_state) {
@@ -147,7 +147,7 @@ function use_target (target, isBrowser) {
 		target.enabled = true;
 		// don't do these things for the browser link, they are only meant for
 		// the links to extern sources
-		if (target != current_browser) {
+		if (target != browser.link) {
 			localStorage[target.shortname+'_enabled'] = true;
 			remotes_enabled.push(target);
 		}
@@ -250,7 +250,7 @@ function use_queue (obj) {
 		this.may_save_state();
 
 		// if this is the browser
-		if (this == current_browser) {
+		if (this == browser.link) {
 			// save all states when they are ready
 			call_all('may_save_state');
 		}

@@ -45,7 +45,7 @@ gchr.start = function () {
 };
 
 gchr.finished_start = function () {
-	// merge() depends on current_browser.ids
+	// merge() depends on browser.link.ids
 	// use gchr.bookmarks because they will become g_bookmarks anyway
 	gchr.import_ids(gchr.bookmarks);
 

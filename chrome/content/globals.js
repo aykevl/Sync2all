@@ -9,7 +9,10 @@ var statuses = {
 }
 
 var browser = {};
-/*if (typeof chrome != 'undefined' && chrome.extension) {
+
+// determine browser
+// needed for background.html
+if (typeof chrome != 'undefined' && chrome.extension) {
 	browser.name = 'chrome';
 } else if (typeof (opera) != 'undefined' && opera.extension) {
 	browser.name = 'opera';
@@ -18,7 +21,7 @@ var browser = {};
 } else {
 	// unkonwn browser
 	console.log('ERROR: browser niet herkend.');
-}*/
+}
 
 
 var is_popup_open = false;
@@ -27,5 +30,5 @@ var update_batch = false;
 var debug = false;
 
 // doesn't include browser links
-var links;
+var links = [];
 

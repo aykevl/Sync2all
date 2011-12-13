@@ -77,38 +77,45 @@ function onLoad() {
 	initSync();
 }
 
-function call_all(funcname, link, params) {
+/* Call all links except #sourceLink and links that have declared they want
+ * all notifications
+ * @string funcname The function to call
+ * @object sourceLink The calling link
+ * @object params The params for the function.
+ */
+function call_all(funcname, sourceLink, params) {
 	// link should be defined
-	if (!link && link != null) {
-		console.error('BUG: link is not defined in call_all()');
+	if (!sourceLink && sourceLink != null) {
+		console.error('BUG: link is not defined, in call_all()');
 	}
 
 	// first parameter should be the link
-	if (params) params.unshift(link); // add link at the start
+	if (params) params.unshift(sourceLink); // add link at the start
 
-	var remote;
-	for (var i=0; remote=remotes_finished[i]; i++) {
+	var link;
+	for (var i=0; link=remotes_finished[i]; i++) {
 		// if this is the link where the call comes from
 		// Report changes when the link is syncing, it needs to know that
-		if (remote == link && !link.has_own_data) continue;
+		if (link == sourceLink && !sourceLink.has_own_data) continue;
 
-		func = remote[funcname];
+		func = link[funcname];
 		if (func == false) continue; // marked as not available;
 		if (func == undefined) {
-			console.warn('WARNING: '+remote.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
-			remote[funcname] = false; // prevent future logs causing lots of data
+			console.warn('WARNING: '+link.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
+			link[funcname] = false; // prevent future logs causing lots of data
 			continue;
 		}
 
 		try {
-			var self = remote;
+			// FIXME should this really use 'self'?
+			var self = link;
 			if (params) {
 				self[funcname].apply(this, params);
 			} else {
 				self[funcname].apply(this);
 			}
 		} catch (error) {
-			console.log('call_all: ERROR: in function '+funcname+' applied to link '+remote.name+':');
+			console.log('call_all: ERROR: in function '+funcname+' applied to link '+link.name+':');
 			console.error(error);
 			console.trace();
 		}
@@ -326,10 +333,10 @@ function initSync () {
 	startSync = 0; // will be updated when targets are synchronized
 
 	// initialize when needed
-	current_browser.init();
+	browser.link.init();
 
 	// and start the browser link
-	current_browser.enable();
+	browser.link.enable();
 }
 
 function target_finished(link) {
@@ -368,18 +375,18 @@ function target_finished(link) {
 	merge(link);
 
 	// is this the browser itself? start the rest!
-	if (link == current_browser) {
-		g_bookmark_ids = current_browser.ids;
-		var remote;
-		for (var i=0; remote=remotes[i]; i++) {
-			remote.init();
+	if (link == browser.link) {
+		g_bookmark_ids = browser.link.ids;
+		var otherLink;
+		for (var i=0; otherLink=links[i]; i++) {
+			otherLink.init();
 		}
 	} else {
 		// this is a real target link
 	}
 
 	// is the syncing finished? Commit changes!
-	if (remotes_enabled.length+1 == remotes_finished.length) { // current_browser isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
+	if (remotes_enabled.length+1 == remotes_finished.length) { // browser.link isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
 		commit();
 		call_all('finished_sync', null);
 	}
@@ -395,7 +402,7 @@ function apply_action (link, action) {
 		if (typeof(arg) == 'object' && arg.length) {
 			arg = get_stable_lId(link, arg);
 		} else {
-			arg = current_browser.ids[arg];
+			arg = browser.link.ids[arg];
 		}
 		if (!arg) {
 			console.warn('WARNING: action could not be applied (link: '+link.name+'):');
@@ -433,8 +440,8 @@ function apply_action (link, action) {
 
 function get_stable_lId(link, sid) {
 	// speed up. This will happen most of the time.
-	if (current_browser.ids[sid[0][0]]) {
-		return current_browser.ids[sid[0][0]];
+	if (browser.link.ids[sid[0][0]]) {
+		return browser.link.ids[sid[0][0]];
 	}
 
 	// determine the first known node
@@ -442,14 +449,14 @@ function get_stable_lId(link, sid) {
 	while (true) {
 		// the first sid[i][0] will be '1', so it isn't needed to check
 		// whether i goes too far.
-		if (current_browser.ids[sid[i][0]]) {
+		if (browser.link.ids[sid[i][0]]) {
 			break;
 		}
 		i += 1;
 	}
 
 	// make all remaining folders
-	var node = current_browser.ids[sid[i][0]];
+	var node = browser.link.ids[sid[i][0]];
 	while ( i>0 ) {
 		i -= 1;
 		// assume this is a directory
