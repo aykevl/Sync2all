@@ -13,7 +13,7 @@ var SYNC2ALL_SOURCES = [
   'chrome://sync2all/content/oauth.js',
   'chrome://sync2all/content/sha1.js',
   'chrome://sync2all/content/operalink.js',
-  'chrome://sync2all/content/target.js',
+  'chrome://sync2all/content/link.js',
 
   // links
   'chrome://sync2all/content/browsers/firefox.js',
