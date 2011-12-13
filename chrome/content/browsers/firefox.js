@@ -1,4 +1,6 @@
 
+browser.name = 'firefox';
+
 var fx = {
 	shortname: 'fx',
 	name: 'Mozilla Firefox',
@@ -277,5 +279,6 @@ var fx = {
 	}*/
 }
 
-use_target(fx);
+use_target(fx, true);
 use_queue(fx);
+

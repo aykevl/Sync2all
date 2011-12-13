@@ -65,6 +65,8 @@ if (!console) {
 var url = "http://sync2all.github.com";
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
           .getService(Components.interfaces.nsIIOService);
+var IOService = Components.classes["@mozilla.org/network/io-service;1"]
+                .getService(Components.interfaces.nsIIOService); // yes, the same. FIXME
 var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
           .getService(Components.interfaces.nsIScriptSecurityManager);
 var dsm = Components.classes["@mozilla.org/dom/storagemanager;1"]
@@ -102,3 +104,7 @@ function setTimeout(callback, interval) {
 	timer.initWithCallback({notify: callback}, interval,
 			Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 }
+
+// FUEL
+var Application = Components.classes["@mozilla.org/fuel/application;1"].getService(Components.interfaces.fuelIApplication);
+

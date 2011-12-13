@@ -22,9 +22,10 @@ var gchr = {};
 
 gchr.name = 'Google Chrome';
 gchr.shortname = 'gchr';
+browser.name = 'chrome'
 
 // include libraries
-use_target(gchr);
+use_target(gchr, true);
 use_queue(gchr);
 
 // get saved data

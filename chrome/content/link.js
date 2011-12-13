@@ -2,7 +2,15 @@
 /* Library for sync targets
  */
 
-function use_target (target) {
+function use_target (target, isBrowser) {
+
+	// initialisation of global variables
+	if (isBrowser) {
+		// this link is a browser link
+		browser.link = target;
+	} else {
+		links.push(target);
+	}
 
 	// should be called only once
 	target.init = function () {

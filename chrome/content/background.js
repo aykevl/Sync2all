@@ -1,21 +1,4 @@
 
-var current_browser;
-// TODO merge 'links' and 'remotes', or give them better names
-var remotes;
-var links;
-if (browser.name == 'chrome') {
-	current_browser = gchr; // currently only supports Google Chrome
-	remotes = [gbm, opl];
-	links = [gchr, gbm, opl];
-} else if (browser.name == 'firefox') {
-	current_browser = fx;
-	remotes = [gbm, opl];
-	links = [fx, gbm, opl];
-} else if (browser.name == 'opera') {
-	current_browser = opl;
-	remotes = [gbm];
-	links = [gbm, opl];
-}
 var remotes_enabled = [];
 var remotes_finished;
 
@@ -55,7 +38,7 @@ var downloading = false; // if downloading bookmarks*/
 function popupCreated(window, document) {
 	is_popup_open = true;
 
-	if (browser.name == 'firefox') {
+	/*if (browser.name == 'firefox') {
 		// needed for opening a new tab
 		current_window = window;
 		current_document = document;
@@ -63,15 +46,17 @@ function popupCreated(window, document) {
 			// display input
 			opl.fx_display_input();
 		}
-	}
+	}*/
 
-	if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
+	// Opera support deprecated (till they support bookmarks editing from
+	// extension), so is not needed.
+	/*if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
 		// display input
 		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
-	}
+	}*/
 
 	var link;
-	for (var i=0; link=remotes[i]; i++) {
+	for (var i=0; link=links[i]; i++) {
 		if (!link.updateStatus) continue;
 		link.updateStatus();
 	}}
@@ -79,11 +64,11 @@ function popupCreated(window, document) {
 function popupClosed() {
 	is_popup_open = false;
 
-	if (browser.name == 'firefox') {
+	/*if (browser.name == 'firefox') {
 		// save resources (may leak the whole window!)
 		delete current_window;
 		delete current_document;
-	}
+	}*/
 
 }
 
