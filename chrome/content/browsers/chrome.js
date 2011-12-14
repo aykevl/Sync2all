@@ -48,8 +48,6 @@ gchr.finished_start = function () {
 };
 
 gchr.finished_sync = function () {
-	// cleanup memory
-	delete gchr.bookmarks;
 };
 
 // import all local id's into gchr.ids

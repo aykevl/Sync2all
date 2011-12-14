@@ -106,12 +106,6 @@ function import_link (link, isBrowser) {
 		// handle request
 		if (request.action.substr(0, link.shortname.length+1) == link.shortname+'_') {
 
-			// hack, don't know why this is needed. FIXME
-			// browser.bookmarks somehow disappears.
-			if (browser.name == 'chrome') {
-				browser.bookmarks = browser.ids[1];
-			}
-
 			// convert linkid_action to msg_action
 			link['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
 		}
