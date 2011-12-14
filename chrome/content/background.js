@@ -310,15 +310,6 @@ function has_contents(folder) {
 }
 
 
-// dump all important variables
-// Only useful for debugging.
-function dump_all() {
-	console.log('--------------------------------------------------');
-	console.log('root:');
-	console.log(root);
-	console.log('--------------------------------------------------');
-}
-
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
 function initSync () {
 
