@@ -1,9 +1,8 @@
 
-browser.name = 'firefox';
-
 var fx = {
 	shortname: 'fx',
-	name: 'Mozilla Firefox',
+	fullname: 'Mozilla Firefox',
+	name: 'firefox',
 
 	_init: function () {
 		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
@@ -279,6 +278,8 @@ var fx = {
 	}*/
 }
 
-use_target(fx, true);
-use_queue(fx);
+browser = gchr;
+
+import_link(fx, true);
+import_queue(fx);
 

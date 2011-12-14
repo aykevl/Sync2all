@@ -19,14 +19,15 @@ chrome.extension.onRequest.addListener(onRequest);
 
 // prefix: gchr (Google CHRome)
 var gchr = {};
+browser = gchr;
 
-gchr.name = 'Google Chrome';
+gchr.fullname = 'Google Chrome';
 gchr.shortname = 'gchr';
-browser.name = 'chrome'
+gchr.name = 'chrome'
 
 // include libraries
-use_target(gchr, true);
-use_queue(gchr);
+import_link(gchr, true);
+import_queue(gchr);
 
 // get saved data
 gchr.lastSync = localStorage['gchr_lastSync'] || 0;
@@ -45,7 +46,7 @@ gchr.start = function () {
 };
 
 gchr.finished_start = function () {
-	// merge() depends on browser.link.ids
+	// merge() depends on browser.ids
 	// use gchr.bookmarks because they will become g_bookmarks anyway
 	gchr.import_ids(gchr.bookmarks);
 

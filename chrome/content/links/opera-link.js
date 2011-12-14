@@ -7,8 +7,8 @@ opl.name = 'Opera Link';
 opl.shortname = 'opl';
 
 // imports (or include if you want)
-use_target(opl);
-use_queue(opl);
+import_link(opl);
+import_queue(opl);
 
 var oauth;
 

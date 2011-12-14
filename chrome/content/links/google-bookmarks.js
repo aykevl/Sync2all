@@ -14,8 +14,8 @@ gbm.shortname = 'gbm';
 
 /* imports */
 
-use_target(gbm);
-use_rqueue(gbm);
+import_link(gbm);
+import_rqueue(gbm);
 
 
 /* constants */
@@ -198,7 +198,7 @@ gbm.calculate_actions = function (state, folder) {
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
 			// Ignore already removed bookmarks.
-			if (browser.link.ids[id]) {
+			if (browser.ids[id]) {
 				console.log('Bookmark deleted: '+url);
 				gbm.actions.push(['bm_del', id]);
 			}
@@ -210,17 +210,17 @@ gbm.calculate_actions = function (state, folder) {
 		if (!folder.f[title]) {
 			// if this is true, the folder has been moved or renamed and the
 			// browser link should take care of it.
-			if (browser.link.ids[substate.id]) continue;
+			if (browser.ids[substate.id]) continue;
 
 			// if this folder exists in the browser...
-			if (browser.link.ids[substate]) {
+			if (browser.ids[substate]) {
 				// mark all bookmarks inside it as deleted, and mark all folders as
 				// 'delete-if-empty'
 				gbm.mark_state_deleted(substate);
 			}
 
 			// don't recurse, because folder.f[title] doesn't exist
-			// (browser.link.ids[substate.id] can't be used because
+			// (browser.ids[substate.id] can't be used because
 			// folder.f[title] is part of gbm.bookmarks
 			continue;
 		}

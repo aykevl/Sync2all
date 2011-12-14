@@ -2,77 +2,74 @@
 /* Library for sync targets
  */
 
-function use_target (target, isBrowser) {
+function import_link (link, isBrowser) {
 
 	// initialisation of global variables
-	if (isBrowser) {
-		// this link is a browser link
-		browser.link = target;
-	} else {
-		webLinks.push(target);
+	if (!isBrowser) {
+		webLinks.push(link);
 	}
 
 	// should be called only once
-	target.init = function () {
-		if (target._init) {
-			target._init(); // should also be called only once
+	link.init = function () {
+		if (link._init) {
+			link._init(); // should also be called only once
 		}
 
-		if (target != browser.link) {
+		if (link != browser) {
 			// start if enabled
-			if (localStorage[target.shortname+'_enabled']) {
-				target.enable();
+			if (localStorage[link.shortname+'_enabled']) {
+				link.enable();
 			}
 		}
 	};
 
-	target.updateStatus = function (status) {
-		// ??? to use my object (this), I have to use 'target' instead of 'this'.
+	link.updateStatus = function (status) {
+		// ??? to use my object (this), I have to use 'link' instead of 'this'.
 		if (status !== undefined) {
-			target.status = status;
+			link.status = status;
 		}
-		if (target == browser.link) return; // not in popup
+		if (link == browser) return; // not in popup
 		if (!is_popup_open) return;
 
 		// make make human-readable message
 		var msgtext = 'Not synchronized';
-		if (target.enabled) {
-			if (target.status == statuses.READY) {
+		if (link.enabled) {
+			if (link.status == statuses.READY) {
 				msgtext = 'Synchronized';
-			} else if (target.status == statuses.AUTHORIZING) {
+			} else if (link.status == statuses.AUTHORIZING) {
 				msgtext = 'Authorizing...';
-			} else if (target.status == statuses.DOWNLOADING) {
+			} else if (link.status == statuses.DOWNLOADING) {
 				msgtext = 'Downloading...';
-			} else if (target.status == statuses.PARSING) {
+			} else if (link.status == statuses.PARSING) {
 				msgtext = 'Parsing bookmarks data...';
-			} else if (target.status == statuses.MERGING) {
+			} else if (link.status == statuses.MERGING) {
 				msgtext = 'Syncing...';
-			} else if (target.status == statuses.UPLOADING) {
-				msgtext = 'Uploading ('+((target.queue||target.r_queue).length+1)+' left)...';
+			} else if (link.status == statuses.UPLOADING) {
+				msgtext = 'Uploading ('+((link.queue||link.r_queue).length+1)+' left)...';
 			} else {
-				msgtext = 'Enabled, but unknown status (BUG! status='+target.status+')';
+				msgtext = 'Enabled, but unknown status (BUG! status='+link.status+')';
 			}
 		}
-		var btn_start = !target.enabled || !target.status && target.enabled;
-		var btn_stop  = target.enabled && !target.status;
+		var btn_start = !link.enabled || !link.status && link.enabled;
+		var btn_stop  = link.enabled && !link.status;
 
-		var message = {action: 'updateUi', shortname: target.shortname, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
+		var message = {action: 'updateUi', shortname: link.shortname, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
 
 		// send message to specific browsers
 		if (browser.name == 'chrome') {
 			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
 			if (is_popup_open) {
-				current_document.getElementById('sync2all-'+target.shortname+'-status').value = msgtext;
-				current_document.getElementById('sync2all-'+target.shortname+'-button-start').disabled = !btn_start;
-				current_document.getElementById('sync2all-'+target.shortname+'-button-stop').disabled  = !btn_stop;
+				current_document.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
+				current_document.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
+				current_document.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
 			}
 		} else if (browser.name == 'opera') {
 			opera.extension.broadcastMessage(message);
 		}
 	}
 
-	target.mark_state_deleted = function (state) {
+	link.mark_state_deleted = function (state) {
 
 		// remove the subfolders first
 		var title;
@@ -97,46 +94,46 @@ function use_target (target, isBrowser) {
 		// remove the parent folder when the contents has been deletet
 		this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
 	}
-	target.onRequest = function (request, sender, sendResponse) {
+	link.onRequest = function (request, sender, sendResponse) {
 		// handle request
-		if (request.action.substr(0, target.shortname.length+1) == target.shortname+'_') {
-			target['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
+		if (request.action.substr(0, link.shortname.length+1) == link.shortname+'_') {
+			link['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
 		}
 	}
 	if (browser.name == 'chrome') {
-		chrome.extension.onRequest.addListener(target.onRequest);
+		chrome.extension.onRequest.addListener(link.onRequest);
 	} else if (browser.name == 'firefox') {
 	}
 
-	target.may_save_state = function () {
-		if (browser.link.queue.running ||
-			target.has_saved_state ||
-			target.status ||
-			!target.save_state) {
+	link.may_save_state = function () {
+		if (browser.queue.running ||
+			link.has_saved_state ||
+			link.status ||
+			!link.save_state) {
 			return;
 		}
 
-		if ((target.queue || target.r_queue).running) {
-			console.warn(target.shortname+': '+'Queue is running but status is zero!');
-			console.log(target);
+		if ((link.queue || link.r_queue).running) {
+			console.warn(link.shortname+': '+'Queue is running but status is zero!');
+			console.log(link);
 			return; // will be started when the queue is empty
 		}
 
-		target.has_saved_state = true;
+		link.has_saved_state = true;
 
-		console.log(target.shortname+': saving state:');
+		console.log(link.shortname+': saving state:');
 		console.trace();
-		target.save_state();
+		link.save_state();
 	};
 
-	// like target.start, but only called when it is not already enabled
-	target.enable = target.msg_enable = function () {
+	// like link.start, but only called when it is not already enabled
+	link.enable = link.msg_enable = function () {
 		// don't re-enable
-		if (target.enabled) return;
+		if (link.enabled) return;
 
-		if (target.status) {
+		if (link.status) {
 			console.error('Target is not enabled but status is non-zero! (BUG!):');
-			console.log(target);
+			console.log(link);
 			delete localStorage.opl_enabled; // just to be sure
 			alert('There is a bug in Opera Link. Opera Link is now disabled. See the log for details.');
 			return;
@@ -144,47 +141,47 @@ function use_target (target, isBrowser) {
 
 		// mark enabled
 		// This also prevents that this link is started twice unneeded
-		target.enabled = true;
+		link.enabled = true;
 		// don't do these things for the browser link, they are only meant for
 		// the links to extern sources
-		if (target != browser.link) {
-			localStorage[target.shortname+'_enabled'] = true;
-			enabledWebLinks.push(target);
+		if (link != browser) {
+			localStorage[link.shortname+'_enabled'] = true;
+			enabledWebLinks.push(link);
 		}
 
 		// clear variables
-		target.has_saved_state = false;
+		link.has_saved_state = false;
 
-		// now start the target. Should be done when it is enabled
-		target.start();
+		// now start the link. Should be done when it is enabled
+		link.start();
 	};
 
 	// Stop Opera Link, but leave status information
-	target.stop = function () {
-		delete localStorage[target.shortname+'_enabled'];
-		target.enabled = false;
-		if (target != browser.link) {
-			Array_remove(enabledWebLinks, target);
+	link.stop = function () {
+		delete localStorage[link.shortname+'_enabled'];
+		link.enabled = false;
+		if (link != browser) {
+			Array_remove(enabledWebLinks, link);
 		}
-		Array_remove(remotes_finished, target);
+		Array_remove(remotes_finished, link);
 
-		target.updateStatus(statuses.READY);
+		link.updateStatus(statuses.READY);
 	};
 
 	// remove memory-eating status information and stop
 	// This will be called from the popup.
-	target.msg_disable = target.disable = function () {
-		delete localStorage[target.shortname+'_state'];
-		target.stop();
+	link.msg_disable = link.disable = function () {
+		delete localStorage[link.shortname+'_state'];
+		link.stop();
 	};
 
-	target.status = statuses.READY; // only to initialize
+	link.status = statuses.READY; // only to initialize
 
 
 };
 
 
-function use_queue (obj) {
+function import_queue (obj) {
 
 	/* variables */
 
@@ -252,7 +249,7 @@ function use_queue (obj) {
 		this.may_save_state();
 
 		// if this is the browser
-		if (this == browser.link) {
+		if (this == browser) {
 			// save all states when they are ready
 			call_all('may_save_state');
 		}
@@ -265,7 +262,7 @@ function use_queue (obj) {
 }
 
 // implement a queue of XMLHttpRequests for a given object
-function use_rqueue(obj) {
+function import_rqueue(obj) {
 
 	// variables
 	obj.r_queue= []; // remote queue (list of [payload, callback])

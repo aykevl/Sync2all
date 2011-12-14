@@ -330,10 +330,10 @@ function initSync () {
 	startSync = 0; // will be updated when targets are synchronized
 
 	// initialize when needed
-	browser.link.init();
+	browser.init();
 
 	// and start the browser link
-	browser.link.enable();
+	browser.enable();
 }
 
 function target_finished(link) {
@@ -372,8 +372,8 @@ function target_finished(link) {
 	merge(link);
 
 	// is this the browser itself? start the rest!
-	if (link == browser.link) {
-		g_bookmark_ids = browser.link.ids;
+	if (link == browser) {
+		g_bookmark_ids = browser.ids;
 		var webLink;
 		for (var i=0; webLink=webLinks[i]; i++) {
 			webLink.init();
@@ -383,7 +383,7 @@ function target_finished(link) {
 	}
 
 	// is the syncing finished? Commit changes!
-	if (enabledWebLinks.length+1 == remotes_finished.length) { // browser.link isn't in enabledWebLinks, but is in remotes_finished. The +1 is to correct this.
+	if (enabledWebLinks.length+1 == remotes_finished.length) { // browser isn't in enabledWebLinks, but is in remotes_finished. The +1 is to correct this.
 		commit();
 		call_all('finished_sync', null);
 	}
@@ -399,7 +399,7 @@ function apply_action (link, action) {
 		if (typeof(arg) == 'object' && arg.length) {
 			arg = get_stable_lId(link, arg);
 		} else {
-			arg = browser.link.ids[arg];
+			arg = browser.ids[arg];
 		}
 		if (!arg) {
 			console.warn('WARNING: action could not be applied (link: '+link.name+'):');
@@ -437,8 +437,8 @@ function apply_action (link, action) {
 
 function get_stable_lId(link, sid) {
 	// speed up. This will happen most of the time.
-	if (browser.link.ids[sid[0][0]]) {
-		return browser.link.ids[sid[0][0]];
+	if (browser.ids[sid[0][0]]) {
+		return browser.ids[sid[0][0]];
 	}
 
 	// determine the first known node
@@ -446,14 +446,14 @@ function get_stable_lId(link, sid) {
 	while (true) {
 		// the first sid[i][0] will be '1', so it isn't needed to check
 		// whether i goes too far.
-		if (browser.link.ids[sid[i][0]]) {
+		if (browser.ids[sid[i][0]]) {
 			break;
 		}
 		i += 1;
 	}
 
 	// make all remaining folders
-	var node = browser.link.ids[sid[i][0]];
+	var node = browser.ids[sid[i][0]];
 	while ( i>0 ) {
 		i -= 1;
 		// assume this is a directory

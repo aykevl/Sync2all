@@ -17,17 +17,19 @@
 	<script type="text/javascript" src="/chrome/content/link.js"></script>
 	<!--<script type="text/javascript" src="remotes/firefox-sync.js"></script>-->
 
+	<!--
+		Browsers
+		This can become a choice when needed.
+	-->
+	<!--<script type="text/javascript">
+		document.write('<script type="text/javascript" src="/chrome/content/browsers/'+browser.name+'.js"></'+'script>');
+	</script>-->
+	<script type="text/javascript" src="/chrome/content/browsers/chrome.js"></script>
+
 	<!-- links -->
 	<script type="text/javascript" src="/chrome/content/links/google-bookmarks.js"></script>
 	<script type="text/javascript" src="/chrome/content/links/opera-link.js"></script>
 	<script type="text/javascript" src="/chrome/content/links/firefox-sync.js"></script>
-
-	<!--
-		Browsers
-	-->
-	<script type="text/javascript">
-		document.write('<script type="text/javascript" src="/chrome/content/browsers/'+browser.name+'.js"></'+'script>');
-	</script>
 
 	<!-- sync engine -->
 	<script type="text/javascript" src="/chrome/content/background.js"></script>

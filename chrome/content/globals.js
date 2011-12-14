@@ -8,11 +8,11 @@ var statuses = {
 	UPLOADING:   5,
 }
 
-var browser = {};
+var browser;
 
 // determine browser
 // needed for background.html
-if (typeof chrome != 'undefined' && chrome.extension) {
+/*if (typeof chrome != 'undefined' && chrome.extension) {
 	browser.name = 'chrome';
 } else if (typeof (opera) != 'undefined' && opera.extension) {
 	browser.name = 'opera';
@@ -21,7 +21,7 @@ if (typeof chrome != 'undefined' && chrome.extension) {
 } else {
 	// unkonwn browser
 	console.log('ERROR: browser niet herkend.');
-}
+}*/
 
 
 var is_popup_open = false;
