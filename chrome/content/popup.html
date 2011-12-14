@@ -33,17 +33,17 @@ function popupClosed () {
 	console.log('popup closed');
 }
 
-function updateTarget (target) {
-	document.getElementById(target.shortname+'_status').innerText = target.message;
-	document.getElementById(target.shortname+'_button_start').disabled = !target.btn_start;
-	document.getElementById(target.shortname+'_button_stop').disabled = !target.btn_stop;
+function updateLink (link) {
+	document.getElementById(link.shortname+'_status').innerText = link.message;
+	document.getElementById(link.shortname+'_button_start').disabled = !link.btn_start;
+	document.getElementById(link.shortname+'_button_stop').disabled = !link.btn_stop;
 }
 
 function onMessage (request, sender, sendResponse) {
 	if (!request) return;
 	console.log(request);
 	if (request.action == 'updateUi') {
-		updateTarget(request);
+		updateLink(request);
 		sendResponse(undefined);
 	}
 }
@@ -66,7 +66,7 @@ function init_popup () {
 			}
 
 			if (message.action == 'updateUi') {
-				updateTarget(message);
+				updateLink(message);
 				return;
 			}
 
@@ -112,31 +112,31 @@ body {
 }
 
 /* TODO: better style */
-.target {
+.link {
 	border: 5px #aaaaff outset;
 	background: #ccccff;
 	padding: 0.3em;
 	margin: 0.3em;
 }
 
-.target .status {
+.link .status {
 	font-style: italic;
 	color: #333333;
 	font-size: 80%;
 	white-space: nowrap;
 }
-.target .name {
+.link .name {
 	float: left;
 	white-space: nowrap;
 	font-weight: bold;
 }
-.target .buttons {
+.link .buttons {
 	white-space: nowrap;
 }
-.target .statusline {
+.link .statusline {
 	white-space: nowrap;
 }
-.target input[type="text"] {
+.link input[type="text"] {
 	font-family: monospace;
 	width: 7em;
 	margin-right: 2px;
@@ -153,14 +153,14 @@ body {
 /* Some css hacking */
 if (Sync2allService.browser.name == 'opera') {
 	document.write('<style>\
-.target { margin: 0; margin-bottom: 0.3em; } \
-#target_opl { margin-bottom: 0; } </style>');
+.link { margin: 0; margin-bottom: 0.3em; } \
+#link_opl { margin-bottom: 0; } </style>');
 }
 </script>
 
 <body onload="init_popup();" onUnload="popupClosed();">
 
-<div id="target_gbm" class="target">
+<div id="link_gbm" class="link">
 	<div class="name">Google Bookmarks</div><br />
 	<span class="status" id="gbm_status">Loading...</span><br />
 	<div class="buttons">
@@ -169,7 +169,7 @@ if (Sync2allService.browser.name == 'opera') {
 	</div>
 </div>
 
-<div id="target_opl" class="target">
+<div id="link_opl" class="link">
 	<div class="name">Opera Link</div><br />
 	<div class="statusline">
 		<div id="opl-verifier">
