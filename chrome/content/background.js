@@ -1,7 +1,4 @@
 
-var g_bookmarks; // global bookmarks
-var g_bookmark_ids;
-
 
 /* = Nodes =
 
@@ -336,7 +333,7 @@ function initSync () {
 	browser.enable();
 }
 
-function target_finished(link) {
+function link_finished(link) {
 
 	// check for possible bugs
 	if (link.actions && link.actions.length > 10) {
@@ -373,7 +370,6 @@ function target_finished(link) {
 
 	// is this the browser itself? start the rest!
 	if (link == browser) {
-		g_bookmark_ids = browser.ids;
 		var webLink;
 		for (var i=0; webLink=webLinks[i]; i++) {
 			webLink.init();

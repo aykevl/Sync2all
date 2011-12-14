@@ -34,3 +34,5 @@ var webLinks = [];
 var enabledWebLinks = [];
 var remotes_finished;
 
+
+var g_bookmarks; // global bookmarks

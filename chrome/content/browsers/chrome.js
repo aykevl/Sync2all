@@ -51,7 +51,7 @@ gchr.finished_start = function () {
 	gchr.import_ids(gchr.bookmarks);
 
 	// send 'finished' signal
-	target_finished(gchr);
+	link_finished(gchr);
 	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
 };
 

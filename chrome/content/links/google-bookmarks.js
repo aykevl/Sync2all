@@ -117,7 +117,7 @@ gbm.finished_start = function () {
 	gbm.updateStatus(statuses.MERGING);
 
 	// send 'finished' signal
-	target_finished(gbm);
+	link_finished(gbm);
 
 	// set status (again)
 	gbm.updateStatus(statuses.READY);

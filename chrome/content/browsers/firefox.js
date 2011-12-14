@@ -22,7 +22,7 @@ var fx = {
 		// add myself as observer
 		fx.bmsvc.addObserver(fx, false);
 
-		target_finished(fx);
+		link_finished(fx);
 	},
 
 	stop: function () {
