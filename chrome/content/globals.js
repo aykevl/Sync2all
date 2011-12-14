@@ -19,6 +19,6 @@ var debug = false;
 // doesn't include browser links
 var webLinks = [];
 var enabledWebLinks = [];
-var remotes_finished;
+var finishedLinks = [];
 
 var g_bookmarks; // global bookmarks, FIXME obsolete

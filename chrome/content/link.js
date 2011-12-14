@@ -163,7 +163,7 @@ function import_link (link, isBrowser) {
 		if (link != browser) {
 			Array_remove(enabledWebLinks, link);
 		}
-		Array_remove(remotes_finished, link);
+		Array_remove(finishedLinks, link);
 
 		link.updateStatus(statuses.READY);
 	};

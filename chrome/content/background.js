@@ -87,7 +87,7 @@ function call_all(funcname, sourceLink, params) {
 	if (params) params.unshift(sourceLink); // add link at the start
 
 	var link;
-	for (var i=0; link=remotes_finished[i]; i++) {
+	for (var i=0; link=finishedLinks[i]; i++) {
 		// if this is the link where the call comes from
 		// Report changes when the link is syncing, it needs to know that
 		if (link == sourceLink && !sourceLink.has_own_data) continue;
@@ -322,8 +322,6 @@ function dump_all() {
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
 function initSync () {
 
-	remotes_finished = [];
-
 	startSync = 0; // will be updated when targets are synchronized
 
 	// initialize when needed
@@ -346,8 +344,8 @@ function link_finished(link) {
 		}
 	}
 
-	if (remotes_finished.indexOf(link) < 0) {
-		remotes_finished.push(link);
+	if (finishedLinks.indexOf(link) < 0) {
+		finishedLinks.push(link);
 	}
 
 	// update internal data to use objects from g_bookmarks and not
@@ -379,7 +377,7 @@ function link_finished(link) {
 	}
 
 	// is the syncing finished? Commit changes!
-	if (enabledWebLinks.length+1 == remotes_finished.length) { // browser isn't in enabledWebLinks, but is in remotes_finished. The +1 is to correct this.
+	if (enabledWebLinks.length+1 == finishedLinks.length) { // browser isn't in enabledWebLinks, but is in finishedLinks. The +1 is to correct this.
 		commit();
 		call_all('finished_sync', null);
 	}
