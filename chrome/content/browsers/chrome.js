@@ -25,13 +25,9 @@ gchr.fullname = 'Google Chrome';
 gchr.shortname = 'gchr';
 gchr.name = 'chrome'
 
-// include libraries
-import_link(gchr, true);
-import_queue(gchr);
-
 gchr.start = function () {
-	gchr.ids = {'1': gchr.bookmarks};
 	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
+	gchr.ids = {'1': gchr.bookmarks};
 	gchr.actions = []; // TODO implement actions
 
 	chrome.bookmarks.getTree(
@@ -347,4 +343,8 @@ gchr.import_node = function (id) {
 						});
 			}, id);
 };
+
+// import libraries, kind of inheritance
+import_link(gchr, true);
+import_queue(gchr);
 

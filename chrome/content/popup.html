@@ -6,25 +6,11 @@
 
 <script type="text/javascript">
 
-var Sync2allService;
-var bgPort; // opera
-
-// firefox
-if (typeof (Components) != 'undefined' && Components.classes) {
-	// get the global 'background page'
-	// This must be here too (other is in ff-overlay.js), because this popup is in
-	// a separate scope.
-	Sync2allService = Components
-		.classes['@github.com/sync2all;1']
-		.getService(Components.interfaces.nsISync2allService).wrappedJSObject;
-} else {
-	Sync2allService = this;
-	document.write('<script src="/chrome/content/globals.js"></'+'script>');
-	document.write('<script src="utils.js"></'+'script>');
+// dummy, only one check is needed.
+var Sync2allService = {};
+Sync2allService.browser = {
+	name: 'chrome',
 }
-
-</script>
-<script type="text/javascript">
 
 // send signal that this popup has been closed
 function popupClosed () {
@@ -48,8 +34,8 @@ function onMessage (request, sender, sendResponse) {
 	}
 }
 
+/* Detect browser and do browser-specific initialisation */
 function init_popup () {
-	/* Detect browser and do browser-specific initialisation */
 
 	// Chrome initialisation data
 	chrome.extension.onRequest.addListener(onMessage);
