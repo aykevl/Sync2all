@@ -21,4 +21,3 @@ var webLinks = [];
 var enabledWebLinks = [];
 var finishedLinks = [];
 
-var g_bookmarks; // global bookmarks, FIXME obsolete

@@ -350,8 +350,6 @@ function link_finished(link) {
 		}
 	}
 
-	// merge bookmarks etc.
-	merge(link);
 
 	// is this the browser itself? start the rest!
 	if (link == browser) {
@@ -359,8 +357,10 @@ function link_finished(link) {
 		for (var i=0; webLink=webLinks[i]; i++) {
 			webLink.init();
 		}
-	} else {
-		// this is a real target link
+	} else { //or, when it is a link, merge the data with the browser.
+		console.log('Merging bookmarks with '+link.fullname+'...');
+		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
+		console.log('Finished merging with '+link.fullname+'.');
 	}
 
 	// is the syncing finished? Commit changes!
@@ -370,7 +370,7 @@ function link_finished(link) {
 	}
 }
 
-// Wrapper for call_all, for applying actions.
+// apply action, parts are the same as call_all.
 function apply_action (link, action) {
 	// first get the arguments
 	var args    = [];
@@ -413,7 +413,6 @@ function apply_action (link, action) {
 		console.log(action);
 		return;
 	}
-	//call_all(command, link, args);
 }
 
 function get_stable_lId(link, sid) {
@@ -449,18 +448,6 @@ function get_stable_lId(link, sid) {
 	}
 	return node;
 }
-
-function merge (link) {
-	
-	if (!g_bookmarks) {
-		console.log('Taking '+link.name+' as base of the bookmarks.');
-		g_bookmarks = link.bookmarks;
-	} else {
-		console.log('Merging bookmarks with '+link.name+'...');
-		mergeBookmarks(g_bookmarks, link.bookmarks, link);
-		console.log('Finished merging with '+link.name+'.');
-	}
-};
 
 function mergeProperties(from, to) {
 	var key;

@@ -8,7 +8,8 @@ for details of the Google Bookmarks API
 
 var gbm = {};
 
-gbm.name = 'Google Bookmarks';
+gbm.name = 'Google Bookmarks'; // OBSOLETE
+gbm.fullname = 'Google Bookmarks';
 gbm.shortname = 'gbm';
 
 
@@ -147,7 +148,7 @@ gbm.finished_start = function () {
 
 gbm.update_data = function () {
 	console.log('gbm: updating data structures...');
-	gbm.update_urls(g_bookmarks);
+	gbm.update_urls(browser.bookmarks);
 };
 gbm.update_urls = function (folder) {
 	var url;
@@ -172,7 +173,7 @@ gbm.finished_sync = function () {
 
 gbm.save_state = function () {
 	var state = {bm: [], f: {}};
-	gbm.get_state(state, g_bookmarks);
+	gbm.get_state(state, browser.bookmarks);
 	localStorage['gbm_state'] = JSON.stringify(state);
 };
 
@@ -280,7 +281,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 
 		// this one IS important
 		// This saves the ID, the rest comes later in gbm.update_data().
-		// That function uses bookmarks objects from g_bookmarks.
+		// That function uses bookmarks objects from browser.bookmarks.
 		gbm.urls[url] = [];
 		gbm.urls[url].id = id;
 
@@ -453,7 +454,7 @@ gbm.f_mv = function (target, folder, oldParent) {
 
 	gbm.upload_all(folder); // FIXME there is a better way, see below, but it doesn't work. Make it work.
 	/*
-	var oldlabel = oldParent == g_bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
+	var oldlabel = oldParent == browser.bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
 	var labels = oldlabel+','+gbm.folder_get_label(folder);
 	gbm.add_to_queue({op: 'modlabel', labels: labels});*/
 };
@@ -566,7 +567,7 @@ gbm.bookmark_get_labels = function (url) {
 		if (!folder) {
 			throw 'undefined folder, bm url='+url;
 		}
-		if (folder == g_bookmarks) {
+		if (folder == browser.bookmarks) {
 			label = gbm.rootNodeLabel;
 		} else {
 			label = gbm.folder_get_label(folder);

@@ -3,7 +3,8 @@
 
 var opl = {};
 
-opl.name = 'Opera Link';
+opl.name = 'Opera Link'; // OBSOLETE
+opl.fullname = 'Opera Link';
 opl.shortname = 'opl';
 
 // imports (or include if you want)
@@ -79,7 +80,7 @@ opl.finished_start = function () {
 			// WARNING: when the opl_id is not known, this will give strange
 			// behaviour (when a moved bookmark or folder moves to the
 			// bookmarks root)
-			opl.ownId_to_lId = {undefined: g_bookmarks.id};
+			opl.ownId_to_lId = {undefined: browser.bookmarks.id};
 			opl.mapOplIdsToLocalIds(state);
 
 			// now calculate the actions once all data has been loaded.
@@ -120,7 +121,7 @@ opl.finished_sync = function () {
 
 opl.save_state = function () {
 	var state = [];
-	opl.get_state(state, g_bookmarks);
+	opl.get_state(state, browser.bookmarks);
 	localStorage['opl_state'] = JSON.stringify(state);
 }
 
@@ -620,7 +621,7 @@ opl.bm_add = function (target, bm, folder) {
 	if (bm.opl_id) return; // already uploaded
 	opl.queue_add(
 			function (bm) {
-				if (!folder.opl_id && folder != g_bookmarks) {
+				if (!folder.opl_id && folder != browser.bookmarks) {
 					console.warn('No parent ID! Bookmark:');
 					console.warn(bm);
 					opl.queue_next();
@@ -646,7 +647,7 @@ opl.bm_add = function (target, bm, folder) {
 
 opl.f_add = function (target, folder) {
 	opl.queue_add(function (folder) {
-				if (!folder.parentNode.opl_id && folder.parentNode != g_bookmarks) {
+				if (!folder.parentNode.opl_id && folder.parentNode != browser.bookmarks) {
 					console.warn('No parent ID! Folder:');
 					console.warn(folder);
 					opl.queue_next();

@@ -33,7 +33,7 @@ import_queue(gchr);
 gchr.lastSync = localStorage['gchr_lastSync'] || 0;
 
 gchr.start = function () {
-	gchr.ids = {'1': gchr.bookmarks}; // gchr.bookmarks will become g_bookmarks
+	gchr.ids = {'1': gchr.bookmarks};
 	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
 	gchr.actions = []; // TODO implement actions
 
@@ -47,7 +47,6 @@ gchr.start = function () {
 
 gchr.finished_start = function () {
 	// merge() depends on browser.ids
-	// use gchr.bookmarks because they will become g_bookmarks anyway
 	gchr.import_ids(gchr.bookmarks);
 
 	// send 'finished' signal
