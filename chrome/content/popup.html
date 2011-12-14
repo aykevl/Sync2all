@@ -84,11 +84,12 @@ function init_popup () {
 }
 
 function sendMessage (msg) {
-	if (Sync2allService.browser.name == 'chrome') {
-		chrome.extension.sendRequest(msg);
-	} else if (Sync2allService.browser.name == 'opera') {
+	//if (Sync2allService.browser.name == 'chrome') {
+	chrome.extension.sendRequest(msg);
+	// old Opera code:
+	/*} else if (Sync2allService.browser.name == 'opera') {
 		bgPort.postMessage(msg);
-	}
+	}*/
 }
 
 

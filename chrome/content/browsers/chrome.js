@@ -83,12 +83,12 @@ gchr.gotTree_handleNode = function (node, folder) {
 	if (node.url) {
 		// bookmark
 
-		var bookmark = {title: node.title, url: node.url, parentNode: folder, time: node.dateAdded, id: node.id};
+		var bookmark = {title: node.title, url: node.url, parentNode: folder, mtime: node.dateAdded, id: node.id};
 		if (folder.bm[bookmark.url]) { // UNTESTED
 			// this bookmark does already exist
 			// take the latest
 			console.log('DUPLICATE: '+node.url);
-			if (folder.bm[node.url].time > bookmark.time) {
+			if (folder.bm[node.url].mtime > bookmark.mtime) {
 				// this bookmark is older
 				chrome.bookmarks.remove(node.id, gchr.remove_result);
 				return;
@@ -148,7 +148,7 @@ gchr.import_bms = function (results) {
 		var folder = gchr.ids[result.parentId];
 		if (result.url) {
 			// bookmark
-			var bm = {title: result.title, url: result.url, time: result.dateAdded, parentNode: folder, id: result.id};
+			var bm = {title: result.title, url: result.url, mtime: result.dateAdded, parentNode: folder, id: result.id};
 			if (addBookmark(gchr, bm)) continue; // error
 		} else {
 			// folder
@@ -285,7 +285,7 @@ gchr.evt_onCreated = function (id, node) {
 	if (node.url) {
 		// bookmark
 		console.log('Created new bookmark: '+node.url);
-		var bookmark = {title: node.title, url: node.url, parentNode: parentNode, time: node.dateAdded, id: id};
+		var bookmark = {title: node.title, url: node.url, parentNode: parentNode, mtime: node.dateAdded, id: id};
 		gchr.ids[id] = bookmark;
 		//parentNode.bm[bookmark.url] = bookmark;
 		//call_all('bm_add', gchr, [bookmark]);

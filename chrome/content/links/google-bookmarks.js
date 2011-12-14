@@ -275,7 +275,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		var url       =          bm_element.getElementsByTagName('url'      )[0].firstChild.nodeValue;
 		url = url.replace(/ /g, '%20');
 		// get the timestamp in seconds, in microseconds precise.
-		var time      = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
+		var timestamp = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
 		var id        =          bm_element.getElementsByTagName('id'       )[0].firstChild.nodeValue;
 
 		// this one IS important
@@ -313,13 +313,13 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 				}
 			}
 			var bookmark = {url: url, title: title, parentNode: folder,
-				time: time};
+				mtime: timestamp};
 			folder.bm[bookmark.url] = bookmark;
 		}
 		if (!label_elements.length) {
 			// this bookmark has no labels, add it to root
 			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks,
-				time: time};
+				mtime: timestamp};
 			gbm.bookmarks.bm[url] = bookmark;
 		}
 	}

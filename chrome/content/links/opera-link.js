@@ -637,9 +637,9 @@ opl.bm_add = function (target, bm, folder) {
 					call_all('bm_mod_title', opl, [bm, oldtitle]);
 				}
 				if (folder.opl_id) {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.mtime))
 				} else {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, opl.itemCreated); //, created: timestamp(new Date(bm.timestamp))
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, opl.itemCreated); //, created: timestamp(new Date(bm.mtime))
 				}
 			}, bm);
 }
