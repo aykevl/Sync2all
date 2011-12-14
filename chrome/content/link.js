@@ -156,7 +156,7 @@ function import_link (link, isBrowser) {
 		link.start();
 	};
 
-	// Stop Opera Link, but leave status information
+	// Stop link, but leave status information
 	link.stop = function () {
 		delete localStorage[link.shortname+'_enabled'];
 		link.enabled = false;

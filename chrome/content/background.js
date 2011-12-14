@@ -337,6 +337,8 @@ function link_finished(link) {
 
 	if (finishedLinks.indexOf(link) < 0) {
 		finishedLinks.push(link);
+	} else {
+		console.warn('OBSOLETE: link_finished called with the link in finishedLinks.');
 	}
 
 	// apply actions
