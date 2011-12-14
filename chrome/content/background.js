@@ -6,7 +6,7 @@
    dictionary: {
 	title:      // title of the bookmark
 	id:         // local id
-	timestamp:  // integer, timestamp
+	time:       // integer, timestamp in seconds (may be floating point number)
 	parentNode: // it's parent folder
 	url:        // self-explanatory (identifies it as a bookmark too)
    }
@@ -20,8 +20,6 @@
 	parentNode  // It's parent. Doesn't exist for the root.
    }
 */
-
-var lastSync      = 0; //localStorage['lastSync'];
 
 /*var synced = false;      // when in sync, this is true
 var syncing = false;     // if doing some work locally (or when syncing full)
@@ -633,7 +631,7 @@ function syncLFolder(target, folder) {
 function syncRBookmark(target, bookmark, lfolder) {
 	// sync single bookmark
 	// if the bookmark is new and this isn't the first sync
-	if (bookmark.time < target.lastSync && lastSync != 0) {
+	if (bookmark.time <= target.lastSyncTime && target.lastSyncTime != 0) {
 		// this bookmark is really old
 		return delRBookmark(target, bookmark, lfolder);
 	} else {
@@ -655,7 +653,7 @@ function pushRBookmark(link, bookmark, lfolder) {
 
 // bookmark exists only locally
 function syncLBookmark(target, bookmark) {
-	if (lastSync == 0 || bookmark.timestamp > lastSync) { // initial sync or really new bookmark
+	if (target.lastSyncTime == 0 || bookmark.time >= target.lastSyncTime) { // initial sync or really new bookmark
 		return pushLBookmark(target, bookmark);
 	} else {
 		return delLBookmark(target, bookmark);

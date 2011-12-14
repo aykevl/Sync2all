@@ -21,6 +21,14 @@ function import_link (link, isBrowser) {
 				link.enable();
 			}
 		}
+
+		if (localStorage[link.shortname+'_lastSyncTime']) {
+			link.lastSyncTime = JSON.parse(localStorage[link.shortname]);
+		} else {
+			link.lastSyncTime = 0;
+		}
+		// get the current time in seconds, with the precision of milliseconds.
+		link.startSyncTime = (new Date()).getTime()/1000;
 	};
 
 	link.updateStatus = function (status) {

@@ -52,7 +52,6 @@ opl.start = opl.msg_start = function () {
 
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}, opl_id: null}; // doesn't have a title nor parentNode, only childrens
-	opl.lastSync  = 0;
 	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
 	opl.ids       = {};

@@ -35,7 +35,6 @@ gbm.has_own_data = true;
 gbm.defaults = {
 	'gbm_rootNodeLabel': 'Bookmarks Bar',
 	'gbm_folderSep':     '/',
-	'gbm_lastSync':      0,
 }
 var default_key;
 for (default_key in gbm.defaults) {
@@ -49,7 +48,6 @@ for (default_key in gbm.defaults) {
 gbm._init = function (enable) {
 	gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
 	gbm.folderSep     = localStorage['gbm_folderSep'];
-	gbm.lastSync      = localStorage['gbm_lastSync'];
 };
 
 // (re) start
@@ -276,7 +274,8 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		}
 		var url       =          bm_element.getElementsByTagName('url'      )[0].firstChild.nodeValue;
 		url = url.replace(/ /g, '%20');
-		var timestamp = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000; // same kind of value as returned by (new Date()).getTime();
+		// get the timestamp in seconds, in microseconds precise.
+		var time      = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
 		var id        =          bm_element.getElementsByTagName('id'       )[0].firstChild.nodeValue;
 
 		// this one IS important
@@ -314,13 +313,13 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 				}
 			}
 			var bookmark = {url: url, title: title, parentNode: folder,
-				timestamp: timestamp};
+				time: time};
 			folder.bm[bookmark.url] = bookmark;
 		}
 		if (!label_elements.length) {
 			// this bookmark has no labels, add it to root
 			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks,
-				timestamp: timestamp};
+				time: time};
 			gbm.bookmarks.bm[url] = bookmark;
 		}
 	}
