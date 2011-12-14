@@ -116,6 +116,9 @@ gbm.finished_start = function () {
 	// set status
 	gbm.updateStatus(statuses.MERGING);
 
+	// update data to use the browser objects
+	gbm.update_data();
+
 	// send 'finished' signal
 	link_finished(gbm);
 

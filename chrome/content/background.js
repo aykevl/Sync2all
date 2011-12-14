@@ -339,12 +339,6 @@ function link_finished(link) {
 		finishedLinks.push(link);
 	}
 
-	// update internal data to use objects from g_bookmarks and not
-	// from it's own data.
-	if (link.update_data) {
-		link.update_data();
-	}
-
 	// apply actions
 	if (link.actions) {
 		var action;
