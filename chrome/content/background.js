@@ -2,43 +2,36 @@
 
 /* = Nodes =
 
-   == Bookmark ==
-   dictionary: {
+   == Bookmark node: ==
+   {
 	title:      // title of the bookmark
-	id:         // local id
-	mtime:       // integer, timestamp in seconds (may be floating point number)
+	id:         // local browser ID
+	mtime:      // integer, timestamp in seconds (may be floating point number). Not always present.
 	parentNode: // it's parent folder
 	url:        // self-explanatory (identifies it as a bookmark too)
+	*_id:       // link-specific IDs
    }
 
-   == Folder ==
-   dictionary: {
+   == Folder node: ==
+   {
 	title: ..., // title of folder
-	id          // Local (Chrome) node id
+	id          // Local (Chrome/Firefox) node id
 	bm: {...}   // dictionary of bookmark nodes (key = url)
 	f: {...}    // dictionary of folder   nodes (key = title)
 	parentNode  // It's parent. Doesn't exist for the root.
+	mtime:      // like bookmark.mtime
+	*_id:       // link-specific IDs
    }
 */
 
-/*var synced = false;      // when in sync, this is true
-var syncing = false;     // if doing some work locally (or when syncing full)
-var downloading = false; // if downloading bookmarks*/
-
 // these functions are called when the popup is created or closed
 
-function popupCreated(window, document) {
+function popupCreated(_popupDOM) {
 	is_popup_open = true;
 
-	/*if (browser.name == 'firefox') {
-		// needed for opening a new tab
-		current_window = window;
-		current_document = document;
-		if (opl.status == statuses.AUTHORIZING) {
-			// display input
-			opl.fx_display_input();
-		}
-	}*/
+	if (browser.name == 'firefox') {
+		browser.popupDOM = _popupDOM;
+	}
 
 	// Opera support deprecated (till they support bookmarks editing from
 	// extension), so is not needed.
@@ -56,11 +49,10 @@ function popupCreated(window, document) {
 function popupClosed() {
 	is_popup_open = false;
 
-	/*if (browser.name == 'firefox') {
+	if (browser.name == 'firefox') {
 		// save resources (may leak the whole window!)
-		delete current_window;
-		delete current_document;
-	}*/
+		delete browser.popupDOM;
+	}
 
 }
 

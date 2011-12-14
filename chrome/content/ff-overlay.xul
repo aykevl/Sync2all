@@ -18,7 +18,7 @@
 			type="menu">
 			<menupopup id="sync2all-popup"
 				onpopupshowing="Sync2allService.popupCreated(
-					window, document);"
+					document);"
 				onpopuphidden="Sync2allService.popupClosed();">
 				<vbox>
 					<vbox id="sync2all-gbm">

@@ -256,7 +256,7 @@ var fx = {
 		return url.substr(0, 9) == 'chrome://';
 	},
 
-	/*import_node: function (id) {
+	import_node: function (id) {
 		// get the node type
 		var type = fx.bmsvc.getItemType(id);
 
@@ -275,10 +275,10 @@ var fx = {
 			fx.ids[folder.id] = folder;
 			addFolder(fx, folder);
 		}
-	}*/
+	}
 }
 
-browser = gchr;
+browser = fx;
 
 import_link(fx, true);
 import_queue(fx);

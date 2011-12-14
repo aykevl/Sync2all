@@ -22,9 +22,12 @@ if (browser.name == 'chrome') {
 	opera.link.authorizeFunction = function (url) {
 		Application.activeWindow.open(IOService.newURI(url, null, null));
 	};
-	opl.fx_display_input = function () {
-		current_document.getElementById('sync2all-opl-verifier-container').style.display = '';
-	}
+	opl.fx_display_verifierInput = function () {
+		browser.popupDOM.getElementById('sync2all-opl-verifier-container').style.display = '';
+	};
+	opl.fx_hide_verifierInput= function () {
+		browser.popupDOM.getElementById('sync2all-opl-verifier-container').style.display = 'none';
+	};
 }
 // Opera is the default, so no fixing required
 
@@ -126,6 +129,7 @@ opl.save_state = function () {
 
 opl.get_state = function (state, folder) {
 	// save all bookmarks in this folder
+	var url;
 	for (url in folder.bm) {
 		// get bookmark
 		var bm = folder.bm[url];
@@ -149,6 +153,7 @@ opl.get_state = function (state, folder) {
 	}
 
 	// save all subfolders of this folder
+	var title;
 	for (title in folder.f) {
 		// do it here and not at the start of opl.get_state, because the root of
 		// Opera Link has no ID.
@@ -253,8 +258,8 @@ opl.calculate_actions = function (state, folder) {
 
 				// get the destination (local) folder
 				var movedTo_id = opl.ownId_to_lId[node.parentNode.opl_id];
-				if (current_browser.ids[movedTo_id]) {
-					var movedTo = current_browser.ids[movedTo_id];
+				if (browser.ids[movedTo_id]) {
+					var movedTo = browser.ids[movedTo_id];
 				}
 
 				if (node.url) { // if this is a bookmark
@@ -273,14 +278,14 @@ opl.calculate_actions = function (state, folder) {
 				// node doesn't exist, remove it.
 				if (isfolder) {
 					opl.calculate_actions(item.children, undefined);
-					if (item.id && current_browser.ids[item.id]) {
-						current_browser.ids[item.id].opl_id = item.opl_id;
+					if (item.id && browser.ids[item.id]) {
+						browser.ids[item.id].opl_id = item.opl_id;
 						opl.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists
-					if (current_browser.ids[item.id]) {
-						current_browser.ids[item.id].opl_id = item.opl_id;
+					if (browser.ids[item.id]) {
+						browser.ids[item.id].opl_id = item.opl_id;
 						opl.actions.push(['bm_del', item.id]);
 					}
 				}
@@ -296,16 +301,16 @@ opl.calculate_actions = function (state, folder) {
 
 					// then remove this folder
 					// but check first whether the folder actually exists
-					if (item.id && current_browser.ids[item.id]) {
-						current_browser.ids[item.id].opl_id = item.opl_id;
-						console.log('opl: old f: '+current_browser.ids[item.id].title);
+					if (item.id && browser.ids[item.id]) {
+						browser.ids[item.id].opl_id = item.opl_id;
+						console.log('opl: old f: '+browser.ids[item.id].title);
 						opl.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists.
-					if (current_browser.ids[item.id]) {
+					if (browser.ids[item.id]) {
 						console.log('opl: old bm: '+item.opl_id);
-						current_browser.ids[item.id].opl_id = item.opl_id;
+						browser.ids[item.id].opl_id = item.opl_id;
 						opl.actions.push(['bm_del', item.id]);
 					}
 				}
@@ -361,6 +366,20 @@ opl.msg_verifier = function (request) {
 	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, opl.verifier, opl.accessTokenCallback, opl.accessTokenError);
 };
 
+opl.onUpdateStatus = function (statusChanged) {
+	if (browser.name == 'firefox') {
+		if (is_popup_open) {
+			// status will also be updated when the popup opens, so this function
+			// is always called.
+			if (opl.status == statuses.AUTHORIZING) {
+				opl.fx_display_verifierInput();
+			} else {
+				opl.fx_hide_verifierInput();
+			}
+		}
+	}
+}
+
 
 // Callback for when the request tokens have been got.
 opl.requestTokenCallback = function (e) {
@@ -374,12 +393,8 @@ opl.requestTokenCallback = function (e) {
 
 	// listen to the verifier from the content script
 	if (browser.name == 'chrome') {
-		chrome.extension.onRequest.addListener(opl.onRequest);
 	} else if (browser.name == 'opera') {
 		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
-	} else if (browser.name == 'firefox') {
-		// TODO
-		opl.fx_display_input();
 	}
 };
 

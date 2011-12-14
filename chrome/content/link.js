@@ -37,6 +37,11 @@ function import_link (link, isBrowser) {
 			link.status = status;
 		}
 		if (link == browser) return; // not in popup
+
+		if (link.onUpdateStatus) {
+			link.onUpdateStatus(status !== undefined);
+		}
+
 		if (!is_popup_open) return;
 
 		// make make human-readable message
@@ -68,9 +73,9 @@ function import_link (link, isBrowser) {
 			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
 			if (is_popup_open) {
-				current_document.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
-				current_document.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
-				current_document.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
+				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
+				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
+				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
 			}
 		} else if (browser.name == 'opera') {
 			opera.extension.broadcastMessage(message);
