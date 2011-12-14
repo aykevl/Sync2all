@@ -42,7 +42,7 @@ function import_link (link, isBrowser) {
 			link.onUpdateStatus(status !== undefined);
 		}
 
-		if (!is_popup_open) return;
+		if (!isPopupOpen) return;
 
 		// make make human-readable message
 		var msgtext = 'Not synchronized';
@@ -72,11 +72,9 @@ function import_link (link, isBrowser) {
 		if (browser.name == 'chrome') {
 			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
-			if (is_popup_open) {
-				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
-				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
-				browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
-			}
+			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
+			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
+			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
 		} else if (browser.name == 'opera') {
 			opera.extension.broadcastMessage(message);
 		}

@@ -27,7 +27,7 @@
 // these functions are called when the popup is created or closed
 
 function popupCreated(_popupDOM) {
-	is_popup_open = true;
+	isPopupOpen = true;
 
 	if (browser.name == 'firefox') {
 		browser.popupDOM = _popupDOM;
@@ -42,12 +42,11 @@ function popupCreated(_popupDOM) {
 
 	var link;
 	for (var i=0; link=webLinks[i]; i++) {
-		if (!link.updateStatus) continue;
 		link.updateStatus();
 	}}
 
 function popupClosed() {
-	is_popup_open = false;
+	isPopupOpen = false;
 
 	if (browser.name == 'firefox') {
 		// save resources (may leak the whole window!)

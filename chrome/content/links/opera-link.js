@@ -368,7 +368,7 @@ opl.msg_verifier = function (request) {
 
 opl.onUpdateStatus = function (statusChanged) {
 	if (browser.name == 'firefox') {
-		if (is_popup_open) {
+		if (isPopupOpen) {
 			// status will also be updated when the popup opens, so this function
 			// is always called.
 			if (opl.status == statuses.AUTHORIZING) {

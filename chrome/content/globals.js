@@ -11,7 +11,7 @@ var statuses = {
 var browser;
 
 
-var is_popup_open = false;
+var isPopupOpen = false;
 var update_batch = false;
 
 var debug = false;
