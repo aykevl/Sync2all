@@ -10,19 +10,6 @@ var statuses = {
 
 var browser;
 
-// determine browser
-// needed for background.html
-/*if (typeof chrome != 'undefined' && chrome.extension) {
-	browser.name = 'chrome';
-} else if (typeof (opera) != 'undefined' && opera.extension) {
-	browser.name = 'opera';
-} else if (Components && Components.classes) {
-	browser.name = 'firefox';
-} else {
-	// unkonwn browser
-	console.log('ERROR: browser niet herkend.');
-}*/
-
 
 var is_popup_open = false;
 var update_batch = false;
@@ -34,5 +21,4 @@ var webLinks = [];
 var enabledWebLinks = [];
 var remotes_finished;
 
-
-var g_bookmarks; // global bookmarks
+var g_bookmarks; // global bookmarks, FIXME obsolete
