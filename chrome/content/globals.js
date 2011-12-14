@@ -30,5 +30,7 @@ var update_batch = false;
 var debug = false;
 
 // doesn't include browser links
-var links = [];
+var webLinks = [];
+var enabledWebLinks = [];
+var remotes_finished;
 

@@ -9,7 +9,7 @@ function use_target (target, isBrowser) {
 		// this link is a browser link
 		browser.link = target;
 	} else {
-		links.push(target);
+		webLinks.push(target);
 	}
 
 	// should be called only once
@@ -149,7 +149,7 @@ function use_target (target, isBrowser) {
 		// the links to extern sources
 		if (target != browser.link) {
 			localStorage[target.shortname+'_enabled'] = true;
-			remotes_enabled.push(target);
+			enabledWebLinks.push(target);
 		}
 
 		// clear variables
@@ -163,7 +163,9 @@ function use_target (target, isBrowser) {
 	target.stop = function () {
 		delete localStorage[target.shortname+'_enabled'];
 		target.enabled = false;
-		Array_remove(remotes_enabled, target);
+		if (target != browser.link) {
+			Array_remove(enabledWebLinks, target);
+		}
 		Array_remove(remotes_finished, target);
 
 		target.updateStatus(statuses.READY);

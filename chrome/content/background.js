@@ -1,7 +1,4 @@
 
-var remotes_enabled = [];
-var remotes_finished;
-
 var g_bookmarks; // global bookmarks
 var g_bookmark_ids;
 
@@ -56,7 +53,7 @@ function popupCreated(window, document) {
 	}*/
 
 	var link;
-	for (var i=0; link=links[i]; i++) {
+	for (var i=0; link=webLinks[i]; i++) {
 		if (!link.updateStatus) continue;
 		link.updateStatus();
 	}}
@@ -377,16 +374,16 @@ function target_finished(link) {
 	// is this the browser itself? start the rest!
 	if (link == browser.link) {
 		g_bookmark_ids = browser.link.ids;
-		var otherLink;
-		for (var i=0; otherLink=links[i]; i++) {
-			otherLink.init();
+		var webLink;
+		for (var i=0; webLink=webLinks[i]; i++) {
+			webLink.init();
 		}
 	} else {
 		// this is a real target link
 	}
 
 	// is the syncing finished? Commit changes!
-	if (remotes_enabled.length+1 == remotes_finished.length) { // browser.link isn't in remotes_enabled, but is in remotes_finished. The +1 is to correct this.
+	if (enabledWebLinks.length+1 == remotes_finished.length) { // browser.link isn't in enabledWebLinks, but is in remotes_finished. The +1 is to correct this.
 		commit();
 		call_all('finished_sync', null);
 	}
