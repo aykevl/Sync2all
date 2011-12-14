@@ -302,11 +302,15 @@ function has_contents(folder) {
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
 function init () {
 
+	for (var i=0; i<webLinks.length; i++) {
+		webLinks[i].init();
+	}
+
 	// initialize when needed
 	browser.init();
 
 	// and start the browser link
-	browser.enable();
+	browser.startSync();
 }
 
 function link_finished(link) {
@@ -325,7 +329,7 @@ function link_finished(link) {
 	if (finishedLinks.indexOf(link) < 0) {
 		finishedLinks.push(link);
 	} else {
-		console.warn('OBSOLETE: link_finished called with the link in finishedLinks.');
+		console.error('BUG: link_finished called with the link in finishedLinks.');
 	}
 
 	// apply actions
@@ -342,7 +346,7 @@ function link_finished(link) {
 	if (link == browser) {
 		var webLink;
 		for (var i=0; webLink=webLinks[i]; i++) {
-			webLink.init();
+			webLink.load();
 		}
 	} else { //or, when it is a link, merge the data with the browser.
 		console.log('Merging bookmarks with '+link.fullname+'...');

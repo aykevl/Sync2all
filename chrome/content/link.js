@@ -1,5 +1,27 @@
 
 /* Library for sync targets
+ *
+ * Link API:
+ * init:
+ *     initialize this link. Should be called when the extension loads.
+ * load:
+ *     start the engine. Initializes variables used during sync. Starts the
+ *     sync when enabled. Should be called after the browser link has finished
+ *     loading.
+ * start:
+ *     start sync. May only be called when started.
+ * stop:
+ *     stops sync. May only be called when started.
+ *
+ * Functions that links should implement:
+ * onInit:
+ *     called when the extension loads.
+ * onUpdateStatus:
+ *     called when the status is updated.
+ * startSync:
+ *     start the sync.
+ * stopSync:
+ *     stop the sync and clear memory.
  */
 
 function import_link (link, isBrowser) {
@@ -11,24 +33,98 @@ function import_link (link, isBrowser) {
 
 	// should be called only once
 	link.init = function () {
-		if (link._init) {
-			link._init(); // should also be called only once
+		link.started = false;
+		link.enabled = false;//JSON.parse(localStorage[link.shortname+'_enabled']);
+		if (link.onInit) {
+			link.onInit(); // should also be called only once
 		}
+	}
 
-		if (link != browser) {
-			// start if enabled
-			if (localStorage[link.shortname+'_enabled']) {
-				link.enable();
-			}
-		}
+	link.load = function () {
+		link.status = statuses.READY; // only to initialize
+		link.loaded = true;
 
 		if (localStorage[link.shortname+'_lastSyncTime']) {
 			link.lastSyncTime = JSON.parse(localStorage[link.shortname]);
 		} else {
 			link.lastSyncTime = 0;
 		}
+
 		// get the current time in seconds, with the precision of milliseconds.
 		link.startSyncTime = (new Date()).getTime()/1000;
+
+		// load enabled/disabled state
+		link.enabled = JSON.parse(localStorage[link.shortname+'_enabled']);
+
+		// start if enabled
+		if (link.enabled) {
+			enabledWebLinks.push(link);
+			link.startSync();
+		}
+		console.log('loaded '+link.name);
+
+	};
+
+	link.start = function (restart) {
+		// this function doesn't apply when this is a browser link
+		if (link == browser) return;
+
+		// link should first be loaded
+		if (!link.loaded) return;
+
+		if (link.enabled) {
+			if (!restart) return;
+		} else {
+			// mark enabled
+			link.enabled = true;
+			localStorage[link.shortname+'_enabled'] = JSON.stringify(true);
+
+			enabledWebLinks.push(link);
+		}
+
+		// now start the link. Should be done when it is enabled
+		link.startSync();
+	};
+
+	link.msg_restart = function () {
+		link.start(true);
+	}
+
+	// Stop link. remove memory-eating status if the keepStatus flag is not set.
+	link.stop = link.msg_stop = function (keepStatus) {
+		localStorage[link.shortname+'_enabled'] = JSON.stringify(false);
+		link.enabled = false;
+		if (link != browser) {
+			Array_remove(enabledWebLinks, link);
+		}
+		Array_remove(finishedLinks, link);
+
+		if (!keepStatus) {
+			delete localStorage[link.shortname+'_state'];
+		}
+
+		link.updateStatus(statuses.READY);
+	};
+
+	link.may_save_state = function () {
+		if (browser.queue.running ||
+			link.has_saved_state ||
+			link.status ||
+			!link.save_state) {
+			return;
+		}
+
+		if ((link.queue || link.r_queue).running) {
+			console.warn(link.shortname+': '+'Queue is running but status is zero!');
+			console.log(link);
+			return; // will be started when the queue is empty
+		}
+
+		link.has_saved_state = true;
+
+		console.log(link.shortname+': saving state:');
+		console.trace();
+		link.save_state();
 	};
 
 	link.updateStatus = function (status) {
@@ -117,79 +213,6 @@ function import_link (link, isBrowser) {
 		chrome.extension.onRequest.addListener(link.onRequest);
 	} else if (browser.name == 'firefox') {
 	}
-
-	link.may_save_state = function () {
-		if (browser.queue.running ||
-			link.has_saved_state ||
-			link.status ||
-			!link.save_state) {
-			return;
-		}
-
-		if ((link.queue || link.r_queue).running) {
-			console.warn(link.shortname+': '+'Queue is running but status is zero!');
-			console.log(link);
-			return; // will be started when the queue is empty
-		}
-
-		link.has_saved_state = true;
-
-		console.log(link.shortname+': saving state:');
-		console.trace();
-		link.save_state();
-	};
-
-	// like link.start, but only called when it is not already enabled
-	link.enable = link.msg_enable = function () {
-		// don't re-enable
-		if (link.enabled) return;
-
-		if (link.status) {
-			console.error('Target is not enabled but status is non-zero! (BUG!):');
-			console.log(link);
-			delete localStorage.opl_enabled; // just to be sure
-			alert('There is a bug in Opera Link. Opera Link is now disabled. See the log for details.');
-			return;
-		}
-
-		// mark enabled
-		// This also prevents that this link is started twice unneeded
-		link.enabled = true;
-		// don't do these things for the browser link, they are only meant for
-		// the links to extern sources
-		if (link != browser) {
-			localStorage[link.shortname+'_enabled'] = true;
-			enabledWebLinks.push(link);
-		}
-
-		// clear variables
-		link.has_saved_state = false;
-
-		// now start the link. Should be done when it is enabled
-		link.start();
-	};
-
-	// Stop link, but leave status information
-	link.stop = function () {
-		delete localStorage[link.shortname+'_enabled'];
-		link.enabled = false;
-		if (link != browser) {
-			Array_remove(enabledWebLinks, link);
-		}
-		Array_remove(finishedLinks, link);
-
-		link.updateStatus(statuses.READY);
-	};
-
-	// remove memory-eating status information and stop
-	// This will be called from the popup.
-	link.msg_disable = link.disable = function () {
-		delete localStorage[link.shortname+'_state'];
-		link.stop();
-	};
-
-	link.status = statuses.READY; // only to initialize
-
 
 };
 

@@ -45,20 +45,16 @@ for (default_key in gbm.defaults) {
 }
 
 
-gbm._init = function (enable) {
+gbm.onInit = function (enable) {
 	gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
 	gbm.folderSep     = localStorage['gbm_folderSep'];
 };
 
 // (re) start
-gbm.start = gbm.msg_start = function () {
+gbm.startSync = function () {
 
-	if (gbm.status) return; // FIXME error handling
-
-	// mark enabled
-	if (!gbm.enabled) { // not needed for gbm? strange...
-		gbm.enable(); // doesn't do anything when already enabled
-		return;
+	if (gbm.status) {
+		console.error('BUG: gbm.startSync called while status is non-zero');
 	}
 
 	// set status

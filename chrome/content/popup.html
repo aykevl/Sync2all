@@ -140,8 +140,8 @@ body {
 	<div class="name">Google Bookmarks</div><br />
 	<span class="status" id="gbm_status">Loading...</span><br />
 	<div class="buttons">
-		<button id='gbm_button_start' disabled="true" onclick="sendMessage({action: 'gbm_start'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
-		<button id='gbm_button_stop'  disabled="true" onclick="sendMessage({action: 'gbm_disable'});"  title="Stop synchronizing with Google Bookmarks">Disable</button>
+		<button id='gbm_button_start' disabled="true" onclick="sendMessage({action: 'gbm_restart'});" title="Start synchronizing with Google Bookmarks. Will continue to sync, even after a restart.">(Re)synchronize</button>
+		<button id='gbm_button_stop'  disabled="true" onclick="sendMessage({action: 'gbm_stop'});"  title="Stop synchronizing with Google Bookmarks">Disable</button>
 	</div>
 </div>
 
@@ -154,8 +154,8 @@ body {
 		<span class="status" id="opl_status">Loading...</span><br />
 	</div>
 	<div class="buttons">
-		<button id="opl_button_start" disabled="true" onclick="sendMessage({action: 'opl_start'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
-		<button id="opl_button_stop"  disabled="true" onclick="sendMessage({action: 'opl_disable'});"  title="Stop synchronizing with Opera Link">Disable</button>
+		<button id="opl_button_start" disabled="true" onclick="sendMessage({action: 'opl_restart'});" title="Start synchronizing with Opera Link">(Re)synchronize</button>
+		<button id="opl_button_stop"  disabled="true" onclick="sendMessage({action: 'opl_stop'});"  title="Stop synchronizing with Opera Link">Disable</button>
 	</div>
 </div>
 

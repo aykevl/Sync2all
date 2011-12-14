@@ -25,11 +25,13 @@ gchr.fullname = 'Google Chrome';
 gchr.shortname = 'gchr';
 gchr.name = 'chrome'
 
-gchr.start = function () {
+gchr.onInit = function () {
 	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
 	gchr.ids = {'1': gchr.bookmarks};
 	gchr.actions = []; // TODO implement actions
+}
 
+gchr.startSync = function () {
 	chrome.bookmarks.getTree(
 			function (tree) {
 				gchr.gotTree(tree[0].children[0], gchr.bookmarks);

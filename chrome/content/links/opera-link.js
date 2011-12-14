@@ -31,7 +31,7 @@ if (browser.name == 'chrome') {
 }
 // Opera is the default, so no fixing required
 
-opl._init = function () {
+opl.onInit = function () {
 	// initialize opera.link
 	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
 	opera.link.loadToken();
@@ -41,7 +41,7 @@ opl._init = function () {
 };
 
 // (re)start
-opl.start = opl.msg_start = function () {
+opl.startSync = function () {
 
 	if (opl.status) return;
 

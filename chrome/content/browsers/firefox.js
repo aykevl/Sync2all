@@ -4,7 +4,7 @@ var fx = {
 	fullname: 'Mozilla Firefox',
 	name: 'firefox',
 
-	_init: function () {
+	onInit: function () {
 		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
 		                              .getService(Components.interfaces.nsINavHistoryService);
 		fx.bmsvc = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
@@ -13,7 +13,7 @@ var fx = {
 		                    .getService(Components.interfaces.nsIIOService);
 	},
 
-	start: function () {
+	startSync: function () {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
 		fx.ids = {};
 		fx.ids[fx.bookmarks.id] = fx.bookmarks;
@@ -25,7 +25,7 @@ var fx = {
 		link_finished(fx);
 	},
 
-	stop: function () {
+	stopSync: function () {
 		// remove myself as observer when I don't need to know the changes
 		fx.bmsvc.removeObserver(fx);
 	},
