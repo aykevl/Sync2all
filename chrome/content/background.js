@@ -57,7 +57,7 @@ function popupClosed() {
 
 
 function onLoad() {
-	initSync();
+	init();
 }
 
 /* Call all links except #sourceLink and links that have declared they want
@@ -300,9 +300,7 @@ function has_contents(folder) {
 
 
 // Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
-function initSync () {
-
-	startSync = 0; // will be updated when targets are synchronized
+function init () {
 
 	// initialize when needed
 	browser.init();
