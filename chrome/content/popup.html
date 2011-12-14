@@ -51,12 +51,12 @@ function onMessage (request, sender, sendResponse) {
 function init_popup () {
 	/* Detect browser and do browser-specific initialisation */
 
-	if (Sync2allService.browser.name == 'chrome') {
-		// Chrome initialisation data
-		chrome.extension.onRequest.addListener(onMessage);
-		chrome.extension.sendRequest({action: 'popupCreated'});
+	// Chrome initialisation data
+	chrome.extension.onRequest.addListener(onMessage);
+	chrome.extension.sendRequest({action: 'popupCreated'});
 
-	} else if (Sync2allService.browser.name == 'opera') {
+	// old code for Opera:
+	/*} else if (Sync2allService.browser.name == 'opera') {
 		// Opera initialisation
 		opera.extension.onmessage = function (event) {
 			var message = event.data
@@ -80,9 +80,7 @@ function init_popup () {
 			// other events
 			console.log('message in popup: '+message.action);
 		};
-	} else if (Sync2allService.browser.name == 'firefox') {
-		// ignore, information will be loaded when the popup is really opened
-	}
+	}*/
 }
 
 function sendMessage (msg) {
@@ -148,15 +146,6 @@ body {
 }
 </style>
 </head>
-
-<script>
-/* Some css hacking */
-if (Sync2allService.browser.name == 'opera') {
-	document.write('<style>\
-.link { margin: 0; margin-bottom: 0.3em; } \
-#link_opl { margin-bottom: 0; } </style>');
-}
-</script>
 
 <body onload="init_popup();" onUnload="popupClosed();">
 
