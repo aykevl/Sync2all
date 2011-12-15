@@ -46,9 +46,6 @@ gchr.startSync = function () {
 };
 
 gchr.finished_start = function () {
-	// merge() depends on browser.ids
-	gchr.import_ids(gchr.bookmarks);
-
 	// send 'finished' signal
 	link_finished(gchr);
 	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
@@ -56,21 +53,6 @@ gchr.finished_start = function () {
 
 gchr.finished_sync = function () {
 };
-
-// import all local id's into gchr.ids
-gchr.import_ids = function (folder) {
-	gchr.ids[folder.id] = folder;
-	var title;
-	for (title in folder.f) {
-		var subfolder = folder.f[title];
-		gchr.import_ids(subfolder);
-	}
-	var url;
-	for (url in folder.bm) {
-		var bookmark = folder.bm[url];
-		gchr.ids[bookmark.id] = bookmark;
-	}
-}
 
 gchr.gotTree = function (gchr_parentNode, folder) {
 	var node;

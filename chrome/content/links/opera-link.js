@@ -525,15 +525,10 @@ opl.parse_bookmarks = function (array, folder) {
 
 			// add this subfolder to the bookmarks tree
 			if (opl.importFolder(subfolder)) continue; // error
-
-			// add it to the list of opl_ids
-			opl.ids[subfolder.opl_id] = subfolder;
-
 		} else if (item.item_type == 'bookmark') {
 			var bookmark = {parentNode: folder, url: item.properties.uri,
 					title: item.properties.title, opl_id: item.id};
 			if (opl.importBookmark(bookmark)) continue;
-			opl.ids[item.id] = bookmark;
 		}
 	}
 };

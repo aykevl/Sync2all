@@ -232,6 +232,13 @@ function import_link (link, isBrowser) {
 			// no duplicate, so just add
 			parentNode.bm[bookmark.url] = bookmark;
 		}
+
+		// add bookmark ID
+		if (link == browser) {
+			link.ids[bookmark.id] = bookmark;
+		} else {
+			link.ids[bookmark[link.id+'_id']] = bookmark;
+		}
 	}
 
 	// import folder, cleans up duplicates too
@@ -278,6 +285,13 @@ function import_link (link, isBrowser) {
 
 		// merge it in the tree
 		parentNode.f[folder.title] = folder;
+
+		// add folder ID
+		if (link == browser) {
+			link.ids[folder.id] = folder;
+		} else {
+			link.ids[folder[link.id+'_id']] = folder;
+		}
 	}
 
 	link.onRequest = function (request, sender, sendResponse) {
