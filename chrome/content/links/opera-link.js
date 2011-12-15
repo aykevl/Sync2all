@@ -510,81 +510,30 @@ opl.parse_bookmarks = function (array, folder) {
 	var item;
 	for (var i=0; item=array[i]; i++) {
 		if (item.item_type == 'bookmark_folder') {
-			// is this a valid folder?
-			if (!item.properties.title) {
-				// bogus folder, Opera Link has sometimes strange quirks...
-				// Ignore this folder.
-				continue;
-			}
-
 			// is this the trash?
 			if (item.properties.type && item.properties.type == 'trash') {
 				// yes, ignore the folder
 				continue; // don't sync trashed bookmarks
 			}
 
-			// ??? Isn't this always a duplicate folder name?
-			if (folder.f[item.properties.title]) {
-				var subfolder = folder.f[item.properties.title];
-				if (subfolder.opl_id) {
-					// ignore empty
-					console.log('Duplicate folder title: '+
-							subfolder.title);
+			var subfolder = {title: item.properties.title,
+					parentNode: folder, bm: {}, f: {}, opl_id: item.id};
 
-					// if the other is empty, remove it
-					if (!folderHasContents(subfolder)) {
-						console.log('opl: has no contents: '+subfolder.title);
-						opera.link.bookmarks.deleteItem(subfolder.opl_id, function(){});
-					} else if (!item.children) {
-						console.log('opl: has no childs: '+item.properties.title);
-						opera.link.bookmarks.deleteItem(item.id, function(){});
-					}
-				} else {
-					// second folder is more likely to be the wrong (new) folder
-					subfolder.opl_id = item.id;
-					console.log('NOTICE: something strange has happened here.');
-				}
-			} else {
-				var subfolder = {title: item.properties.title,
-						parentNode: folder, bm: {}, f: {}, opl_id: item.id};
-				opl.ids[item.id] = subfolder;
-				folder.f[subfolder.title] = subfolder;
-			}
 			if (item.children) {
 				opl.parse_bookmarks(item.children, subfolder);
-			} else {
-				console.log('opl: empty folder: '+subfolder.title);
 			}
+
+			// add this subfolder to the bookmarks tree
+			if (opl.importFolder(subfolder)) continue; // error
+
+			// add it to the list of opl_ids
+			opl.ids[subfolder.opl_id] = subfolder;
+
 		} else if (item.item_type == 'bookmark') {
-			// check whether this is a valid bookmark
-			if (!item.properties.uri || !item.properties.title) {
-				// this is a bogus bookmark. Ignore it before errors arise.
-				console.log('opl: bogus bookmark:');
-				console.log(item);
-				continue;
-			}
-			if (!folder.bm[item.properties.uri]) {
-				var bookmark = {parentNode: folder, url: item.properties.uri,
-						title: item.properties.title, opl_id: item.id};
-				opl.ids[item.id] = bookmark;
-				folder.bm[item.properties.uri] = bookmark;
-			} else {
-				// strange too. Should only be here when there is a duplicate URL.
-				bookmark = folder.bm[item.properties.uri];
-				if (bookmark.opl_id) {
-					console.log('Opera Link: duplicate url: '+bookmark.url);
-					// delete this duplicate bookmark.
-					// It may be done outside all queues, because this url
-					// will not be used anywhere else (it isn't in any tree)
-					// FIXME check which is newer and keep it.
-					// ignore errors
-					opera.link.bookmarks.deleteItem(item.id, function(){});
-					continue;
-				} else {
-					console.log('NOTICE: something strange has happened here.');
-				}
-				bookmark.opl_id = item.id;
-			}
+			var bookmark = {parentNode: folder, url: item.properties.uri,
+					title: item.properties.title, opl_id: item.id};
+			if (opl.importBookmark(bookmark)) continue;
+			opl.ids[item.id] = bookmark;
 		}
 	}
 };

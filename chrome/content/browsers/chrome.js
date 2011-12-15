@@ -84,56 +84,17 @@ gchr.gotTree_handleNode = function (node, folder) {
 	if (node.url) {
 		// bookmark
 
-		var bookmark = {title: node.title, url: node.url, parentNode: folder, mtime: node.dateAdded, id: node.id};
-		if (folder.bm[bookmark.url]) { // UNTESTED
-			// this bookmark does already exist
-			// take the latest
-			console.log('DUPLICATE: '+node.url);
-			if (folder.bm[node.url].mtime > bookmark.mtime) {
-				// this bookmark is older
-				chrome.bookmarks.remove(node.id, gchr.remove_result);
-				return;
-			} else {
-				// the other bookmark is older
-				chrome.bookmarks.remove(folder.bm[node.url].id, gchr.remove_result);
-				folder.bm[node.url] = bookmark; // replace the other bookmark
-				return;
-			}
-		}
-		folder.bm[bookmark.url] = bookmark;
+		var bookmark = {title: node.title, url: node.url, parentNode: folder, mtime: node.dateAdded/1000, id: node.id};
+		gchr.importBookmark(bookmark);
 	} else {
 		// folder
 
-		// ignore folders without a title
-		if (node.title === '') {
-			return;
-		}
-
 		// create the local node
 		var subfolder = {title: node.title, parentNode: folder, bm: {}, f: {}, id: node.id};
-
-		// check for duplicates
-		if (folder.f[subfolder.title]) {
-			// duplicate folder, merge the contents
-			console.log('DUPLICATE FOLDER: '+subfolder.title);
-
-			// get the other folder of which this is a duplicate
-			var othersubfolder = folder.f[subfolder.title];
-			var subnode;
-			for (var j=0; subnode=node.children[j]; j++) {
-				// move the node first. No callback needed I hope
-				chrome.bookmarks.move(node.id, {parentId: othersubfolder.id});
-				// and do as if the bookmark has already been moved
-				gchr.gotTree_handleNode(subnode, othersubfolder);
-			}
-			// remove this folder node. If the contents is not completely
-			// removed, this function won't do anything.
-			chrome.bookmarks.remove(subfolder.id, gchr.remove_result);
-		}
-
-		// merge it in the tree
-		folder.f[subfolder.title] = subfolder;
 		gchr.gotTree(node, subfolder); // recurse into subfolders
+
+		gchr.importFolder(subfolder);
+
 	}
 };
 
