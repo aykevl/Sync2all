@@ -115,47 +115,42 @@ function commit() {
 // Bookmark-tree modifying:
 // The functions prefixed with _ don't report it to other links.
 
-function addNode(source, node, parentNode) {
+function addNode(link, node, parentNode) {
 	if (!parentNode) {
 		throw 'undefined parentNode';
 	}
 	node.parentNode = parentNode;
 	if (node.url) {
-		return addBookmark(source, node);
+		return addBookmark(link, node);
 	} else {
-		return addFolder(source, node);
+		return addFolder(link, node);
 	}
 }
-function addBookmark(source, bm) {
+function addBookmark(link, bm) {
 	if (!bm.parentNode) {
 		console.log(bm);
 		throw 'Undefined parentNode';
 	}
 	if (fixBookmark(bm)) return true; // error
 	bm.parentNode.bm[bm.url] = bm;
-	broadcastMessage('bm_add', source, [bm]);
+	broadcastMessage('bm_add', link, [bm]);
 }
 function fixBookmark(bm, url) { // url is the ID
 	// try to fix the url
 	if (!bm.url && url) bm.url = url;
 	// if it can't be fixed, remove
 	if (!bm.url) return true;
-	// if there's no title, set the url as the title
-	// Only Opera Link doesn't seem to support empty title, so fix it there.
-	/*if (!bm.title) {
-		bm.title = bm.url;
-	}*/
 }
-function addFolder(source, folder) {
+function addFolder(link, folder) {
 	folder.parentNode.f[folder.title] = folder;
-	broadcastMessage('f_add', source, [folder]);
+	broadcastMessage('f_add', link, [folder]);
 }
 
-function rmNode(source, node) {
+function rmNode(link, node) {
 	if (node.url) {
-		rmBookmark(source, node);
+		rmBookmark(link, node);
 	} else {
-		rmFolder(source, node);
+		rmFolder(link, node);
 	}
 }
 
@@ -172,9 +167,9 @@ function _rmBookmark(bookmark) { // internal use only
 	delete bookmark.parentNode.bm[bookmark.url];
 }
 
-function rmFolder(source, folder) {
+function rmFolder(link, folder) {
 	_rmFolder(folder);
-	broadcastMessage('f_del', source, [folder]);
+	broadcastMessage('f_del', link, [folder]);
 }
 function _rmFolder(folder) {
 	delete folder.parentNode.f[folder.title];
