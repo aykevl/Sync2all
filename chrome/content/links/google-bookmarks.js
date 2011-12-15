@@ -45,7 +45,7 @@ for (default_key in gbm.defaults) {
 }
 
 
-gbm.onInit = function (enable) {
+gbm.onInit = function () {
 	gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
 	gbm.folderSep     = localStorage['gbm_folderSep'];
 };

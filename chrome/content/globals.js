@@ -16,7 +16,7 @@ var update_batch = false;
 
 var debug = false;
 
-// doesn't include browser links
+// webLinks doesn't include browser links (obvious)
 var webLinks = [];
 var enabledWebLinks = [];
 var finishedLinks = [];
