@@ -117,8 +117,10 @@ opl.finished_start = function () {
 // called when sync has been finished.
 opl.finished_sync = function () {
 	// clean up unused memory
-	//delete opl.bookmarks; // should not be commented out?
-	delete opl.ids;
+	if (!debug) {
+		delete opl.bookmarks; // should not be commented out?
+		delete opl.ids;
+	}
 }
 
 opl.save_state = function () {
