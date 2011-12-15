@@ -9,7 +9,7 @@ for details of the Google Bookmarks API
 var gbm = {};
 
 gbm.name = 'Google Bookmarks'; // OBSOLETE
-gbm.fullname = 'Google Bookmarks';
+gbm.fullName = 'Google Bookmarks';
 gbm.shortname = 'gbm';
 
 

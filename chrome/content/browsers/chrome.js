@@ -21,7 +21,7 @@ chrome.extension.onRequest.addListener(onRequest);
 var gchr = {};
 browser = gchr;
 
-gchr.fullname = 'Google Chrome';
+gchr.fullName = 'Google Chrome';
 gchr.shortname = 'gchr';
 gchr.name = 'chrome'
 

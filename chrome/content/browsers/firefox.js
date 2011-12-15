@@ -1,7 +1,7 @@
 
 var fx = {
 	shortname: 'fx',
-	fullname: 'Mozilla Firefox',
+	fullName: 'Mozilla Firefox',
 	name: 'firefox',
 
 	onInit: function () {

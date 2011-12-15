@@ -4,7 +4,7 @@
 var opl = {};
 
 opl.name = 'Opera Link'; // OBSOLETE
-opl.fullname = 'Opera Link';
+opl.fullName = 'Opera Link';
 opl.shortname = 'opl';
 
 // imports (or include if you want)

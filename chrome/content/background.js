@@ -63,12 +63,13 @@ function onLoad() {
 
 /* Call all links except #sourceLink and links that have declared they want
  * all notifications
- * @string funcname The function to call
- * @object sourceLink The calling link
- * @object params The params for the function.
+ * @string methodName The function to call
+ * @object sourceLink The calling link, function will not be called upon it
+ * except if a flag is set to receive all notifications.
+ * @object params The parameters for the function (sourceLink is inserted at
+ * the start)
  */
-function call_all(funcname, sourceLink, params) {
-	// link should be defined
+function call_all(methodName, sourceLink, params) {
 	if (!sourceLink && sourceLink != null) {
 		console.error('BUG: link is not defined, in call_all()');
 	}
@@ -78,30 +79,31 @@ function call_all(funcname, sourceLink, params) {
 
 	var link;
 	for (var i=0; link=finishedLinks[i]; i++) {
-		// if this is the link where the call comes from
-		// Report changes when the link is syncing, it needs to know that
+		// ignore the calling link, except when a flag is set.
 		if (link == sourceLink && !sourceLink.has_own_data) continue;
 
-		func = link[funcname];
-		if (func == false) continue; // marked as not available;
-		if (func == undefined) {
-			console.warn('WARNING: '+link.name+' hasn\'t implemented '+funcname+' (set to false to ignore)');
-			link[funcname] = false; // prevent future logs causing lots of data
-			continue;
-		}
-
-		try {
-			// FIXME should this really use 'self'?
-			var self = link;
-			if (params) {
-				self[funcname].apply(this, params);
-			} else {
-				self[funcname].apply(this);
+		var method = link[methodName];
+		if (method == false) {
+			// marked as not available.
+			// ignore
+		} else if (method == undefined) {
+			// this method is not implemented. Give a warning indicating so.
+			console.warn('WARNING: '+link.name+' hasn\'t implemented '+methodName+' (set function to false to ignore)');
+			link[methodName] = false; // prevent future logs causing lots of data
+		} else {
+			try {
+				// FIXME should this really use 'self'?
+				var self = link;
+				if (params) {
+					self[methodName].apply(this, params);
+				} else {
+					self[methodName].apply(this);
+				}
+			} catch (error) {
+				console.log('call_all: ERROR: in function '+methodName+' applied to link '+link.fullName+':');
+				console.error(error);
+				console.trace();
 			}
-		} catch (error) {
-			console.log('call_all: ERROR: in function '+funcname+' applied to link '+link.name+':');
-			console.error(error);
-			console.trace();
 		}
 	}
 }
@@ -345,9 +347,9 @@ function link_finished(link) {
 			webLink.load();
 		}
 	} else { //or, when it is a link, merge the data with the browser.
-		console.log('Merging bookmarks with '+link.fullname+'...');
+		console.log('Merging bookmarks with '+link.fullName+'...');
 		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
-		console.log('Finished merging with '+link.fullname+'.');
+		console.log('Finished merging with '+link.fullName+'.');
 	}
 
 	// is the syncing finished? Commit changes!

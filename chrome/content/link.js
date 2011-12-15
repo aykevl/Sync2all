@@ -61,7 +61,6 @@ function import_link (link, isBrowser) {
 			enabledWebLinks.push(link);
 			link.startSync();
 		}
-		console.log('loaded '+link.name);
 
 	};
 
