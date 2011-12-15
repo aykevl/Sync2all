@@ -33,11 +33,11 @@
 							<button id="sync2all-gbm-button-start"
 								label="(Re)synchronize"
 								disabled="true"
-								oncommand="Sync2allService.gbm.msg_start()"/>
+								oncommand="Sync2allService.gbm.msg_restart()"/>
 							<button id="sync2all-gbm-button-stop"
 								label="Disable"
 								disalbled="true"
-								oncommand="Sync2allService.gbm.msg_disable();"/>
+								oncommand="Sync2allService.gbm.msg_stop();"/>
 						</hbox>
 					</vbox>
 					<menuseparator/>
@@ -53,11 +53,11 @@
 							<button id="sync2all-opl-button-start"
 								label="(Re)synchronize"
 								disabled="true"
-								oncommand="Sync2allService.opl.msg_start()"/>
+								oncommand="Sync2allService.opl.msg_restart()"/>
 							<button id="sync2all-opl-button-stop"
 								label="Disable"
 								disabled="true"
-								oncommand="Sync2allService.opl.msg_disable();"/>
+								oncommand="Sync2allService.opl.msg_stop();"/>
 						</hbox>
 						<hbox align="end" style="display: none;"
 						      id="sync2all-opl-verifier-container">
