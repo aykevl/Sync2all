@@ -121,25 +121,6 @@ gbm.finished_start = function () {
 	gbm.updateStatus(statuses.READY);
 };
 
-/*gbm.get_cbl_ids = function (folder) {
-	gbm.cbl_ids[folder.id] = folder;
-	for (url in folder.bm) {
-		gbm.cbl_ids[folder.bm[url].id] = folder.bm[url];
-	}
-	for (title in folder.f) {
-		gbm.get_cbl_ids(folder.f[title]);
-	}
-}*/
-
-/*gbm.use_global_urls = function (folder) {
-	for (url in folder.bm) {
-		gbm.added_bookmark(folder.bm[url]);
-	}
-	for (title in folder.f) {
-		gbm.use_global_urls(folder.f[title]);
-	}
-}*/
-
 gbm.update_data = function () {
 	console.log('gbm: updating data structures...');
 	gbm.update_urls(browser.bookmarks);
