@@ -32,9 +32,9 @@ gchr.onInit = function () {
 }
 
 gchr.startSync = function () {
-	chrome.bookmarks.getTree(
+	chrome.bookmarks.getSubTree(gchr.bookmarks.id,
 			function (tree) {
-				gchr.gotTree(tree[0].children[0], gchr.bookmarks);
+				gchr.gotTree(tree[0], gchr.bookmarks);
 				gchr.finished_start();
 			}
 	);
