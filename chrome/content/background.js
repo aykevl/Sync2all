@@ -43,7 +43,8 @@ function popupCreated(_popupDOM) {
 	var link;
 	for (var i=0; link=webLinks[i]; i++) {
 		link.updateStatus();
-	}}
+	}
+}
 
 function popupClosed() {
 	isPopupOpen = false;
@@ -55,7 +56,7 @@ function popupClosed() {
 
 }
 
-
+/* Called when the extension has loaded */
 function onLoad() {
 	init();
 }
@@ -106,11 +107,6 @@ function call_all(funcname, sourceLink, params) {
 }
 
 function commit() {
-	// when update_batch is true, a batch of updates is in progress.
-	// It is better when we wait till that has finished before we commit
-	// everyting (for example, Google Bookmarks is efficienter in that case).
-	// When the batch has been finished, commit() will be called again.
-	if (update_batch) return;
 	call_all('commit', null);
 }
 

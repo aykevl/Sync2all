@@ -12,7 +12,6 @@ var browser;
 
 
 var isPopupOpen = false;
-var update_batch = false;
 
 var debug = false;
 
