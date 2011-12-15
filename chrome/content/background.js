@@ -280,7 +280,7 @@ function onChanged(link, node, changeInfo) {
 }
 
 // whether this folder-node has contents (bookmarks or folders)
-function has_contents(folder) {
+function folderHasContents(folder) {
 	var url;
 	for (url in folder.bm) {
 		return true;
@@ -289,6 +289,7 @@ function has_contents(folder) {
 	for (title in folder.f) {
 		return true;
 	}
+	return false;
 }
 
 
@@ -380,7 +381,7 @@ function apply_action (link, action) {
 	// and check whether it is allowed
 	if (command == 'f_del_ifempty') {
 		// directory shouldn't be removed if it has entries in it
-		if (has_contents(args[0])) return;
+		if (folderHasContents(args[0])) return;
 		command = 'f_del';
 	}
 

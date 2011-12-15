@@ -532,7 +532,7 @@ opl.parse_bookmarks = function (array, folder) {
 							subfolder.title);
 
 					// if the other is empty, remove it
-					if (!has_contents(subfolder)) {
+					if (!folderHasContents(subfolder)) {
 						console.log('opl: has no contents: '+subfolder.title);
 						opera.link.bookmarks.deleteItem(subfolder.opl_id, function(){});
 					} else if (!item.children) {

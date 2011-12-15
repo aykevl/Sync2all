@@ -87,7 +87,7 @@ gbm.finished_start = function () {
 		return;
 	}
 
-	if (!has_contents(gbm.bookmarks)) {
+	if (!folderHasContents(gbm.bookmarks)) {
 		if (confirm('Are you sure you want to remove all bookmarks?')) {
 			return;
 		}
