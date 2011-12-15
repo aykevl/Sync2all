@@ -25,6 +25,11 @@ gchr.fullName = 'Google Chrome';
 gchr.id = 'gchr';
 gchr.name = 'chrome'
 
+// import libraries, kind of inheritance
+import_link(gchr, true);
+import_queue(gchr);
+
+
 gchr.onInit = function () {
 	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
 	gchr.ids = {'1': gchr.bookmarks};
@@ -342,8 +347,4 @@ gchr.import_node = function (id) {
 						});
 			}, id);
 };
-
-// import libraries, kind of inheritance
-import_link(gchr, true);
-import_queue(gchr);
 
