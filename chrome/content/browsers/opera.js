@@ -23,7 +23,7 @@ function onMessage(event) {
 	// send message to the right link
 	var link;
 	for (var i=0; link=links[i]; i++) {
-		if (action.substr(0, link.shortname.length+1) == link.shortname+'_') {
+		if (action.substr(0, link.id.length+1) == link.id+'_') {
 			link['msg_'+action.substr(action.indexOf('_')+1)](event.data);
 		}
 	}

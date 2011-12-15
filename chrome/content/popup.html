@@ -20,9 +20,9 @@ function popupClosed () {
 }
 
 function updateLink (link) {
-	document.getElementById(link.shortname+'_status').innerText = link.message;
-	document.getElementById(link.shortname+'_button_start').disabled = !link.btn_start;
-	document.getElementById(link.shortname+'_button_stop').disabled = !link.btn_stop;
+	document.getElementById(link.id+'_status').innerText = link.message;
+	document.getElementById(link.id+'_button_start').disabled = !link.btn_start;
+	document.getElementById(link.id+'_button_stop').disabled = !link.btn_stop;
 }
 
 function onMessage (request, sender, sendResponse) {

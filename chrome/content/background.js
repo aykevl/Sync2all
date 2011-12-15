@@ -69,9 +69,9 @@ function onLoad() {
  * @object params The parameters for the function (sourceLink is inserted at
  * the start)
  */
-function call_all(methodName, sourceLink, params) {
+function broadcastMessage(methodName, sourceLink, params) {
 	if (!sourceLink && sourceLink != null) {
-		console.error('BUG: link is not defined, in call_all()');
+		console.error('BUG: link is not defined, in broadcastMessage()');
 	}
 
 	// first parameter should be the link
@@ -100,7 +100,7 @@ function call_all(methodName, sourceLink, params) {
 					self[methodName].apply(this);
 				}
 			} catch (error) {
-				console.log('call_all: ERROR: in function '+methodName+' applied to link '+link.fullName+':');
+				console.log('broadcastMessage: ERROR: in function '+methodName+' applied to link '+link.fullName+':');
 				console.error(error);
 				console.trace();
 			}
@@ -109,7 +109,7 @@ function call_all(methodName, sourceLink, params) {
 }
 
 function commit() {
-	call_all('commit', null);
+	broadcastMessage('commit', null);
 }
 
 // Bookmark-tree modifying:
@@ -133,7 +133,7 @@ function addBookmark(source, bm) {
 	}
 	if (fixBookmark(bm)) return true; // error
 	bm.parentNode.bm[bm.url] = bm;
-	call_all('bm_add', source, [bm]);
+	broadcastMessage('bm_add', source, [bm]);
 }
 function fixBookmark(bm, url) { // url is the ID
 	// try to fix the url
@@ -148,7 +148,7 @@ function fixBookmark(bm, url) { // url is the ID
 }
 function addFolder(source, folder) {
 	folder.parentNode.f[folder.title] = folder;
-	call_all('f_add', source, [folder]);
+	broadcastMessage('f_add', source, [folder]);
 }
 
 function rmNode(source, node) {
@@ -162,7 +162,7 @@ function rmNode(source, node) {
 function rmBookmark(link, bookmark) { // public function
 	_rmBookmark(bookmark);
 	console.log('Removed bookmark: '+bookmark.url);
-	call_all('bm_del', link, [bookmark]);
+	broadcastMessage('bm_del', link, [bookmark]);
 }
 function _rmBookmark(bookmark) { // internal use only
 	if (!bookmark.parentNode) {
@@ -174,7 +174,7 @@ function _rmBookmark(bookmark) { // internal use only
 
 function rmFolder(source, folder) {
 	_rmFolder(folder);
-	call_all('f_del', source, [folder]);
+	broadcastMessage('f_del', source, [folder]);
 }
 function _rmFolder(folder) {
 	delete folder.parentNode.f[folder.title];
@@ -182,15 +182,15 @@ function _rmFolder(folder) {
 
 function mvBookmark (link, bm, target) {
 	_mvBookmark(bm, target);
-	call_all('bm_mv', link, [bm, target]);
+	broadcastMessage('bm_mv', link, [bm, target]);
 }
 
 function mvNode(link, node, target) {
 	_mvNode(node, target);
 	if (node.url) {
-		call_all('bm_mv', link, [node, target]);
+		broadcastMessage('bm_mv', link, [node, target]);
 	} else {
-		call_all('f_mv', link, [node, target]);
+		broadcastMessage('f_mv', link, [node, target]);
 	}
 }
 
@@ -253,14 +253,14 @@ function onChanged(link, node, changeInfo) {
 			// add new reference
 			node.parentNode.bm[node.url] = node;
 
-			call_all('bm_mod_url', link, [node, oldurl]);
+			broadcastMessage('bm_mod_url', link, [node, oldurl]);
 		}
 
 		if (changeInfo.title != node.title) {
 			console.log('Title of url '+node.url+' changed from '+node.title+' to '+changeInfo.title);
 			var oldtitle = node.title;
 			node.title = changeInfo.title;
-			call_all('bm_mod_title', link, [node, oldtitle]);
+			broadcastMessage('bm_mod_title', link, [node, oldtitle]);
 		}
 
 	} else {
@@ -280,7 +280,7 @@ function onChanged(link, node, changeInfo) {
 		delete parentNode.f[oldtitle];
 		parentNode.f[newtitle] = node;
 
-		call_all('f_mod_title', link, [node , oldtitle]);
+		broadcastMessage('f_mod_title', link, [node , oldtitle]);
 	}
 }
 
@@ -355,11 +355,11 @@ function link_finished(link) {
 	// is the syncing finished? Commit changes!
 	if (enabledWebLinks.length+1 == finishedLinks.length) { // browser isn't in enabledWebLinks, but is in finishedLinks. The +1 is to correct this.
 		commit();
-		call_all('finished_sync', null);
+		broadcastMessage('finished_sync', null);
 	}
 }
 
-// apply action, parts are the same as call_all.
+// apply action, parts are the same as broadcastMessage.
 function apply_action (link, action) {
 	// first get the arguments
 	var args    = [];
@@ -559,7 +559,7 @@ function syncRFolder(target, rfolder, lparentfolder) {
 	var lfolder = {bm: {}, f: {}, title: rfolder.title, parentNode: lparentfolder};
 	mergeProperties(rfolder, lfolder); // copy opl_id etc
 	lparentfolder.f[lfolder.title] = lfolder;
-	call_all('f_add', target, [lfolder]);
+	broadcastMessage('f_add', target, [lfolder]);
 
 	// sync bookmarks
 	var url;
@@ -631,7 +631,7 @@ function syncRBookmark(target, bookmark, lfolder) {
 }
 function delRBookmark(target, bookmark, lfolder) {
 	console.log('Old remote bookmark :'+bookmark.url);
-	call_all('bm_del', target, [bookmark]);
+	broadcastMessage('bm_del', target, [bookmark]);
 	// bookmark doesn't exist locally, so no removing required
 	return 0;
 }
@@ -659,7 +659,7 @@ function delLBookmark(target, bm) {
 	// remove bookmark
 	console.log('Old local bookmark: '+bm.url);
 	// TODO
-	//call_all('bm_del', target, [bm]);
+	//broadcastMessage('bm_del', target, [bm]);
 	return 0;
 }
 

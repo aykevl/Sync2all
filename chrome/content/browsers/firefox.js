@@ -1,6 +1,6 @@
 
 var fx = {
-	shortname: 'fx',
+	id: 'fx',
 	fullName: 'Mozilla Firefox',
 	name: 'firefox',
 

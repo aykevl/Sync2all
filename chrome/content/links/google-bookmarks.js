@@ -10,7 +10,7 @@ var gbm = {};
 
 gbm.name = 'Google Bookmarks'; // OBSOLETE
 gbm.fullName = 'Google Bookmarks';
-gbm.shortname = 'gbm';
+gbm.id = 'gbm';
 
 
 /* imports */
@@ -384,7 +384,7 @@ gbm.check_mods = function (bookmark) {
 		// google doesn't allow URLs with only a hash on the end
 		var oldurl = bookmark.url;
 		bookmark.url = bookmark.url.substr(0, bookmark.url.length-1);
-		call_all('bm_mod_url', gbm, [bookmark, oldurl]);
+		broadcastMessage('bm_mod_url', gbm, [bookmark, oldurl]);
 	}
 }
 

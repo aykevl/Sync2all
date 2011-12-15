@@ -22,7 +22,7 @@ var gchr = {};
 browser = gchr;
 
 gchr.fullName = 'Google Chrome';
-gchr.shortname = 'gchr';
+gchr.id = 'gchr';
 gchr.name = 'chrome'
 
 gchr.onInit = function () {
@@ -217,7 +217,7 @@ gchr.bm_add = function (source, bm, lfolder) {
 
 gchr.bm_del = function (source, bm) {
 	// remove this from our data
-	// this keeps evt_onRemoved from calling call_all('bm_del', ...)
+	// this keeps evt_onRemoved from calling broadcastMessage('bm_del', ...)
 	delete gchr.ids[bm.id];
 	// delete global reference
 	_rmBookmark(bm); // _ before it so it won't call bm_del on all links
@@ -284,7 +284,6 @@ gchr.evt_onCreated = function (id, node) {
 		var bookmark = {title: node.title, url: node.url, parentNode: parentNode, mtime: node.dateAdded, id: id};
 		gchr.ids[id] = bookmark;
 		//parentNode.bm[bookmark.url] = bookmark;
-		//call_all('bm_add', gchr, [bookmark]);
 		if (addBookmark(gchr, bookmark)) return; // error
 	} else {
 		// folder

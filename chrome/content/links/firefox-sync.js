@@ -4,7 +4,7 @@
 ffs = {};
 
 ffs.name = 'Firefox Sync';
-ffs.shortname = 'ffs';
+ffs.id = 'ffs';
 
 ffs.email    = localStorage.ffs_email;
 ffs.password = localStorage.ffs_password;

@@ -34,7 +34,7 @@ function import_link (link, isBrowser) {
 	// should be called only once
 	link.init = function () {
 		link.started = false;
-		link.enabled = false;//JSON.parse(localStorage[link.shortname+'_enabled']);
+		link.enabled = false;//JSON.parse(localStorage[link.id+'_enabled']);
 		if (link.onInit) {
 			link.onInit(); // should also be called only once
 		}
@@ -44,8 +44,8 @@ function import_link (link, isBrowser) {
 		link.status = statuses.READY; // only to initialize
 		link.loaded = true;
 
-		if (localStorage[link.shortname+'_lastSyncTime']) {
-			link.lastSyncTime = JSON.parse(localStorage[link.shortname]);
+		if (localStorage[link.id+'_lastSyncTime']) {
+			link.lastSyncTime = JSON.parse(localStorage[link.id]);
 		} else {
 			link.lastSyncTime = 0;
 		}
@@ -54,7 +54,7 @@ function import_link (link, isBrowser) {
 		link.startSyncTime = (new Date()).getTime()/1000;
 
 		// load enabled/disabled state
-		link.enabled = JSON.parse(localStorage[link.shortname+'_enabled']);
+		link.enabled = JSON.parse(localStorage[link.id+'_enabled']);
 
 		// start if enabled
 		if (link.enabled) {
@@ -76,7 +76,7 @@ function import_link (link, isBrowser) {
 		} else {
 			// mark enabled
 			link.enabled = true;
-			localStorage[link.shortname+'_enabled'] = JSON.stringify(true);
+			localStorage[link.id+'_enabled'] = JSON.stringify(true);
 
 			enabledWebLinks.push(link);
 		}
@@ -91,7 +91,7 @@ function import_link (link, isBrowser) {
 
 	// Stop link. remove memory-eating status if the keepStatus flag is not set.
 	link.stop = link.msg_stop = function (keepStatus) {
-		localStorage[link.shortname+'_enabled'] = JSON.stringify(false);
+		localStorage[link.id+'_enabled'] = JSON.stringify(false);
 		link.enabled = false;
 		if (link != browser) {
 			Array_remove(enabledWebLinks, link);
@@ -99,7 +99,7 @@ function import_link (link, isBrowser) {
 		Array_remove(finishedLinks, link);
 
 		if (!keepStatus) {
-			delete localStorage[link.shortname+'_state'];
+			delete localStorage[link.id+'_state'];
 		}
 
 		link.updateStatus(statuses.READY);
@@ -114,14 +114,14 @@ function import_link (link, isBrowser) {
 		}
 
 		if ((link.queue || link.r_queue).running) {
-			console.warn(link.shortname+': '+'Queue is running but status is zero!');
+			console.warn(link.id+': '+'Queue is running but status is zero!');
 			console.log(link);
 			return; // will be started when the queue is empty
 		}
 
 		link.has_saved_state = true;
 
-		console.log(link.shortname+': saving state:');
+		console.log(link.id+': saving state:');
 		console.trace();
 		link.save_state();
 	};
@@ -161,15 +161,15 @@ function import_link (link, isBrowser) {
 		var btn_start = !link.enabled || !link.status && link.enabled;
 		var btn_stop  = link.enabled && !link.status;
 
-		var message = {action: 'updateUi', shortname: link.shortname, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
+		var message = {action: 'updateUi', id: link.id, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
 
 		// send message to specific browsers
 		if (browser.name == 'chrome') {
 			chrome.extension.sendRequest(message, function () {});
 		} else if (browser.name == 'firefox') {
-			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-status').value = msgtext;
-			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-start').disabled = !btn_start;
-			browser.popupDOM.getElementById('sync2all-'+link.shortname+'-button-stop').disabled  = !btn_stop;
+			browser.popupDOM.getElementById('sync2all-'+link.id+'-status').value = msgtext;
+			browser.popupDOM.getElementById('sync2all-'+link.id+'-button-start').disabled = !btn_start;
+			browser.popupDOM.getElementById('sync2all-'+link.id+'-button-stop').disabled  = !btn_stop;
 		} else if (browser.name == 'opera') {
 			opera.extension.broadcastMessage(message);
 		}
@@ -202,7 +202,7 @@ function import_link (link, isBrowser) {
 	}
 	link.onRequest = function (request, sender, sendResponse) {
 		// handle request
-		if (request.action.substr(0, link.shortname.length+1) == link.shortname+'_') {
+		if (request.action.substr(0, link.id.length+1) == link.id+'_') {
 
 			// convert linkid_action to msg_action
 			link['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
@@ -286,7 +286,7 @@ function import_queue (obj) {
 		// if this is the browser
 		if (this == browser) {
 			// save all states when they are ready
-			call_all('may_save_state');
+			broadcastMessage('may_save_state');
 		}
 	};
 	obj.queue_error = function () {
@@ -454,7 +454,7 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 		console.log('Moved '+node.url+' from '+(oldParent?oldParent.title:'somewhere in the Other Bookmarks menu')+' to '+newParent.title);
 		newParent.bm[node.url] = node;
 		delete oldParent.bm[node.url];
-		call_all('bm_mv', link, [node, oldParent]);
+		broadcastMessage('bm_mv', link, [node, oldParent]);
 	} else {
 		// folder
 		if (newParent.f[node.title]) {
@@ -462,7 +462,7 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 		}
 		newParent.f[node.title] = node;
 		delete oldParent.f[node.title];
-		call_all('f_mv', link, [node, oldParent]);
+		broadcastMessage('f_mv', link, [node, oldParent]);
 	}
 	commit();
 }
