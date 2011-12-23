@@ -54,7 +54,11 @@ function import_link (link, isBrowser) {
 		link.startSyncTime = (new Date()).getTime()/1000;
 
 		// load enabled/disabled state
-		link.enabled = JSON.parse(localStorage[link.id+'_enabled']);
+		if (localStorage[link.id+'_enabled']) {
+			link.enabled = JSON.parse(localStorage[link.id+'_enabled']);
+		} else {
+			link.enabled = false;
+		}
 
 		// start if enabled
 		if (link.enabled) {
@@ -96,7 +100,11 @@ function import_link (link, isBrowser) {
 		if (link != browser) {
 			Array_remove(enabledWebLinks, link);
 		}
-		Array_remove(finishedLinks, link);
+		// check whether this link has finished after starting. It is possible
+		// that there's an error while it starts, and that it disables itself.
+		if (finishedLinks.indexOf(link) >= 0) {
+			Array_remove(finishedLinks, link);
+		}
 
 		if (!keepStatus) {
 			delete localStorage[link.id+'_state'];
@@ -213,6 +221,7 @@ function import_link (link, isBrowser) {
 		// check for duplicate
 		if (parentNode.bm[bookmark.url]) {
 			console.log('DUPLICATE: '+bookmark.url);
+			console.log(bookmark);
 
 			// this bookmark does already exist, take the latest.
 			var otherBookmark = parentNode.bm[bookmark.url];
@@ -254,6 +263,7 @@ function import_link (link, isBrowser) {
 		if (parentNode.f[folder.title]) {
 			// duplicate folder, merge the contents
 			console.log('DUPLICATE FOLDER: '+folder.title);
+			console.log(folder);
 
 			// get the other folder of which this is a duplicate
 			var otherFolder = parentNode.f[folder.title];

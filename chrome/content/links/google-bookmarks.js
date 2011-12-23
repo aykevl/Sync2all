@@ -214,7 +214,8 @@ gbm.onXmlLoaded = function () {
 	// finished loading
 
 	if (gbm.reqXml.status != 200) {
-		alert('Failed to retrieve bookmarks (XML). Is there an internet connection?');
+		alert('Failed to retrieve bookmarks (XML). Is there an internet connection and are you logged in to Google?');
+		gbm.stop();
 	} else {
 		// parse XML.
 		if (gbm.parseXmlBookmarks(gbm.reqXml.responseXML)) {
@@ -235,7 +236,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 	try {
 		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
 	} catch (err) {
-		gbm.disable();
+		gbm.stop();
 		alert("Failed to parse bookmarks ("+err+") -- are you logged in?\nGoogle Bookmarks link is now disabled.");
 		return true;
 	}
