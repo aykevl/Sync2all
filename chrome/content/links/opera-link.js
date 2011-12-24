@@ -203,41 +203,19 @@ opl.make_stable_lId = function (node) {
 	return sid;
 };
 
-// @var folder The current folder (represents #state), undefined if this folder
+// @var parentNode The current folder (represents #state), undefined if this folder
 // is deleted (and should be checked for moved items).
 // @var state The array of children of this folder.
-opl.calculate_actions = function (state, folder) {
-	var state;
+opl.calculate_actions = function (parentState, parentNode) {
 	var item;
-
-	/* check for created folders
-	 * This must be checked before the moved folders, otherwise the nodes will
-	 * be moved to non-existing folders (that gives an error).
-	 */
-	
-	/*// make an key/value array of the state
-	var opl_ids = {};
-	for (var i=0; item=state[i]; i++) {
-		opl_ids[item.opl_id] = item;
-	}
-
-	// check for added folders.
-	var subfolder;
-	for (var title in folder.f) {
-		subfolder = folder.f[title];
-		if (!opl_ids[subfolder.opl_id]) {
-			console.log('New folder: '+subfolder.title);
-			actions.push('f_new', subfolder);
-		}
-	}*/
 
 	/* check for removed and moved items */
 
-	for (var i=0; item=state[i]; i++) {
+	for (var i=0; item=parentState[i]; i++) {
 		if (!item.opl_id || !item.id) {
-			console.error('saved item has no id or opl_id (bug somewhere else!); item, folder:');
+			console.error('saved item has no id or opl_id (bug somewhere else!); item, parentNode:');
 			console.log(item);
-			console.log(folder);
+			console.log(parentNode);
 			continue;
 		}
 
@@ -248,32 +226,34 @@ opl.calculate_actions = function (state, folder) {
 			isfolder = true
 		}
 
-		if (!folder) {
+		if (!parentNode) {
 			// this folder has been deleted, check for items that have been
 			// moved outside this folder. Not really needed, but it is better
 			// to move folders and bookmarks than to re-create them. (Preserves
 			// more data, for example descriptions and favicons).
 			if (opl.ids[item.opl_id]) {
-				// this node does still exist, mark it as moved.
+				// this node does still exist but in another place, mark it as moved.
 
 				var node = opl.ids[item.opl_id];
 
-				// get the destination (local) folder
-				var movedTo_id = opl.ownId_to_lId[node.parentNode.opl_id];
-				if (browser.ids[movedTo_id]) {
-					var movedTo = browser.ids[movedTo_id];
+				// get the destination (local) folder, the parent of otherNode
+				var localParentNodeId= opl.ownId_to_lId[node.parentNode.opl_id];
+				if (browser.ids[localParentNodeId]) {
+					var localParentNode = browser.ids[localParentNodeId];
+				} else {
+					var localParentNode = null;
 				}
 
 				if (node.url) { // if this is a bookmark
 					// check whether this bookmark has already been moved
 					// If not, add an action
-					if (movedTo && !movedTo.bm[node.url]) {
-						opl.actions.push(['bm_mv', item.id, l_node]);
+					if (localParentNode && !localParentNode.bm[node.url]) {
+						opl.actions.push(['bm_mv', item.id, localParentNode]);
 					}
 				} else {
 					// check whether this folder has already been moved local
-					if (movedTo && !movedTo.f[node.title]) {
-						opl.actions.push(['f_mv',  item.id, l_node]);
+					if (localParentNode && !localParentNode.f[node.title]) {
+						opl.actions.push(['f_mv',  item.id, localParentNode]);
 					}
 				}
 			} else {
@@ -317,7 +297,7 @@ opl.calculate_actions = function (state, folder) {
 					}
 				}
 
-			} else if (opl.ids[item.opl_id].parentNode.opl_id != folder.opl_id) {
+			} else if (opl.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
 				var movedTo = opl.ids[item.opl_id].parentNode;
 
 				// useful information for debugging
