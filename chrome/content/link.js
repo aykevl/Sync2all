@@ -112,6 +112,11 @@ function import_link (link, isBrowser) {
 			link.ids[link.bookmarks.id] = link.bookmarks;
 		}
 
+		if (link.flag_tagStructure) {
+			link.rootNodeLabel = localStorage[link.id+'_rootNodeLabel'] || 'Bookmarks Bar';
+			link.folderSep     = localStorage[link.id+'_folderSep']     || '/';
+		}
+
 		// only for webLinks:
 		if (link != browser) {
 			link.actions = [];

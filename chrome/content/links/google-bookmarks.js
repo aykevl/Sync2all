@@ -31,26 +31,6 @@ gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarks
 gbm.has_own_data = true;
 
 
-// set default options
-// TODO maybe in a separate function?
-gbm.defaults = {
-	'gbm_rootNodeLabel': 'Bookmarks Bar',
-	'gbm_folderSep':     '/',
-}
-var default_key;
-for (default_key in gbm.defaults) {
-	if (localStorage[default_key] === undefined ||
-		localStorage[default_key] === null) {
-		localStorage[default_key] = gbm.defaults[default_key];
-	}
-}
-
-
-gbm.onInit = function () {
-	gbm.rootNodeLabel = localStorage['gbm_rootNodeLabel'];
-	gbm.folderSep     = localStorage['gbm_folderSep'];
-};
-
 // (re) start
 gbm.startSync = function () {
 
