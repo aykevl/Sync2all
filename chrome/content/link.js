@@ -81,6 +81,10 @@ function import_link (link, isBrowser) {
 			enabledWebLinks.push(link);
 		}
 
+		if (link.status) {
+			console.error('BUG: '+link.id+'.startSync called while status is non-zero');
+		}
+
 		// now start the link. Should be done when it is enabled
 		link.startSync();
 	};
