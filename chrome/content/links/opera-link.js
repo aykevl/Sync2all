@@ -61,34 +61,29 @@ opl.finished_start = function () {
 	if (localStorage['opl_state']) {
 		// this may fail with an update, so ignore (dump) the errors, and just
 		// save a new status after this sync.
-		//try {
-			// load saved status
-			var state = JSON.parse(localStorage['opl_state']);
 
-			// map Opera Link IDs to local browser IDs.
-			// WARNING: when the opl_id is not known, this will give strange
-			// behaviour (when a moved bookmark or folder moves to the
-			// bookmarks root)
-			opl.ownId_to_lId = {undefined: browser.bookmarks.id};
-			opl.mapOplIdsToLocalIds(state);
+		// load saved status
+		var state = JSON.parse(localStorage['opl_state']);
 
-			// now calculate the actions once all data has been loaded.
-			opl.calculate_actions(state, opl.bookmarks);
+		// map Opera Link IDs to local browser IDs.
+		// WARNING: when the opl_id is not known, this will give strange
+		// behaviour (when a moved bookmark or folder moves to the
+		// bookmarks root)
+		opl.ownId_to_lId = {undefined: browser.bookmarks.id};
+		opl.mapOplIdsToLocalIds(state);
 
-			// delete unused variables
-			delete state; // big variable (44KB with my bookmarks in JSON)
-			//delete opl.ownId_to_lId;
+		// now calculate the actions once all data has been loaded.
+		opl.calculate_actions(state, opl.bookmarks);
 
-			// display message when there are actions
-			if (opl.actions.length) {
-				console.log('opl actions:');
-				console.log(opl.actions);
-			}
-		/*} catch (err) {
-			console.log('opl: Error while calculating changes in Opera Link bookmarks:');
-			console.error(err);
-			console.trace(err);
-		}*/
+		// delete unused variables
+		delete state; // big variable (44KB with my bookmarks in JSON)
+		//delete opl.ownId_to_lId;
+
+		// display message when there are actions
+		if (opl.actions.length) {
+			console.log('opl actions:');
+			console.log(opl.actions);
+		}
 	}
 
 	// set status to merging
