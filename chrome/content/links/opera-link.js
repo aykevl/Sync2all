@@ -43,16 +43,6 @@ opl.onInit = function () {
 // (re)start
 opl.startSync = function () {
 
-	if (opl.status) return;
-
-	// enable if needed
-	if (!opl.enabled) {
-		opl.enable();
-		return;
-	}
-
-	opl.updateStatus(statuses.DOWNLOADING);
-
 	// initialize variables
 	opl.bookmarks = {bm: {}, f: {}, opl_id: null}; // doesn't have a title nor parentNode, only childrens
 	opl.actions   = [];
@@ -61,8 +51,6 @@ opl.startSync = function () {
 	opl.has_saved_state = false;
 
 	// start downloading
-	//opera.link.testAuthorization(opl.authorizationTested);
-
 	opl.loadBookmarks();
 };
 

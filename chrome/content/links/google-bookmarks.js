@@ -53,13 +53,6 @@ gbm.onInit = function () {
 // (re) start
 gbm.startSync = function () {
 
-	if (gbm.status) {
-		console.error('BUG: gbm.startSync called while status is non-zero');
-	}
-
-	// set status
-	gbm.updateStatus(statuses.DOWNLOADING);
-
 	// initialize variables
     gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
 	gbm.urls      = {}; // dictionary: url => list of bookmarks
@@ -70,7 +63,8 @@ gbm.startSync = function () {
 	// will be set to false once the status has been saved
 	gbm.initial_commit = true;
 
-	// start download
+	// set status and start download
+	gbm.updateStatus(statuses.DOWNLOADING);
 	gbm.reqXml = new XMLHttpRequest();
 	gbm.reqXml.open (
 				"GET",
