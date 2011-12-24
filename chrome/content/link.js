@@ -96,6 +96,7 @@ function import_link (link, isBrowser) {
 	link._startSync = function () {
 		// first, initialize the link
 		if (link.flag_treeStructure) {
+			// link.bookmarks
 			link.bookmarks = {bm: {}, f: {}}; // doesn't have a title nor parentNode, only childrens
 			if (link == browser) {
 				link.bookmarks.id = link.bookmarksRootId;
@@ -105,6 +106,12 @@ function import_link (link, isBrowser) {
 			if (link.bookmarksRootTitle) {
 				link.bookmarks.title = link.bookmarksRootTitle;
 			}
+
+		}
+
+		// only for webLinks:
+		if (link != browser) {
+			link.actions = [];
 		}
 
 		// now start the link

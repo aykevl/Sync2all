@@ -59,7 +59,6 @@ gbm.startSync = function () {
 	gbm.urls      = {}; // dictionary: url => list of bookmarks
 	gbm.labels    = {};
 	gbm.changed   = {}; // marked to be uploaded
-	gbm.actions   = [];
 	gbm.cbl_ids   = {}; // current browser IDs
 	// will be set to false once the status has been saved
 	gbm.initial_commit = true;

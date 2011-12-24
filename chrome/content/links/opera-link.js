@@ -47,7 +47,6 @@ opl.onInit = function () {
 opl.startSync = function () {
 
 	// initialize variables
-	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
 	opl.ids       = {};
 	opl.has_saved_state = false;
