@@ -33,9 +33,6 @@ import_link(gchr, true);
 import_queue(gchr);
 
 
-gchr.onInit = function () {
-}
-
 gchr.startSync = function () {
 	chrome.bookmarks.getSubTree(gchr.bookmarks.id,
 			function (tree) {
