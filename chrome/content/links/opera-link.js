@@ -7,6 +7,8 @@ opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 opl.id = 'opl';
 opl.flag_treeStructure = true;
+opl.bookmarksRootTitle = null;
+opl.bookmarksRootId    = null;
 
 // imports (or include if you want)
 import_link(opl);
@@ -45,7 +47,6 @@ opl.onInit = function () {
 opl.startSync = function () {
 
 	// initialize variables
-	opl.bookmarks = {bm: {}, f: {}, opl_id: null}; // doesn't have a title nor parentNode, only childrens
 	opl.actions   = [];
 	// local IDs mapped to own bookmark objects, should be deleted after merging
 	opl.ids       = {};

@@ -25,6 +25,8 @@ gchr.fullName = 'Google Chrome';
 gchr.id = 'gchr';
 gchr.name = 'chrome'
 gchr.flag_treeStructure = true;
+gchr.bookmarksRootTitle = 'Bookmarks Bar';
+gchr.bookmarksRootId    = '1';
 
 // import libraries, kind of inheritance
 import_link(gchr, true);
@@ -32,7 +34,6 @@ import_queue(gchr);
 
 
 gchr.onInit = function () {
-	gchr.bookmarks = {bm: {}, f: {}, id: '1', title: 'Bookmarks Bar'};
 	gchr.ids = {'1': gchr.bookmarks};
 	gchr.actions = []; // TODO implement actions
 }

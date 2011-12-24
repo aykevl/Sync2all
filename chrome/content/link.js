@@ -63,17 +63,17 @@ function import_link (link, isBrowser) {
 		// start if enabled
 		if (link.enabled) {
 			enabledWebLinks.push(link);
-			link.startSync();
+			link._startSync();
 		}
 
 	};
 
 	link.start = function (restart) {
-		// this function doesn't apply when this is a browser link
-		if (link == browser) return;
-
 		// link should first be loaded
-		if (!link.loaded) return;
+		if (!link.loaded && link != browser) { // browser doesn't need loading
+			console.error('link '+link.id+' started when it was not initialized');
+			return;
+		}
 
 		if (link.enabled) {
 			if (!restart) return;
@@ -86,12 +86,30 @@ function import_link (link, isBrowser) {
 		}
 
 		if (link.status) {
-			console.error('BUG: '+link.id+'.startSync called while status is non-zero');
+			console.error('BUG: '+link.id+'.startSync called while link is busy (status is non-zero)');
 		}
 
 		// now start the link. Should be done when it is enabled
-		link.startSync();
+		link._startSync();
 	};
+
+	link._startSync = function () {
+		// first, initialize the link
+		if (link.flag_treeStructure) {
+			link.bookmarks = {bm: {}, f: {}}; // doesn't have a title nor parentNode, only childrens
+			if (link == browser) {
+				link.bookmarks.id = link.bookmarksRootId;
+			} else {
+				link.bookmarks[link.id+'_id'] = link.bookmarksRootId;
+			}
+			if (link.bookmarksRootTitle) {
+				link.bookmarks.title = link.bookmarksRootTitle;
+			}
+		}
+
+		// now start the link
+		link.startSync();
+	}
 
 	link.msg_restart = function () {
 		link.start(true);

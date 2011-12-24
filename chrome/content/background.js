@@ -304,7 +304,7 @@ function init () {
 	browser.init();
 
 	// and start the browser link
-	browser.startSync();
+	browser.start();
 }
 
 function link_finished(link) {
