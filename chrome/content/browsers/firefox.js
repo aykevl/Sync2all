@@ -16,8 +16,6 @@ var fx = {
 
 	startSync: function () {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
-		fx.ids = {};
-		fx.ids[fx.bookmarks.id] = fx.bookmarks;
 		fx.getTree();
 
 		// add myself as observer

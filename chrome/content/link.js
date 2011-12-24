@@ -107,6 +107,9 @@ function import_link (link, isBrowser) {
 				link.bookmarks.title = link.bookmarksRootTitle;
 			}
 
+			// local IDs mapped to own bookmark objects, should be deleted after merging
+			link.ids = {};
+			link.ids[link.bookmarks.id] = link.bookmarks;
 		}
 
 		// only for webLinks:

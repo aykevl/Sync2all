@@ -34,7 +34,6 @@ import_queue(gchr);
 
 
 gchr.onInit = function () {
-	gchr.ids = {'1': gchr.bookmarks};
 }
 
 gchr.startSync = function () {
