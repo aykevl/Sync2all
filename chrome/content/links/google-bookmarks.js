@@ -12,6 +12,7 @@ gbm.name = 'Google Bookmarks'; // OBSOLETE
 gbm.fullName = 'Google Bookmarks';
 gbm.id = 'gbm';
 gbm.flag_tagStructure = true;
+gbm.bookmarksRootTitle = 'Bookmarks Bar';
 
 
 /* imports */
@@ -35,7 +36,6 @@ gbm.has_own_data = true;
 gbm.startSync = function () {
 
 	// initialize variables
-    gbm.bookmarks = {title: gbm.rootNodeLabel, bm: {}, f: {}};
 	gbm.urls      = {}; // dictionary: url => list of bookmarks
 	gbm.labels    = {};
 	gbm.changed   = {}; // marked to be uploaded
