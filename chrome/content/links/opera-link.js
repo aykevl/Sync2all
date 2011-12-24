@@ -6,6 +6,7 @@ var opl = {};
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 opl.id = 'opl';
+opl.flag_treeStructure = true;
 
 // imports (or include if you want)
 import_link(opl);

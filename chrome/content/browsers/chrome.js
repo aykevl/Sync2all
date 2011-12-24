@@ -24,6 +24,7 @@ browser = gchr;
 gchr.fullName = 'Google Chrome';
 gchr.id = 'gchr';
 gchr.name = 'chrome'
+gchr.flag_treeStructure = true;
 
 // import libraries, kind of inheritance
 import_link(gchr, true);
