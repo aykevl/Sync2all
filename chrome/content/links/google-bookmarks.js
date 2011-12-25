@@ -18,7 +18,7 @@ gbm.bookmarksRootTitle = 'Bookmarks Bar';
 /* imports */
 
 import_link(gbm);
-import_rqueue(gbm);
+import_queue(gbm);
 
 
 /* constants */
@@ -36,9 +36,6 @@ gbm.has_own_data = true;
 gbm.startSync = function () {
 
 	// initialize variables
-	gbm.urls      = {}; // dictionary: url => list of bookmarks
-	gbm.labels    = {};
-	gbm.changed   = {}; // marked to be uploaded
 	gbm.cbl_ids   = {}; // current browser IDs
 	// will be set to false once the status has been saved
 	gbm.initial_commit = true;
@@ -491,6 +488,7 @@ gbm.commit = function () {
 		gbm.may_save_state();
 	}
 	gbm.changed = {};
+	gbm.queue_start();
 };
 
 gbm.add_to_queue = function (params, callback) {
@@ -501,7 +499,26 @@ gbm.add_to_queue = function (params, callback) {
 	}
 	params.sig  = gbm.sig;
 	params.prev = '';
-	gbm.r_queue_add(gbm.api_url, params, callback);
+	gbm.queue_add(function (dict_params) {
+				var req = new XMLHttpRequest();
+				req.open("POST", gbm.api_url, true);
+				var params = '';
+				var key;
+				for (key in dict_params) {
+					params += (params?'&':'')+key+'='+encodeURIComponent(dict_params[key]);
+				}
+				req.onreadystatechange = function () {
+					if (req.readyState != 4) return; // not loaded
+					// request completed
+
+					if (req.status != 200) {
+						console.error('Request failed, status='+req.status+', params='+params);
+					}
+					if (callback) callback(req);
+					gbm.queue_next();
+				}
+				req.send(params);
+			}, params);
 }
 
 gbm.bookmark_get_labels = function (url) {

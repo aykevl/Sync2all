@@ -203,10 +203,6 @@ gchr.bm_mod_url = function (target, node, oldurl) {
 			}, node);
 }
 
-gchr.commit = function () {
-	gchr.queue_start();
-}
-
 /*************************************
  * Listen to bookmark events
  ************************************/

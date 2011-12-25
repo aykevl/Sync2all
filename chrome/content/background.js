@@ -352,6 +352,7 @@ function link_finished(link) {
 	if (enabledWebLinks.length+1 == finishedLinks.length) { // browser isn't in enabledWebLinks, but is in finishedLinks. The +1 is to correct this.
 		commit();
 		broadcastMessage('finished_sync', null);
+		console.log('Finished start');
 	}
 }
 
@@ -460,6 +461,7 @@ function mergeBookmarks(local, remote, target) {
 		if (!(title in remote.f)) {
 			// unique folder/label
 			console.log('Unique local folder: '+title);
+			console.log(local_subfolder);
 			syncLFolder(target, local_subfolder);
 
 		} else {

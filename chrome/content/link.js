@@ -62,7 +62,9 @@ function import_link (link, isBrowser) {
 
 		// start if enabled
 		if (link.enabled) {
-			enabledWebLinks.push(link);
+			if (link != browser) {
+				enabledWebLinks.push(link);
+			}
 			link._startSync();
 		}
 
@@ -82,7 +84,9 @@ function import_link (link, isBrowser) {
 			link.enabled = true;
 			localStorage[link.id+'_enabled'] = JSON.stringify(true);
 
-			enabledWebLinks.push(link);
+			if (link != browser) {
+				enabledWebLinks.push(link);
+			}
 		}
 
 		if (link.status) {
@@ -117,6 +121,9 @@ function import_link (link, isBrowser) {
 		if (link.flag_tagStructure) {
 			link.rootNodeLabel = localStorage[link.id+'_rootNodeLabel'] || 'Bookmarks Bar';
 			link.folderSep     = localStorage[link.id+'_folderSep']     || '/';
+			link.urls      = {}; // dictionary: url => list of bookmarks
+			link.labels    = {};
+			link.changed   = {}; // marked to be uploaded
 		}
 
 		// only for webLinks:
@@ -152,6 +159,12 @@ function import_link (link, isBrowser) {
 		link.updateStatus(statuses.READY);
 	};
 
+	link.commit = function () {
+		console.warn(link.id+' commit -- backtrace:');
+		console.trace();
+		link.queue_start(); // start running
+	}
+
 	link.may_save_state = function () {
 		if (browser.queue.running ||
 			link.has_saved_state ||
@@ -161,7 +174,7 @@ function import_link (link, isBrowser) {
 		}
 
 		if ((link.queue || link.r_queue).running) {
-			console.warn(link.id+': '+'Queue is running but status is zero!');
+			console.warn(link.id+': Queue is running but status is zero!');
 			console.log(link);
 			return; // will be started when the queue is empty
 		}
@@ -429,7 +442,7 @@ function import_queue (obj) {
 		// if this is the browser
 		if (this == browser) {
 			// save all states when they are ready
-			broadcastMessage('may_save_state');
+			//broadcastMessage('may_save_state');
 		}
 	};
 	obj.queue_error = function () {
@@ -437,74 +450,6 @@ function import_queue (obj) {
 		this.queue_stop();
 		this.stop();
 	}
-}
-
-// implement a queue of XMLHttpRequests for a given object
-function import_rqueue(obj) {
-
-	// variables
-	obj.r_queue= []; // remote queue (list of [payload, callback])
-
-	// functons
-
-	obj.r_queue_add = function (url, payload, callback) {
-		var req = new XMLHttpRequest();
-		req.open("POST", url, true);
-		req.url = url; // only for me, not for the request
-		var params = '';
-		var key;
-		for (key in payload) {
-			params += (params?'&':'')+key+'='+encodeURIComponent(payload[key]);
-		}
-		this.r_queue_add_req(req, params, callback);
-	};
-
-	obj.r_queue_add_req = function (req, params, callback) {
-		this.r_queue.push([req, params, callback]);
-		if (!this.r_queue.running) {
-			this.r_queue.running = true;
-			this.updateStatus(statuses.UPLOADING);
-			this.r_queue_next();
-		}
-	};
-
-	obj.r_queue_next = function () {
-
-		if (this.r_queue.length == 0) {
-			console.log('Finished uploading');
-			this.r_queue.running = false;
-			this.updateStatus(statuses.READY); // update popup with 'finished' count
-
-			// save my own state when it is finished
-			this.may_save_state();
-
-			// save current state when everything has been uploaded
-			if (this.initial_commit) {
-				this.save_state();
-			}
-			return;
-		}
-
-		// update the popup with the new 'left' count
-		this.updateStatus(statuses.UPLOADING);
-
-		var req      = this.r_queue[0][0];
-		var params   = this.r_queue[0][1];
-		var callback = this.r_queue[0][2];
-		this.r_queue.shift();
-		var obj = this;
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return; // not loaded
-			// request completed
-
-			if (req.status != 200) {
-				console.error('Request failed, status='+req.status+', url='+req.url+', params='+params);
-			}
-			if (callback) callback(req);
-			obj.r_queue_next(); // do the next push
-		}
-		req.send(params);
-	};
 }
 
 /** Called when something has been moved. This is an utility function for
