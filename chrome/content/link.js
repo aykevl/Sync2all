@@ -302,6 +302,10 @@ function import_link (link, isBrowser) {
 		}
 	}
 
+	// import a tagged bookmark (without a tree)
+	link.importUrl = function (bookmark) {
+	}
+
 	// import folder, cleans up duplicates too
 	link.importFolder = function (folder) {
 		var parentNode = folder.parentNode;

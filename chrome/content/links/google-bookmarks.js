@@ -232,10 +232,12 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		gbm.urls[url] = [];
 		gbm.urls[url].id = id;
 
-		var label_element;
-		var label_elements = xmlBookmark.getElementsByTagName('label');
-		for (var j=0; label_element=label_elements[j]; j++) {
-			var label = label_element.childNodes[0].nodeValue;
+		var tags = [];
+		var xmlTag;
+		var xmlTags = xmlBookmark.getElementsByTagName('label');
+		for (var j=0; xmlTag=xmlTags[j]; j++) {
+			var label = xmlTag.childNodes[0].nodeValue;
+			tags.push(label);
 			var folder = undefined;
 			if (label == gbm.rootNodeLabel) {
 				folder = gbm.bookmarks;
@@ -264,7 +266,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 				mtime: timestamp};
 			folder.bm[bookmark.url] = bookmark;
 		}
-		if (!label_elements.length) {
+		if (!xmlTags.length) {
 			// this bookmark has no labels, add it to root
 			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks,
 				mtime: timestamp};
