@@ -369,6 +369,14 @@ function import_link (link, isBrowser) {
 	} else if (browser.name == 'firefox') {
 	}
 
+	/* Errors */
+
+	link.errorStarting = function (msg) {
+		console.log(msg);
+		console.log(link.name+' will now be disabled');
+		link.stop();
+	}
+
 };
 
 

@@ -47,7 +47,7 @@ gbm.startSync = function () {
 				"GET",
 				"https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=xml&num=10000",
 				true);
-	gbm.reqXml.onreadystatechange = gbm.onXmlLoaded;
+	gbm.reqXml.onreadystatechange = gbm.onXmlRSC;
 	gbm.reqXml.send(null);
 }
 
@@ -179,14 +179,14 @@ gbm.calculate_actions = function (state, folder) {
 }
 
 
-gbm.onXmlLoaded = function () {
+// RSC = ReadyStateChange
+gbm.onXmlRSC = function () {
 	if (gbm.reqXml.readyState != 4) return;
 
 	// finished loading
 
 	if (gbm.reqXml.status != 200) {
-		alert('Failed to retrieve bookmarks (XML). Is there an internet connection and are you logged in to Google?');
-		gbm.stop();
+		gbm.errorStarting('Failed to retrieve bookmarks (XML). Is there an internet connection and are you logged in to Google?');
 	} else {
 		// parse XML.
 		if (gbm.parseXmlBookmarks(gbm.reqXml.responseXML)) {
@@ -197,7 +197,7 @@ gbm.onXmlLoaded = function () {
 		// XML parsing finished successfully, so download RSS now (for the signature)
 		gbm.reqRss = new XMLHttpRequest();
 		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1&start=0", true); // will always give at least 25 bookmarks
-		gbm.reqRss.onreadystatechange = gbm.onRssLoaded;
+		gbm.reqRss.onreadystatechange = gbm.onRssRSC;
 		gbm.reqRss.send(null);
 	}
 }
@@ -207,25 +207,24 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 	try {
 		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
 	} catch (err) {
-		gbm.stop();
-		alert("Failed to parse bookmarks ("+err+") -- are you logged in?\nGoogle Bookmarks link is now disabled.");
+		gbm.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return true;
 	}
 
-	var bm_elements = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');
-	var bm_element;
-	for (var i=0; bm_element=bm_elements[i]; i++) {
-		if (!bm_element.getElementsByTagName('title').length) {
+	var xmlBookmarks = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');
+	var xmlBookmark;
+	for (var i=0; xmlBookmark=xmlBookmarks[i]; i++) {
+		if (!xmlBookmark.getElementsByTagName('title').length) {
 			// bookmark may have no title
 			var title = undefined;
 		} else {
-			var title =          bm_element.getElementsByTagName('title'    )[0].firstChild.nodeValue;
+			var title =          xmlBookmark.getElementsByTagName('title'    )[0].firstChild.nodeValue;
 		}
-		var url       =          bm_element.getElementsByTagName('url'      )[0].firstChild.nodeValue;
-		url = url.replace(/ /g, '%20');
+		var url       =          xmlBookmark.getElementsByTagName('url'      )[0].firstChild.nodeValue;
+		url = url.replace(/ /g, '%20'); // Google Bookmarks is sometimes weird
 		// get the timestamp in seconds, in microseconds precise.
-		var timestamp = parseInt(bm_element.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
-		var id        =          bm_element.getElementsByTagName('id'       )[0].firstChild.nodeValue;
+		var timestamp = parseInt(xmlBookmark.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
+		var id        =          xmlBookmark.getElementsByTagName('id'       )[0].firstChild.nodeValue;
 
 		// this one IS important
 		// This saves the ID, the rest comes later in gbm.update_data().
@@ -234,7 +233,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		gbm.urls[url].id = id;
 
 		var label_element;
-		var label_elements = bm_element.getElementsByTagName('label');
+		var label_elements = xmlBookmark.getElementsByTagName('label');
 		for (var j=0; label_element=label_elements[j]; j++) {
 			var label = label_element.childNodes[0].nodeValue;
 			var folder = undefined;
@@ -279,15 +278,14 @@ gbm.parseXmlBookmarks = function (xmlTree) {
  * them. */
 /* TODO: use RSS for the descriptions of bookmarks */
 
-gbm.onRssLoaded = function () {
+gbm.onRssRSC = function () {
 	if (gbm.reqRss.readyState != 4) return;
 
 	// readyState = 4
 	gbm.updateStatus(statuses.PARSING);
 
 	if (gbm.reqRss.status != 200) {
-		alert('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
-		console.log(gbm.reqRss);
+		gbm.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 	} else {
 		gbm.parseRssBookmarks(gbm.reqRss.responseXML);
 		gbm.finished_start();
@@ -302,7 +300,7 @@ gbm.parseRssBookmarks = function (xmlTree) {
 			channel.getElementsByTagName('smh:signature')[0]; // firefox
 		gbm.sig     = sig_element.firstChild.nodeValue;
 	} catch (err) {
-		alert("Failed to parse bookmarks ("+err+") -- are you logged in?");
+		gbm.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
 	}
 	/*var element;
