@@ -121,9 +121,9 @@ function import_link (link, isBrowser) {
 		if (link.flag_tagStructure) {
 			link.rootNodeLabel = localStorage[link.id+'_rootNodeLabel'] || 'Bookmarks Bar';
 			link.folderSep     = localStorage[link.id+'_folderSep']     || '/';
-			link.urls      = {}; // dictionary: url => list of bookmarks
-			link.labels    = {};
-			link.changed   = {}; // marked to be uploaded
+			link.urls    = {}; // dictionary: url => list of bookmarks
+			link.tags    = {};
+			link.changed = {}; // marked to be uploaded
 		}
 
 		// only for webLinks:
@@ -302,8 +302,49 @@ function import_link (link, isBrowser) {
 		}
 	}
 
-	// import a tagged bookmark (without a tree)
-	link.importUrl = function (bookmark) {
+	// import a single-url, tagged bookmark (without a tree)
+	// I'm not very happy with this name, but couldn't find a better one
+	link.importUrlBookmark = function (uBm) {
+		// This saves the ID, the rest comes later in gbm.update_data().
+		// That function uses bookmarks objects from browser.bookmarks.
+		link.urls[uBm.url] = {gbm_id: uBm.id, url: uBm.url, bm: []}
+
+		for (var tagIndex=0; tagIndex<uBm.tags.length; tagIndex++) {
+			var tag = uBm.tags[tagIndex];
+			var parentNode = undefined;
+			if (tag == link.rootNodeLabel) {
+				parentNode = link.bookmarks;
+			} else {
+				if (!link.tags[tag]) {
+					// Add the new folder to the list
+					var folderNameList = tag.split(link.folderSep);
+					parentNode = link.bookmarks;
+					var folderNameList;
+					for (var folderNameIndex=0; folderName=folderNameList[folderNameIndex]; folderNameIndex++) {
+						// is this a new directory?
+						if (parentNode.f[folderName] == undefined) {
+							// yes, create it first
+							parentNode.f[folderName] = {bm: {}, f: {}, title: folderName,
+								parentNode: parentNode};
+						}
+						// parentNode does exist
+						parentNode = parentNode.f[folderName];
+					}
+					link.tags[tag] = parentNode;
+				} else {
+					parentNode = link.tags[tag];
+				}
+			}
+			var bookmark = {url: uBm.url, title: uBm.title, parentNode: parentNode,
+				mtime: uBm.mtime};
+			parentNode.bm[bookmark.url] = bookmark;
+		}
+		if (!uBm.tags.length) {
+			// this bookmark has no labels, add it to root
+			var bookmark = {url: uBm.url, title: uBm.title, parentNode: link.bookmarks,
+				mtime: uBm.mtime};
+			link.bookmarks.bm[bookmark.url] = bookmark;
+		}
 	}
 
 	// import folder, cleans up duplicates too

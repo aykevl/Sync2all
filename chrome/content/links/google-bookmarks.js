@@ -24,7 +24,6 @@ import_queue(gbm);
 /* constants */
 
 gbm.api_url = 'https://www.google.com/bookmarks/mark';
-gbm.labels;         // kind of label cache
 // Copied from GMarks, from the top of the file components/nsIGmarksCom_google.js
 gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarksbkmklet";
 // whether or not this link has it's own data structures and needs to be
@@ -66,16 +65,10 @@ gbm.finished_start = function () {
 
 	// get actions
 	if (localStorage['gbm_state']) {
-		try {
-			gbm.calculate_actions(JSON.parse(localStorage['gbm_state']), gbm.bookmarks); // yes, gbm.bookmarks
-			if (gbm.actions.length) {
-				console.log('gbm actions:');
-				console.log(gbm.actions);
-			}
-		} catch (err) {
-			console.log('gbm: error while calculating actions:');
-			console.log(err);
-			// bookmarks will just be merged, so no real harm done. You will only get duplicates...
+		gbm.calculate_actions(JSON.parse(localStorage['gbm_state']), gbm.bookmarks); // yes, gbm.bookmarks
+		if (gbm.actions.length) {
+			console.log('gbm actions:');
+			console.log(gbm.actions);
 		}
 	}
 
@@ -114,7 +107,7 @@ gbm.finished_sync = function () {
 	// clear unused memory
 	delete gbm.bookmarks;
 	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
-	delete gbm.labels;
+	delete gbm.tags;
 };
 
 gbm.save_state = function () {
@@ -226,52 +219,19 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		var timestamp = parseInt(xmlBookmark.getElementsByTagName('timestamp')[0].firstChild.nodeValue)/1000/1000;
 		var id        =          xmlBookmark.getElementsByTagName('id'       )[0].firstChild.nodeValue;
 
-		// this one IS important
-		// This saves the ID, the rest comes later in gbm.update_data().
-		// That function uses bookmarks objects from browser.bookmarks.
-		gbm.urls[url] = [];
-		gbm.urls[url].id = id;
-
+		// get the tags for this bookmark
 		var tags = [];
 		var xmlTag;
 		var xmlTags = xmlBookmark.getElementsByTagName('label');
 		for (var j=0; xmlTag=xmlTags[j]; j++) {
-			var label = xmlTag.childNodes[0].nodeValue;
-			tags.push(label);
-			var folder = undefined;
-			if (label == gbm.rootNodeLabel) {
-				folder = gbm.bookmarks;
-			} else {
-				if (!gbm.labels[label]) {
-					// Add the new folder to the list
-					var elements = label.split(gbm.folderSep);
-					folder = gbm.bookmarks;
-					var element;
-					for (var i_element=0; element=elements[i_element]; i_element++) {
-						// is this a new directory?
-						if (folder.f[element] == undefined) {
-							// yes, create it first
-							folder.f[element] = {bm: {}, f: {}, title: element,
-								parentNode: folder};
-						}
-						// folder does exist
-						folder = folder.f[element];
-					}
-					gbm.labels[label] = folder;
-				} else {
-					folder = gbm.labels[label];
-				}
-			}
-			var bookmark = {url: url, title: title, parentNode: folder,
-				mtime: timestamp};
-			folder.bm[bookmark.url] = bookmark;
+			var tag = xmlTag.childNodes[0].nodeValue;
+			tags.push(tag);
 		}
-		if (!xmlTags.length) {
-			// this bookmark has no labels, add it to root
-			var bookmark = {url: url, title: title, parentNode: gbm.bookmarks,
-				mtime: timestamp};
-			gbm.bookmarks.bm[url] = bookmark;
-		}
+
+		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, id: id};
+
+		// import it into the tree
+		gbm.importUrlBookmark(urlBookmark);
 	}
 }
 
@@ -325,9 +285,9 @@ gbm.parseRssBookmarks = function (xmlTree) {
 
 gbm.added_bookmark = function (bm) {
 	if (!gbm.urls[bm.url]) {
-		gbm.urls[bm.url] = [];
+		gbm.urls[bm.url] = {url: bm.url, bm: []};
 	}
-	gbm.urls[bm.url].push(bm);
+	gbm.urls[bm.url].bm.push(bm);
 }
 
 // check for things that will be modified by Google. Change the url of the
@@ -363,7 +323,7 @@ gbm.bm_del = function (target, bookmark) {
 	var gbookmark = gbm.urls[bookmark.url];
 
 	// delete this label
-	Array_remove(gbookmark, bookmark);
+	Array_remove(gbookmark.bm, bookmark);
 
 	// if this is a known change
 	if (target == gbm) return;
@@ -420,13 +380,13 @@ gbm.bm_mod_url = function (target, bm, oldurl) {
 
 	gbm.check_mods(bm); // TODO will upload too much data. Investigate why.
 
-	// nearly a copy of gbm.bm_del, unfortunately
+	// nearly a copy of gbm.bm_del: TODO
 	oldgbookmark = gbm.urls[oldurl];
-	Array_remove(oldgbookmark, bm);
-	if (!oldgbookmark.length) {
-		gbm.delete_bookmark(oldgbookmark.id);
+	Array_remove(oldgbookmark.bm, bm);
+	if (!oldgbookmark.bm.length) {
+		gbm.delete_bookmark(oldgbookmark.gbm_id);
 	} else {
-		gbm.changed[oldurl] = gbm.changed[oldurl] || oldgbookmark[0]; // choose one at random
+		gbm.changed[oldurl] = gbm.changed[oldurl] || oldgbookmark.bm[0]; // choose one at random
 	}
 
 	gbm.bm_add(target, bm);
@@ -447,7 +407,7 @@ gbm.upload_bookmark = function (bookmark) {
 	var labels = gbm.bookmark_get_labels(bookmark.url);
 	gbm.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
 			function (request) {
-				gbm.urls[bookmark.url].id = request.responseText;
+				gbm.urls[bookmark.url].gbm_id = request.responseText;
 			});
 };
 
@@ -475,9 +435,9 @@ gbm.commit = function () {
 		has_changes = true;
 
 		var gbookmark = gbm.urls[url];
-		if (!gbookmark.length) {
+		if (!gbookmark.bm.length) {
 			// no labels, delete this bookmark
-			gbm.delete_bookmark(gbookmark.id);
+			gbm.delete_bookmark(gbookmark.gbm_id);
 		} else {
 			// has still at least one label, upload  (changing the
 			// bookmark).
@@ -522,7 +482,7 @@ gbm.add_to_queue = function (params, callback) {
 }
 
 gbm.bookmark_get_labels = function (url) {
-	if (!gbm.urls[url] || gbm.urls[url].length == 0) {
+	if (!gbm.urls[url] || gbm.urls[url].bm.length == 0) {
 		// no labels
 		return false;
 	}
@@ -530,7 +490,7 @@ gbm.bookmark_get_labels = function (url) {
 	var labels = '';
 	var label;
 	var gbookmark;
-	for (var i=0; gbookmark=gbm.urls[url][i]; i++) {
+	for (var i=0; gbookmark=gbm.urls[url].bm[i]; i++) {
 		var folder = gbookmark.parentNode;
 		if (!folder) {
 			throw 'undefined folder, bm url='+url;
