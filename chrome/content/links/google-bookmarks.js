@@ -50,11 +50,6 @@ gbm.startSync = function () {
 
 gbm.finished_start = function () {
 
-	if (!gbm.enabled) {
-		// something went wrong, for example, wrong authentication
-		return;
-	}
-
 	if (!folderHasContents(gbm.bookmarks)) {
 		if (confirm('Are you sure you want to remove all bookmarks?')) {
 			return;
