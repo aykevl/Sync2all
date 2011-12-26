@@ -34,8 +34,6 @@ gbm.has_own_data = true;
 // (re) start
 gbm.startSync = function () {
 
-	// initialize variables
-	gbm.cbl_ids   = {}; // current browser IDs
 	// will be set to false once the status has been saved
 	gbm.initial_commit = true;
 
@@ -106,7 +104,6 @@ gbm.finished_sync = function () {
 
 	// clear unused memory
 	delete gbm.bookmarks;
-	delete gbm.cbl_ids; // this MUST be deleted when the sync has finished
 	delete gbm.tags;
 };
 
