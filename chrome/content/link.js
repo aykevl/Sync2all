@@ -178,6 +178,17 @@ function import_link (link, isBrowser) {
 		link_finished(link);
 	}
 
+	// called when sync has been finished.
+	link.syncFinished = function () {
+		if (link != browser) {
+			// clean up unused memory
+			if (!debug) {
+				delete link.bookmarks;
+				delete link.ids;
+			}
+		}
+	}
+
 	// Stop link. remove memory-eating status if the keepStatus flag is not set.
 	link.stop = link.msg_stop = function (keepStatus) {
 		localStorage[link.id+'_enabled'] = JSON.stringify(false);

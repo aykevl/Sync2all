@@ -362,7 +362,7 @@ function link_finished(link) {
 	// is the syncing finished? Commit changes!
 	if (isSyncFinished) {
 		commit();
-		broadcastMessage('finished_sync', null);
+		broadcastMessage('syncFinished', null);
 		console.log('Finished start');
 	}
 }

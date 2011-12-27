@@ -48,15 +48,6 @@ gbm.startSync = function () {
 	gbm.reqXml.send(null);
 }
 
-// the (re)synchronisation has finished (all bookmarks are merged,
-// committing is in progress)
-gbm.finished_sync = function () {
-
-	// clear unused memory
-	delete gbm.bookmarks;
-	delete gbm.tags;
-};
-
 gbm.save_state = function () {
 	var state = {bm: [], f: {}};
 	gbm.get_state(state, browser.bookmarks);

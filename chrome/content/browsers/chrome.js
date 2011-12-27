@@ -43,9 +43,6 @@ gchr.startSync = function () {
 	);
 };
 
-gchr.finished_sync = function () {
-};
-
 gchr.gotTree = function (gchr_parentNode, folder) {
 	var node;
 	for (var i=0; node=gchr_parentNode.children[i]; i++) {

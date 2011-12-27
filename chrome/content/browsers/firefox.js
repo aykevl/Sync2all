@@ -232,7 +232,6 @@ var fx = {
 		fx.queue_start(); // FIXME do in batch, see below
 		//fx.bmsvc.runInBatchMode(fx.queue_start, {value: 'none'}); // FIXME doesn't work
 	},
-	finished_sync: false,
 
 	// To handle chrome:// urls, those urls have to be escaped.
 	escape_chrome_uri: function (url) {

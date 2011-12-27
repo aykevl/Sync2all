@@ -53,15 +53,6 @@ opl.startSync = function () {
 	opl.loadBookmarks();
 };
 
-// called when sync has been finished.
-opl.finished_sync = function () {
-	// clean up unused memory
-	if (!debug) {
-		delete opl.bookmarks; // should not be commented out?
-		delete opl.ids;
-	}
-}
-
 opl.save_state = function () {
 	var state = [];
 	opl.get_state(state, browser.bookmarks);
