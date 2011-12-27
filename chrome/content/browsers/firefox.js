@@ -3,7 +3,6 @@ var fx = {
 	id: 'fx',
 	fullName: 'Mozilla Firefox',
 	name: 'firefox',
-	flag_treeStructure: true,
 
 	onInit: function () {
 		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
@@ -278,6 +277,6 @@ var fx = {
 
 browser = fx;
 
-import_link(fx, true);
+import_treeBasedLink(fx, true);
 import_queue(fx);
 

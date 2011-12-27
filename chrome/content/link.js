@@ -224,7 +224,7 @@ function import_link (link, isBrowser) {
 		if (browser.queue.running ||
 			link.has_saved_state ||
 			link.status ||
-			!link.save_state) {
+			link == browser) {
 			return;
 		}
 
@@ -240,6 +240,16 @@ function import_link (link, isBrowser) {
 		console.trace();
 		link.save_state();
 	};
+
+	link.save_state = function () {
+		if (link.flag_treeStructure) {
+			var state = [];
+		} else {
+			var state = {bm: [], f: {}};
+		}
+		link.get_state(state, browser.bookmarks);
+		localStorage[link.id+'_state'] = JSON.stringify(state);
+	}
 
 	link.updateStatus = function (status) {
 		// ??? to use my object (this), I have to use 'link' instead of 'this'.
@@ -314,150 +324,6 @@ function import_link (link, isBrowser) {
 
 		// remove the parent folder when the contents has been deletet
 		this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
-	}
-
-	// import bookmark into own tree, thereby cleaning up duplicates etc.
-	link.importBookmark = function (bookmark) {
-		// this is the folder where the bookmark is in.
-		var parentNode = bookmark.parentNode;
-
-		// check for invalid bookmark
-		if (!bookmark.url)
-			return true; // invalid, not added
-
-		// check for duplicate
-		if (parentNode.bm[bookmark.url]) {
-			console.log('DUPLICATE: '+bookmark.url);
-			console.log(bookmark);
-
-			// this bookmark does already exist, take the latest.
-			var otherBookmark = parentNode.bm[bookmark.url];
-
-			if (otherBookmark.mtime > bookmark.mtime) {
-				// otherBookmark is the latest added, so remove this bookmark
-				link.bm_del(link, bookmark);
-				// other bookmark is already added to the tree
-				return true; // invalid bookmark
-			} else {
-				// this bookmark is the newest, remove the other
-				link.bm_del(link, otherBookmark);
-				parentNode.bm[bookmark.url] = bookmark; // replace the other bookmark
-			}
-
-		} else {
-			// no duplicate, so just add
-			parentNode.bm[bookmark.url] = bookmark;
-		}
-
-		// add bookmark ID
-		if (link == browser) {
-			link.ids[bookmark.id] = bookmark;
-		} else {
-			link.ids[bookmark[link.id+'_id']] = bookmark;
-		}
-	}
-
-	// import a single-url, tagged bookmark (without a tree)
-	// I'm not very happy with this name, but couldn't find a better one
-	link.importUrlBookmark = function (uBm) {
-		if (!tagtree.urls[uBm.url]) {
-			// new bookmark (only sometimes the case)
-			tagtree.urls[uBm.url] = {gbm_id: uBm.id, url: uBm.url, bm: []}
-		} else {
-			// bookmark does already exist (most often the case)
-			tagtree.urls[uBm.url].gbm_id = uBm.id;
-		}
-
-		for (var tagIndex=0; tagIndex<uBm.tags.length; tagIndex++) {
-			var tag = uBm.tags[tagIndex];
-			var parentNode = undefined;
-			if (tag == link.rootNodeLabel) {
-				parentNode = link.bookmarks;
-			} else {
-				if (!link.tags[tag]) {
-					// Add the new folder to the list
-					var folderNameList = tag.split(link.folderSep);
-					parentNode = link.bookmarks;
-					var folderNameList;
-					for (var folderNameIndex=0; folderName=folderNameList[folderNameIndex]; folderNameIndex++) {
-						// is this a new directory?
-						if (parentNode.f[folderName] == undefined) {
-							// yes, create it first
-							parentNode.f[folderName] = {bm: {}, f: {}, title: folderName,
-								parentNode: parentNode};
-						}
-						// parentNode does exist
-						parentNode = parentNode.f[folderName];
-					}
-					link.tags[tag] = parentNode;
-				} else {
-					parentNode = link.tags[tag];
-				}
-			}
-			var bookmark = {url: uBm.url, title: uBm.title, parentNode: parentNode,
-				mtime: uBm.mtime};
-			parentNode.bm[bookmark.url] = bookmark;
-		}
-		if (!uBm.tags.length) {
-			// this bookmark has no labels, add it to root
-			var bookmark = {url: uBm.url, title: uBm.title, parentNode: link.bookmarks,
-				mtime: uBm.mtime};
-			link.bookmarks.bm[bookmark.url] = bookmark;
-		}
-	}
-
-	// import folder, cleans up duplicates too
-	link.importFolder = function (folder) {
-		var parentNode = folder.parentNode;
-
-		// ignore folders without a title
-		if (folder.title === '') {
-			return;
-		}
-
-		// check for duplicates
-		if (parentNode.f[folder.title]) {
-			// duplicate folder, merge the contents
-			console.log('DUPLICATE FOLDER: '+folder.title);
-			console.log(folder);
-
-			// get the other folder of which this is a duplicate
-			var otherFolder = parentNode.f[folder.title];
-			// move the contents of this folder to the other folder
-			// FIXME check for duplicates (by using importFolder and importBookmark)
-			var title; // first the subfolders
-			for (title in folder.f) {
-				var subFolder = folder.f[title];
-				_mvFolder(subFolder, otherFolder);
-				link.f_mv(link, subFolder, folder);
-			}
-			var url; // now move the bookmarks
-			for (url in folder.bm) {
-				// get bookmark
-				var bookmark = folder.bm[url];
-				// move bookmark
-				bookmark.parentNode = otherFolder;
-				delete folder.bm[bookmark.url];
-				link.importBookmark(bookmark);
-				// move bookmark on web storage / in the browser
-				link.bm_mv(link, bookmark, folder);
-			}
-
-			// now delete this folder. This removes it's contents too!
-			// But that should not be a problem, as the contents has already
-			// been moved.
-			link.f_del(link, folder);
-		}
-
-		// merge it in the tree
-		parentNode.f[folder.title] = folder;
-
-		// add folder ID
-		if (link == browser) {
-			link.ids[folder.id] = folder;
-		} else {
-			link.ids[folder[link.id+'_id']] = folder;
-		}
 	}
 
 	link.onRequest = function (request, sender, sendResponse) {

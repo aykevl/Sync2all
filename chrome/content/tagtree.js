@@ -64,3 +64,22 @@ tagtree.removeLink = function (link) {
 	}
 }
 
+tagtree.bm_add = function (target, bookmark) {
+
+	// check for things that will be changed by the link provider
+	var link;
+	for (var i=0; link=tagStructuredWebLinks[i]; i++) {
+		link.fixBookmark(bookmark);
+	}
+
+	// add to tagtree.urls
+	tagtree.importBookmark(bookmark);
+
+	var link;
+	for (var i=0; link=tagStructuredWebLinks[i]; i++) {
+		if (link == target) continue;
+		link.changed[bookmark.url] = bookmark;
+	}
+	
+};
+

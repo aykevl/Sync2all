@@ -77,10 +77,17 @@ function broadcastMessage(methodName, sourceLink, params) {
 	// first parameter should be the link
 	if (params) params.unshift(sourceLink); // add link at the start
 
+	// kind of a hack
+	if (tagtree[methodName]) {
+		tagtree[methodName].apply(this, params);
+	}
+
 	var link;
 	for (var i=0; link=finishedLinks[i]; i++) {
 		// ignore the calling link, except when a flag is set.
 		if (link == sourceLink && !sourceLink.has_own_data) continue;
+
+		if (link.flag_tagStructure && tagtree[methodName]) continue;
 
 		var method = link[methodName];
 		if (method == false) {

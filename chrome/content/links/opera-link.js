@@ -6,12 +6,11 @@ var opl = {};
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 opl.id = 'opl';
-opl.flag_treeStructure = true;
 opl.bookmarksRootTitle = null;
 opl.bookmarksRootId    = null;
 
 // imports (or include if you want)
-import_link(opl);
+import_treeBasedLink(opl);
 import_queue(opl);
 
 var oauth;
@@ -52,12 +51,6 @@ opl.startSync = function () {
 	// start downloading
 	opl.loadBookmarks();
 };
-
-opl.save_state = function () {
-	var state = [];
-	opl.get_state(state, browser.bookmarks);
-	localStorage['opl_state'] = JSON.stringify(state);
-}
 
 opl.get_state = function (state, folder) {
 	// save all bookmarks in this folder

@@ -11,13 +11,12 @@ var gbm = {};
 gbm.name = 'Google Bookmarks'; // OBSOLETE
 gbm.fullName = 'Google Bookmarks';
 gbm.id = 'gbm';
-gbm.flag_tagStructure = true;
 gbm.bookmarksRootTitle = 'Bookmarks Bar';
 
 
 /* imports */
 
-import_link(gbm);
+import_tagBasedLink(gbm);
 import_queue(gbm);
 
 
@@ -47,12 +46,6 @@ gbm.startSync = function () {
 	gbm.reqXml.onreadystatechange = gbm.onXmlRSC;
 	gbm.reqXml.send(null);
 }
-
-gbm.save_state = function () {
-	var state = {bm: [], f: {}};
-	gbm.get_state(state, browser.bookmarks);
-	localStorage['gbm_state'] = JSON.stringify(state);
-};
 
 gbm.get_state = function (state, folder) {
 	state.id = folder.id;
@@ -169,7 +162,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, id: id};
 
 		// import it into the tree
-		gbm.importUrlBookmark(urlBookmark);
+		gbm.importBookmark(urlBookmark);
 	}
 }
 
@@ -232,21 +225,8 @@ gbm.fixBookmark = function (bookmark) {
 	}
 }
 
+gbm.bm_add = tagtree.bm_add;
 
-gbm.bm_add = function (target, bookmark) {
-
-	// check for things that will be changed by Google
-	gbm.fixBookmark(bookmark);
-
-	// add to tagtree.urls
-	tagtree.importBookmark(bookmark);
-
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.changed[bookmark.url] = bookmark;
-	
-};
 
 gbm.bm_del = function (target, bookmark) {
 

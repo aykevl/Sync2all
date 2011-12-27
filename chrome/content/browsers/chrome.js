@@ -29,7 +29,7 @@ gchr.bookmarksRootTitle = 'Bookmarks Bar';
 gchr.bookmarksRootId    = '1';
 
 // import libraries, kind of inheritance
-import_link(gchr, true);
+import_treeBasedLink(gchr, true);
 import_queue(gchr);
 
 
