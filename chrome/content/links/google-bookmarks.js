@@ -50,12 +50,6 @@ gbm.startSync = function () {
 
 gbm.finished_start = function () {
 
-	if (!folderHasContents(gbm.bookmarks)) {
-		if (confirm('Are you sure you want to remove all bookmarks?')) {
-			return;
-		}
-	}
-
 	// get actions
 	if (localStorage['gbm_state']) {
 		gbm.calculate_actions(JSON.parse(localStorage['gbm_state']), gbm.bookmarks); // yes, gbm.bookmarks
@@ -68,29 +62,11 @@ gbm.finished_start = function () {
 	// set status
 	gbm.updateStatus(statuses.MERGING);
 
-	// update data to use the browser objects
-	gbm.update_data();
-
 	// send 'finished' signal
 	link_finished(gbm);
 
 	// set status (again)
 	gbm.updateStatus(statuses.READY);
-};
-
-gbm.update_data = function () {
-	console.log('gbm: updating data structures...');
-	gbm.update_urls(browser.bookmarks);
-};
-gbm.update_urls = function (folder) {
-	var url;
-	for (url in folder.bm) {
-		gbm.added_bookmark(folder.bm[url]);
-	}
-	var title;
-	for (title in folder.f) {
-		gbm.update_urls(folder.f[title]);
-	}
 };
 
 // the (re)synchronisation has finished (all bookmarks are merged,
@@ -275,13 +251,6 @@ gbm.parseRssBookmarks = function (xmlTree) {
 	}*/
 }
 
-gbm.added_bookmark = function (bm) {
-	if (!gbm.urls[bm.url]) {
-		gbm.urls[bm.url] = {url: bm.url, bm: []};
-	}
-	gbm.urls[bm.url].bm.push(bm);
-}
-
 // check for things that will be modified by Google. Change the url of the
 // bookmark and notify other links.
 gbm.check_mods = function (bookmark) {
@@ -299,8 +268,8 @@ gbm.bm_add = function (target, bookmark) {
 	// check for things that will be changed by Google
 	gbm.check_mods(bookmark);
 
-	// add to gbm.urls
-	gbm.added_bookmark(bookmark);
+	// add to tagtree.urls
+	tagtree.importBookmark(bookmark);
 
 	// if this is a known change
 	if (target == gbm) return;
@@ -312,7 +281,7 @@ gbm.bm_add = function (target, bookmark) {
 gbm.bm_del = function (target, bookmark) {
 
 	// get all bookmarks with this url
-	var gbookmark = gbm.urls[bookmark.url];
+	var gbookmark = tagtree.urls[bookmark.url];
 
 	// delete this label
 	Array_remove(gbookmark.bm, bookmark);
@@ -373,7 +342,7 @@ gbm.bm_mod_url = function (target, bm, oldurl) {
 	gbm.check_mods(bm); // TODO will upload too much data. Investigate why.
 
 	// nearly a copy of gbm.bm_del: TODO
-	oldgbookmark = gbm.urls[oldurl];
+	oldgbookmark = tagtree.urls[oldurl];
 	Array_remove(oldgbookmark.bm, bm);
 	if (!oldgbookmark.bm.length) {
 		gbm.delete_bookmark(oldgbookmark.gbm_id);
@@ -399,7 +368,7 @@ gbm.upload_bookmark = function (bookmark) {
 	var labels = gbm.bookmark_get_labels(bookmark.url);
 	gbm.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
 			function (request) {
-				gbm.urls[bookmark.url].gbm_id = request.responseText;
+				tagtree.urls[bookmark.url].gbm_id = request.responseText;
 			});
 };
 
@@ -426,7 +395,7 @@ gbm.commit = function () {
 	for (url in gbm.changed) {
 		has_changes = true;
 
-		var gbookmark = gbm.urls[url];
+		var gbookmark = tagtree.urls[url];
 		if (!gbookmark.bm.length) {
 			// no labels, delete this bookmark
 			gbm.delete_bookmark(gbookmark.gbm_id);
@@ -474,7 +443,7 @@ gbm.add_to_queue = function (params, callback) {
 }
 
 gbm.bookmark_get_labels = function (url) {
-	if (!gbm.urls[url] || gbm.urls[url].bm.length == 0) {
+	if (!tagtree.urls[url] || tagtree.urls[url].bm.length == 0) {
 		// no labels
 		return false;
 	}
@@ -482,7 +451,7 @@ gbm.bookmark_get_labels = function (url) {
 	var labels = '';
 	var label;
 	var gbookmark;
-	for (var i=0; gbookmark=gbm.urls[url].bm[i]; i++) {
+	for (var i=0; gbookmark=tagtree.urls[url].bm[i]; i++) {
 		var folder = gbookmark.parentNode;
 		if (!folder) {
 			throw 'undefined folder, bm url='+url;

@@ -92,7 +92,7 @@ function import_link (link, isBrowser) {
 
 			// whether this link needs extra url/tag indices
 			if (link.flag_tagStructure && !link.flag_treeStructure) {
-				tagStructuredWebLinks.push(link);
+				tagtree.addLink(link);
 			}
 		}
 
@@ -129,9 +129,8 @@ function import_link (link, isBrowser) {
 		if (link.flag_tagStructure) {
 			link.rootNodeLabel = localStorage[link.id+'_rootNodeLabel'] || 'Bookmarks Bar';
 			link.folderSep     = localStorage[link.id+'_folderSep']     || '/';
-			link.urls    = {}; // dictionary: url => list of bookmarks
-			link.tags    = {};
 			link.changed = {}; // marked to be uploaded
+			link.tags    = {};
 		}
 
 		// only for webLinks:
@@ -162,7 +161,7 @@ function import_link (link, isBrowser) {
 
 		// whether this link needs extra url/tag indices
 		if (link.flag_tagStructure && !link.flag_treeStructure) {
-			Array_remove(tagStructuredWebLinks, link);
+			tagtree.removeLink(link);
 		}
 
 		if (!keepStatus) {
@@ -318,9 +317,13 @@ function import_link (link, isBrowser) {
 	// import a single-url, tagged bookmark (without a tree)
 	// I'm not very happy with this name, but couldn't find a better one
 	link.importUrlBookmark = function (uBm) {
-		// This saves the ID, the rest comes later in gbm.update_data().
-		// That function uses bookmarks objects from browser.bookmarks.
-		link.urls[uBm.url] = {gbm_id: uBm.id, url: uBm.url, bm: []}
+		if (!tagtree.urls[uBm.url]) {
+			// new bookmark (only sometimes the case)
+			tagtree.urls[uBm.url] = {gbm_id: uBm.id, url: uBm.url, bm: []}
+		} else {
+			// bookmark does already exist (most often the case)
+			tagtree.urls[uBm.url].gbm_id = uBm.id;
+		}
 
 		for (var tagIndex=0; tagIndex<uBm.tags.length; tagIndex++) {
 			var tag = uBm.tags[tagIndex];
