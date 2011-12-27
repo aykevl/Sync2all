@@ -59,14 +59,8 @@ gbm.finished_start = function () {
 		}
 	}
 
-	// set status
-	gbm.updateStatus(statuses.MERGING);
-
 	// send 'finished' signal
 	link_finished(gbm);
-
-	// set status (again)
-	gbm.updateStatus(statuses.READY);
 };
 
 // the (re)synchronisation has finished (all bookmarks are merged,

@@ -344,9 +344,16 @@ function link_finished(link) {
 			webLink.load();
 		}
 	} else { //or, when it is a link, merge the data with the browser.
+		// set status to merging the tree
+		link.updateStatus(statuses.MERGING);
+
+		// merge the bookmarks
 		console.log('Merging bookmarks with '+link.fullName+'...');
 		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
 		console.log('Finished merging with '+link.fullName+'.');
+
+		// set status (again)
+		link.updateStatus(statuses.READY);
 	}
 
 	// browser isn't in enabledWebLinks, but is in finishedLinks. The +1 on the enabledWebLinks is to correct this.

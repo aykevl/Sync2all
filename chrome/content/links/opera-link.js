@@ -77,7 +77,6 @@ opl.finished_start = function () {
 
 		// delete unused variables
 		delete state; // big variable (44KB with my bookmarks in JSON)
-		//delete opl.ownId_to_lId;
 
 		// display message when there are actions
 		if (opl.actions.length) {
@@ -86,14 +85,8 @@ opl.finished_start = function () {
 		}
 	}
 
-	// set status to merging
-	opl.updateStatus(statuses.MERGING);
-
 	// mark as ready
 	link_finished(opl);
-	
-	// set status to finished
-	opl.updateStatus(statuses.READY);
 };
 
 // called when sync has been finished.
