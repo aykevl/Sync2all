@@ -29,6 +29,7 @@ function import_link (link, isBrowser) {
 	// initialisation of global variables
 	if (!isBrowser) {
 		webLinks.push(link);
+
 	}
 
 	// should be called only once
@@ -62,14 +63,15 @@ function import_link (link, isBrowser) {
 
 		// start if enabled
 		if (link.enabled) {
-			if (link != browser) {
-				enabledWebLinks.push(link);
-			}
-			link._startSync();
+			// disable it first and then re-enable it in link.start
+			link.enabled = false;
+			link.start();
 		}
 
 	};
 
+	// Start the link
+	// @var force Force this link to start, also when it is already started
 	link.start = function (restart) {
 		// link should first be loaded
 		if (!link.loaded && link != browser) { // browser doesn't need loading
@@ -87,10 +89,16 @@ function import_link (link, isBrowser) {
 			if (link != browser) {
 				enabledWebLinks.push(link);
 			}
+
+			// whether this link needs extra url/tag indices
+			if (link.flag_tagStructure && !link.flag_treeStructure) {
+				tagStructuredWebLinks.push(link);
+			}
 		}
 
 		if (link.status) {
 			console.error('BUG: '+link.id+'.startSync called while link is busy (status is non-zero)');
+			return;
 		}
 
 		// now start the link. Should be done when it is enabled
@@ -150,6 +158,11 @@ function import_link (link, isBrowser) {
 		// that there's an error while it starts, and that it disables itself.
 		if (finishedLinks.indexOf(link) >= 0) {
 			Array_remove(finishedLinks, link);
+		}
+
+		// whether this link needs extra url/tag indices
+		if (link.flag_tagStructure && !link.flag_treeStructure) {
+			Array_remove(tagStructuredWebLinks, link);
 		}
 
 		if (!keepStatus) {

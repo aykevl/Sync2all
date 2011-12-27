@@ -315,15 +315,17 @@ function link_finished(link) {
 				link.actions.length+' deletes/moves). '+
 				'Are you sure you want to apply them?\n\n'+
 				'This might be a bug in this extension.')) {
-			link.disable(); // removes status information too
+			link.stop(); // removes status information too
 			return;
 		}
 	}
 
 	if (finishedLinks.indexOf(link) < 0) {
 		finishedLinks.push(link);
+		var resynchronisation = false;
 	} else {
-		console.error('BUG: link_finished called with the link in finishedLinks.');
+		// re-synchronisation, so the initial sync has already been finished
+		var resynchronisation = true;
 	}
 
 	// apply actions
@@ -334,7 +336,6 @@ function link_finished(link) {
 			apply_action(link, action);
 		}
 	}
-
 
 	// is this the browser itself? start the rest!
 	if (link == browser) {
@@ -348,8 +349,11 @@ function link_finished(link) {
 		console.log('Finished merging with '+link.fullName+'.');
 	}
 
+	// browser isn't in enabledWebLinks, but is in finishedLinks. The +1 on the enabledWebLinks is to correct this.
+	var isSyncFinished = enabledWebLinks.length+1 == finishedLinks.length && !resynchronisation;
+
 	// is the syncing finished? Commit changes!
-	if (enabledWebLinks.length+1 == finishedLinks.length) { // browser isn't in enabledWebLinks, but is in finishedLinks. The +1 is to correct this.
+	if (isSyncFinished) {
 		commit();
 		broadcastMessage('finished_sync', null);
 		console.log('Finished start');
