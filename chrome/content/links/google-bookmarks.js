@@ -48,21 +48,6 @@ gbm.startSync = function () {
 	gbm.reqXml.send(null);
 }
 
-gbm.finished_start = function () {
-
-	// get actions
-	if (localStorage['gbm_state']) {
-		gbm.calculate_actions(JSON.parse(localStorage['gbm_state']), gbm.bookmarks); // yes, gbm.bookmarks
-		if (gbm.actions.length) {
-			console.log('gbm actions:');
-			console.log(gbm.actions);
-		}
-	}
-
-	// send 'finished' signal
-	link_finished(gbm);
-};
-
 // the (re)synchronisation has finished (all bookmarks are merged,
 // committing is in progress)
 gbm.finished_sync = function () {
@@ -92,7 +77,7 @@ gbm.get_state = function (state, folder) {
 };
 
 gbm.calculate_actions = function (state, folder) {
-	// only look for removed bookmarks, not for added bookmarks (and moved bookmarks are 'removed' and 'added', TODO fix in a future version, this should 'just work').
+	// only look for removed bookmarks, not for added bookmarks (and moved bookmarks are 'removed' and 'added', TODO fix in a future version).
 	var data = undefined;
 	var id, url;
 	for (var i=0; data=state.bm[i]; i++) {
@@ -212,7 +197,7 @@ gbm.onRssRSC = function () {
 		gbm.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 	} else {
 		gbm.parseRssBookmarks(gbm.reqRss.responseXML);
-		gbm.finished_start();
+		gbm.parsingFinished();
 	}
 }
 
@@ -247,7 +232,7 @@ gbm.parseRssBookmarks = function (xmlTree) {
 
 // check for things that will be modified by Google. Change the url of the
 // bookmark and notify other links.
-gbm.check_mods = function (bookmark) {
+gbm.fixBookmark = function (bookmark) {
 	if (bookmark.url.substr(-1) == '#') {
 		// google doesn't allow URLs with only a hash on the end
 		var oldurl = bookmark.url;
@@ -260,7 +245,7 @@ gbm.check_mods = function (bookmark) {
 gbm.bm_add = function (target, bookmark) {
 
 	// check for things that will be changed by Google
-	gbm.check_mods(bookmark);
+	gbm.fixBookmark(bookmark);
 
 	// add to tagtree.urls
 	tagtree.importBookmark(bookmark);
@@ -333,7 +318,7 @@ gbm.bm_mod_url = function (target, bm, oldurl) {
 	// if this is a known change
 	if (target == gbm) return;
 
-	gbm.check_mods(bm); // TODO will upload too much data. Investigate why.
+	gbm.fixBookmark(bm); // TODO will upload too much data. Investigate why.
 
 	// nearly a copy of gbm.bm_del: TODO
 	oldgbookmark = tagtree.urls[oldurl];

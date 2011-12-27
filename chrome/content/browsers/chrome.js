@@ -37,15 +37,10 @@ gchr.startSync = function () {
 	chrome.bookmarks.getSubTree(gchr.bookmarks.id,
 			function (tree) {
 				gchr.gotTree(tree[0], gchr.bookmarks);
-				gchr.finished_start();
+				gchr.addListeners();
+				link_finished(gchr);
 			}
 	);
-};
-
-gchr.finished_start = function () {
-	// send 'finished' signal
-	link_finished(gchr);
-	gchr.addListeners(); // this should be 'disableable' (you should be able to disable it, without loosing sync functionality (except immediate upload)), but it isn't at the moment.
 };
 
 gchr.finished_sync = function () {

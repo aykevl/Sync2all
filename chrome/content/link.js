@@ -146,6 +146,38 @@ function import_link (link, isBrowser) {
 		link.start(true);
 	}
 
+	link.parsingFinished = function () {
+		if (localStorage[link.id+'_state']) {
+			// load saved status
+			var state = JSON.parse(localStorage[link.id+'_state']);
+
+			// for tree-based bookmark systems
+			if (link.flag_treeStructure) {
+				// map link-specific IDs to local browser IDs.
+				// WARNING: when the link_id is not known, this will give strange
+				// behaviour (when a moved bookmark or folder moves to the
+				// bookmarks root)
+				link.ownId_to_lId = {undefined: browser.bookmarks.id};
+				link.mapLinkIdsToLocalIds(state);
+			}
+
+			// now calculate the actions once all data has been loaded.
+			link.calculate_actions(state, link.bookmarks);
+
+			// display message when there are actions
+			if (link.actions.length) {
+				console.log(link.id+'.actions:');
+				console.log(link.actions);
+			}
+
+			// delete unused variables
+			delete state; // big variable (44KB with my bookmarks in JSON)
+		}
+
+		// start merging
+		link_finished(link);
+	}
+
 	// Stop link. remove memory-eating status if the keepStatus flag is not set.
 	link.stop = link.msg_stop = function (keepStatus) {
 		localStorage[link.id+'_enabled'] = JSON.stringify(false);

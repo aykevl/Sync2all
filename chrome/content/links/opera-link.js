@@ -53,42 +53,6 @@ opl.startSync = function () {
 	opl.loadBookmarks();
 };
 
-// own loading and parsing has been done, now calculate the last bits before
-// submitting it to background.js
-opl.finished_start = function () {
-
-	// calculate actions if there is data available
-	if (localStorage['opl_state']) {
-		// this may fail with an update, so ignore (dump) the errors, and just
-		// save a new status after this sync.
-
-		// load saved status
-		var state = JSON.parse(localStorage['opl_state']);
-
-		// map Opera Link IDs to local browser IDs.
-		// WARNING: when the opl_id is not known, this will give strange
-		// behaviour (when a moved bookmark or folder moves to the
-		// bookmarks root)
-		opl.ownId_to_lId = {undefined: browser.bookmarks.id};
-		opl.mapOplIdsToLocalIds(state);
-
-		// now calculate the actions once all data has been loaded.
-		opl.calculate_actions(state, opl.bookmarks);
-
-		// delete unused variables
-		delete state; // big variable (44KB with my bookmarks in JSON)
-
-		// display message when there are actions
-		if (opl.actions.length) {
-			console.log('opl actions:');
-			console.log(opl.actions);
-		}
-	}
-
-	// mark as ready
-	link_finished(opl);
-};
-
 // called when sync has been finished.
 opl.finished_sync = function () {
 	// clean up unused memory
@@ -149,14 +113,14 @@ opl.get_state = function (state, folder) {
 	}
 }
 
-opl.mapOplIdsToLocalIds = function (state) {
+opl.mapLinkIdsToLocalIds = function (state) {
 	var item;
 	for (var i=0; item=state[i]; i++) {
 		opl.ownId_to_lId[item.opl_id] = item.id;
 
 		// if this node has children (that means this is a folder).
 		if (item.children) {
-			opl.mapOplIdsToLocalIds(item.children);
+			opl.mapLinkIdsToLocalIds(item.children);
 		}
 	}
 }
@@ -452,7 +416,7 @@ opl.bookmarksLoaded = function (result) {
 	opl.parse_bookmarks(result.response, opl.bookmarks);
 
 	// send signal to sync engine to start merging
-	opl.finished_start();
+	opl.parsingFinished();
 };
 
 opl.parse_bookmarks = function (array, folder) {
@@ -522,6 +486,14 @@ opl.itemUpdated = function (result) {
 	opl.queue_next();
 };
 
+opl.fixBookmark = function (bm) {
+	if (!bm.title) {
+		// fix title. Opera Link needs a title
+		var oldtitle = bm.title;
+		bm.title = bm.url;
+		broadcastMessage('bm_mod_title', opl, [bm, oldtitle]);
+	}
+}
 
 opl.bm_add = function (target, bm, folder) {
 	if (!folder) var folder = bm.parentNode;
@@ -538,12 +510,7 @@ opl.bm_add = function (target, bm, folder) {
 				// TODO: last visited timestamp, comments (from Google Bookmarks)
 				console.log('bm_add');
 
-				if (!bm.title) {
-					// fix title. Opera Link needs a title
-					var oldtitle = bm.title;
-					bm.title = bm.url;
-					broadcastMessage('bm_mod_title', opl, [bm, oldtitle]);
-				}
+				opl.fixBookmark(bm);
 				if (folder.opl_id) {
 					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.mtime))
 				} else {
