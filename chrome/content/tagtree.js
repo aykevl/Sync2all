@@ -4,6 +4,8 @@
  */
 
 tagtree = {};
+tagtree.name = 'tagtree';
+tagtree.id = 'tagtree';
 
 tagtree.enabled = false;
 
@@ -18,6 +20,7 @@ tagtree.start = function () {
 	tagtree.enabled = true;
 	tagtree.urls = {}; // dictionary: url => list of bookmarks
 	tagtree.importUrls(browser.bookmarks);
+	messageListeners.unshift(tagtree); // insert as first
 }
 
 tagtree.importUrls = function (folder) {
@@ -45,6 +48,7 @@ tagtree.stop = function () {
 	}
 	tagtree.enabled = false;
 	delete tagtree.urls;
+	Array_remove(messageListeners, tagtree);
 }
 
 tagtree.addLink = function (link) {
@@ -64,22 +68,50 @@ tagtree.removeLink = function (link) {
 	}
 }
 
-tagtree.bm_add = function (target, bookmark) {
-
-	// check for things that will be changed by the link provider
-	var link;
-	for (var i=0; link=tagStructuredWebLinks[i]; i++) {
-		link.fixBookmark(bookmark);
-	}
-
+tagtree.bm_add = function (callingLink, bookmark) {
 	// add to tagtree.urls
 	tagtree.importBookmark(bookmark);
-
-	var link;
-	for (var i=0; link=tagStructuredWebLinks[i]; i++) {
-		if (link == target) continue;
-		link.changed[bookmark.url] = bookmark;
-	}
-	
 };
+
+tagtree.bm_del = function (callingLink, bookmark) {
+	// delete this label
+	Array_remove(tagtree.urls[bookmark.url].bm, bookmark);
+
+	// TODO remove bookmark from list when it is removed from links?
+}
+
+tagtree.f_add = false;
+
+// delete a bookmarks tree
+tagtree.f_del = function (callingLink, folder) {
+	var url;
+	for (url in folder.bm) {
+		tagtree.bm_del(callingLink, folder.bm[url]);
+	}
+	var title;
+	for (title in folder.f) {
+		tagtree.f_del(callingLink, folder.f[title]);
+	}
+};
+
+tagtree.bm_mod_url = function (callingLink, bm, oldurl) {
+	// remove the one, like tagtree.bm_del (unfortunately):
+	Array_remove(tagtree.urls[oldurl].bm, bm);
+
+	// add the other
+	tagtree.bm_add(callingLink, bm);
+}
+
+// Moved bookmarks get automatically new labels (code for that is in the links)
+// and those aren't in the scope of tagtree.
+tagtree.bm_mv = false;
+tagtree.f_mv = false;
+
+// same for f_mod_title and bm_mod_title:
+tagtree.f_mod_title = false;
+tagtree.bm_mod_title = false;
+
+// Messages to which I won't listen
+tagtree.commit       = false;
+tagtree.syncFinished = false;
 

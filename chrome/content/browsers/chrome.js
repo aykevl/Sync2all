@@ -38,7 +38,7 @@ gchr.startSync = function () {
 			function (tree) {
 				gchr.gotTree(tree[0], gchr.bookmarks);
 				gchr.addListeners();
-				link_finished(gchr);
+				gchr.startingFinished();
 			}
 	);
 };

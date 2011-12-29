@@ -77,17 +77,10 @@ function broadcastMessage(methodName, sourceLink, params) {
 	// first parameter should be the link
 	if (params) params.unshift(sourceLink); // add link at the start
 
-	// kind of a hack
-	if (tagtree[methodName]) {
-		tagtree[methodName].apply(this, params);
-	}
-
 	var link;
-	for (var i=0; link=finishedLinks[i]; i++) {
+	for (var i=0; link=messageListeners[i]; i++) {
 		// ignore the calling link, except when a flag is set.
 		if (link == sourceLink && !sourceLink.has_own_data) continue;
-
-		if (link.flag_tagStructure && tagtree[methodName]) continue;
 
 		var method = link[methodName];
 		if (method == false) {
@@ -327,14 +320,6 @@ function link_finished(link) {
 		}
 	}
 
-	if (finishedLinks.indexOf(link) < 0) {
-		finishedLinks.push(link);
-		var resynchronisation = false;
-	} else {
-		// re-synchronisation, so the initial sync has already been finished
-		var resynchronisation = true;
-	}
-
 	// apply actions
 	if (link.actions) {
 		var action;
@@ -347,8 +332,12 @@ function link_finished(link) {
 	// is this the browser itself? start the rest!
 	if (link == browser) {
 		var webLink;
+		startingLinksAfterInit = 0;
 		for (var i=0; webLink=webLinks[i]; i++) {
 			webLink.load();
+			if (webLink.enabled) {
+				startingLinksAfterInit += 1;
+			}
 		}
 	} else { //or, when it is a link, merge the data with the browser.
 		// set status to merging the tree
@@ -363,11 +352,12 @@ function link_finished(link) {
 		link.updateStatus(statuses.READY);
 	}
 
-	// browser isn't in enabledWebLinks, but is in finishedLinks. The +1 on the enabledWebLinks is to correct this.
-	var isSyncFinished = enabledWebLinks.length+1 == finishedLinks.length && !resynchronisation;
+	if (!link.has_saved_state && startingLinksAfterInit) { // if this is the first time the link starts (not a resynchronisation)
+		startingLinksAfterInit -= 1;
+	}
 
 	// is the syncing finished? Commit changes!
-	if (isSyncFinished) {
+	if (!startingLinksAfterInit) {
 		commit();
 		broadcastMessage('syncFinished', null);
 		console.log('Finished start');

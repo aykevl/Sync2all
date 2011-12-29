@@ -20,7 +20,7 @@ var fx = {
 		// add myself as observer
 		fx.bmsvc.addObserver(fx, false);
 
-		link_finished(fx);
+		fx.startingFinished();
 	},
 
 	stopSync: function () {

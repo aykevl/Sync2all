@@ -27,7 +27,7 @@ gbm.api_url = 'https://www.google.com/bookmarks/mark';
 gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarksbkmklet";
 // whether or not this link has it's own data structures and needs to be
 // notified of changes that it has posted itself
-gbm.has_own_data = true;
+//gbm.has_own_data = true;
 
 
 // (re) start
@@ -181,7 +181,7 @@ gbm.onRssRSC = function () {
 		gbm.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 	} else {
 		gbm.parseRssBookmarks(gbm.reqRss.responseXML);
-		gbm.parsingFinished();
+		gbm.startingFinished();
 	}
 }
 
@@ -225,92 +225,6 @@ gbm.fixBookmark = function (bookmark) {
 	}
 }
 
-gbm.bm_add = tagtree.bm_add;
-
-
-gbm.bm_del = function (target, bookmark) {
-
-	// get all bookmarks with this url
-	var gbookmark = tagtree.urls[bookmark.url];
-
-	// delete this label
-	Array_remove(gbookmark.bm, bookmark);
-
-	// if this is a known change
-	if (target == gbm) return;
-
-	// if there are no labels left (most often: yes, because most often
-	// bookmarks have only one label)
-	gbm.changed[bookmark.url] = bookmark;
-}
-
-gbm.f_add = false; // doesn't need implementing
-
-gbm.f_del = function (target, folder) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	var url;
-	for (url in folder.bm) {
-		gbm.bm_del(target, folder.bm[url]);
-	}
-	var title;
-	for (title in folder.f) {
-		gbm.f_del(target, folder.f[title]);
-	}
-};
-
-gbm.bm_mv = function (target, bm, oldParent) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.changed[bm.url] = bm;
-}
-
-gbm.f_mv = function (target, folder, oldParent) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.upload_all(folder); // FIXME there is a better way, see below, but it doesn't work. Make it work.
-	/*
-	var oldlabel = oldParent == browser.bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
-	var labels = oldlabel+','+gbm.folder_get_label(folder);
-	gbm.add_to_queue({op: 'modlabel', labels: labels});*/
-};
-
-gbm.bm_mod_title = function (target, bm, oldtitle) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.changed[bm.url] = bm;
-};
-
-gbm.bm_mod_url = function (target, bm, oldurl) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.fixBookmark(bm); // TODO will upload too much data. Investigate why.
-
-	// nearly a copy of gbm.bm_del: TODO
-	oldgbookmark = tagtree.urls[oldurl];
-	Array_remove(oldgbookmark.bm, bm);
-	if (!oldgbookmark.bm.length) {
-		gbm.delete_bookmark(oldgbookmark.gbm_id);
-	} else {
-		gbm.changed[oldurl] = gbm.changed[oldurl] || oldgbookmark.bm[0]; // choose one at random
-	}
-
-	gbm.bm_add(target, bm);
-};
-
-// title changed
-gbm.f_mod_title = function (target, folder, oldtitle) {
-	// if this is a known change
-	if (target == gbm) return;
-
-	gbm.upload_all(folder);
-};
-
 // do an upload (for when an bookmark has been created/updated/label deleted)
 // this needs a bookmark object because it uploads the latest title of the bookmark
 gbm.upload_bookmark = function (bookmark) {
@@ -326,17 +240,6 @@ gbm.upload_bookmark = function (bookmark) {
 gbm.delete_bookmark = function (id) {
 	console.log('gbm: delete_bookmark');
 	gbm.add_to_queue({dlq: id});
-};
-
-gbm.upload_all = function (folder) {
-	var url;
-	for (url in folder.bm) {
-		gbm.changed[url] = folder.bm[url];
-	}
-	var title;
-	for (title in folder.f) {
-		gbm.upload_all(folder.f[title]);
-	}
 };
 
 gbm.commit = function () {
@@ -418,16 +321,4 @@ gbm.bookmark_get_labels = function (url) {
 	}
 	return labels;
 };
-
-gbm.folder_get_label = function (folder) {
-	if (!folder.parentNode) return gbm.rootNodeLabel;
-	var label = '';
-	while (true) {
-		label = folder.title+(label.length?gbm.folderSep:'')+label;
-		folder = folder.parentNode;
-		if (!folder || !folder.parentNode) break; // first check introduced for bug when a bookmark is added to the Bookmarks Bar.
-	}
-	return label;
-}
-
 

@@ -400,7 +400,7 @@ opl.bookmarksLoaded = function (result) {
 	opl.parse_bookmarks(result.response, opl.bookmarks);
 
 	// send signal to sync engine to start merging
-	opl.parsingFinished();
+	opl.startingFinished();
 };
 
 opl.parse_bookmarks = function (array, folder) {

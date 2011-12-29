@@ -22,6 +22,14 @@
  *     start the sync.
  * stopSync:
  *     stop the sync and clear memory.
+ * bm_add:
+ *     Add a bookmark
+ * bm_del:
+ *     Delete a bookmark
+ * f_add:
+ *     Add a single folder without content
+ * f_del:
+ *     Delete a folder tree
  */
 
 function import_link (link, isBrowser) {
@@ -146,7 +154,8 @@ function import_link (link, isBrowser) {
 		link.start(true);
 	}
 
-	link.parsingFinished = function () {
+	// TODO better name
+	link.startingFinished = function () {
 		if (localStorage[link.id+'_state']) {
 			// load saved status
 			var state = JSON.parse(localStorage[link.id+'_state']);
@@ -174,6 +183,10 @@ function import_link (link, isBrowser) {
 			delete state; // big variable (44KB with my bookmarks in JSON)
 		}
 
+		if (messageListeners.indexOf(link) < 0) {
+			messageListeners.push(link);
+		}
+
 		// start merging
 		link_finished(link);
 	}
@@ -198,8 +211,8 @@ function import_link (link, isBrowser) {
 		}
 		// check whether this link has finished after starting. It is possible
 		// that there's an error while it starts, and that it disables itself.
-		if (finishedLinks.indexOf(link) >= 0) {
-			Array_remove(finishedLinks, link);
+		if (messageListeners.indexOf(link) >= 0) {
+			Array_remove(messageListeners, link);
 		}
 
 		// whether this link needs extra url/tag indices
@@ -441,6 +454,7 @@ function move_event (link, id, oldParentId, newParentId) {
 
 	// if the bookmark has been moved by Sync2all, ignore this event
 	if (node && newParent && node.parentNode == newParent) {
+		console.log('Move: the node has been moved by this extension, so doing nothing now.');
 		return;
 	}
 
@@ -507,6 +521,7 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 	if (newParent == oldParent) {
 		// node moved inside folder (so nothing has happened, don't know
 		// whether this is really needed, Chrome might catch this).
+		console.log('Move: newParent and oldParent are the same, so nothing moved.');
 		return;
 	}
 
