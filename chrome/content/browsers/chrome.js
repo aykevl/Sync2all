@@ -30,6 +30,7 @@ gchr.bookmarksRootId    = '1';
 
 // import libraries, kind of inheritance
 import_treeBasedLink(gchr, true);
+import_browserlink(gchr);
 import_queue(gchr);
 
 
@@ -68,11 +69,6 @@ gchr.gotTree_handleNode = function (node, folder) {
 
 	}
 };
-
-
-gchr.remove_result = function () {
-	console.log('Duplicate bookmark/folder removed.');
-}
 
 // import an array of BookmarkTreeNodes
 gchr.import_bms = function (results) {
@@ -200,54 +196,26 @@ gchr.bm_mod_url = function (target, node, oldurl) {
  ************************************/
 
 gchr.evt_onCreated = function (id, node) {
-	console.log('evt_onCreated');
-	if (node.parentId == gchr.creating_parentId &&
-			(node.url == gchr.creating_url || node.title == gchr.creating_title)) {
-		delete gchr.creating_parentId;
-		delete gchr.creating_url;
-		delete gchr.creating_title;
-		return;
-	}
-	if (node.id in gchr.ids) return; // already tracked
-	if (!gchr.ids[node.parentId]) return; // not in the synced folder
-	var parentNode = gchr.ids[node.parentId];
-	if (node.url) {
-		// bookmark
-		console.log('Created new bookmark: '+node.url);
-		var bookmark = {title: node.title, url: node.url, parentNode: parentNode, mtime: node.dateAdded, id: id};
-		gchr.ids[id] = bookmark;
-		//parentNode.bm[bookmark.url] = bookmark;
-		if (addBookmark(gchr, bookmark)) return; // error
-	} else {
-		// folder
-		console.log('Created new empty folder: '+node.title);
-		var folder = {title: node.title, parentNode: parentNode, bm: {}, f: {}, id: id};
-		gchr.ids[id] = folder;
-		addFolder(gchr, folder);
-	}
-	commit();
+	// make this object ready
+	node.mtime = node.dateAdded/1000;
+	// let the browser library handle the rest
+	gchr.onCreated(node);
 };
 
 gchr.evt_onRemoved = function (id, removeInfo) {
-	try {
-		console.log('evt_onRemoved');
-		if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
-		var node = gchr.ids[id];
-		if (node.url) {
-			// bookmark
-			var bookmark = node;
-			rmBookmark(gchr, bookmark);
-		} else {
-			// folder
-			console.log('Removed folder: '+node.title);
-			rmFolder(gchr, node);
-		}
-		commit();
-	} catch (error) {
-		console.log('ERROR ERROR ERROR in evt_onRemoved:');
-		console.log(error);
+	console.log('evt_onRemoved');
+	if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+	var node = gchr.ids[id];
+	if (node.url) {
+		// bookmark
+		var bookmark = node;
+		rmBookmark(gchr, bookmark);
+	} else {
+		// folder
+		console.log('Removed folder: '+node.title);
+		rmFolder(gchr, node);
 	}
-	console.log('end of evt_onRemoved');
+	commit();
 }
 
 gchr.evt_onChanged = function (id, changeInfo) {
