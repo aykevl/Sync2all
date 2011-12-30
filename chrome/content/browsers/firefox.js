@@ -101,10 +101,6 @@ var fx = {
 	},
 	onBeforeItemRemoved: function (){},
 	onItemAdded:         function (id, parentId, index, type, uri, title) {
-		if (!title) {
-			// gecko < 6
-			title = fx.bmsvc.getItemTitle(id);
-		}
 		if (!fx.ids[parentId]) return; // not here added
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
 			if (uri.resolve(null) == null)  return; // not a valid url
