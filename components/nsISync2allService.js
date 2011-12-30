@@ -8,12 +8,18 @@ var SYNC2ALL_SOURCES = [
   'chrome://sync2all/content/globals.js',
   'chrome://sync2all/content/utils.js',
 
-  // Specific libraries
+  // Firefox-specific library (to let it use webstandards in XPCOM
   'chrome://sync2all/content/browsers/firefox-fixes.js',
+
+  // Specific libraries
   'chrome://sync2all/content/oauth.js',
   'chrome://sync2all/content/sha1.js',
   'chrome://sync2all/content/operalink.js',
   'chrome://sync2all/content/link.js',
+  'chrome://sync2all/content/link_tagBased.js',
+  'chrome://sync2all/content/link_treeBased.js',
+  'chrome://sync2all/content/browserlink.js',
+  'chrome://sync2all/content/tagtree.js',
 
   // links
   'chrome://sync2all/content/browsers/firefox.js',
