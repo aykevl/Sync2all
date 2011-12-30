@@ -91,18 +91,12 @@ function broadcastMessage(methodName, sourceLink, params) {
 			console.warn('WARNING: '+link.name+' hasn\'t implemented '+methodName+' (set function to false to ignore)');
 			link[methodName] = false; // prevent future logs causing lots of data
 		} else {
-			try {
-				// FIXME should this really use 'self'?
-				var self = link;
-				if (params) {
-					self[methodName].apply(this, params);
-				} else {
-					self[methodName].apply(this);
-				}
-			} catch (error) {
-				console.log('broadcastMessage: ERROR: in function '+methodName+' applied to link '+link.fullName+':');
-				console.error(error);
-				console.trace();
+			// FIXME should this really use 'self'?
+			var self = link;
+			if (params) {
+				self[methodName].apply(this, params);
+			} else {
+				self[methodName].apply(this);
 			}
 		}
 	}
