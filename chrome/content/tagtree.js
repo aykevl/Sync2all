@@ -121,6 +121,14 @@ tagtree.selftest = function () {
 	if (!tagtree.enabled) return;
 	var url;
 	for (url in tagtree.urls) {
+		var uBm = tagtree.urls[url];
+		if (url != uBm.url)
+			tagtree.testfail('url != uBm.url', uBm);
+		var bm;
+		for (var i=0; bm=uBm.bm[i]; i++) {
+			if (uBm.url != bm.url)
+				console.log('uBm.url != bm.url', uBm);
+		}
 	}
 	console.log('tagtree passed the integrity test.')
 }

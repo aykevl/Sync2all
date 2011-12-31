@@ -91,7 +91,7 @@ import_tagBasedLink = function (link) {
 	link.bm_mod_url = function (callingLink, bm, oldurl) {
 		link.fixBookmark(bm);
 
-		gbm.changed[oldurl] = gbm.changed[oldurl] || oldgbookmark.bm[0]; // choose one at random
+		gbm.changed[oldurl] = gbm.changed[oldurl] || tagtree.urls[oldurl].bm[0] || false; // choose one at random
 	};
 
 	link.bm_mod_title = function (callingLink, bm, oldtitle) {
