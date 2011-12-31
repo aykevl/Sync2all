@@ -118,7 +118,10 @@ tagtree.syncFinished = false;
 /* Self-check */
 
 tagtree.selftest = function () {
+	// only run when enabled
 	if (!tagtree.enabled) return;
+
+	// check consistency of tagtree.urls and check whether all bookmarks have a parent
 	var url;
 	for (url in tagtree.urls) {
 		var uBm = tagtree.urls[url];
@@ -127,10 +130,47 @@ tagtree.selftest = function () {
 		var bm;
 		for (var i=0; bm=uBm.bm[i]; i++) {
 			if (uBm.url != bm.url)
-				console.log('uBm.url != bm.url', uBm);
+				console.log('uBm.url != bm.url', [uBm, bm]);
+
+			// check for orphaned bookmarks
+			if (bm.parentNode.bm[url] != bm)
+				console.log('bm.parentNode.bm[url] != bm', [uBm, bm]);
+
+			// check for orphaned folders
+			var folder = bm.parentNode;
+			while (true) {
+				if (!folder.parentNode)
+					tagtree.testfail('!folder.parentNode', folder);
+				if (!folder.parentNode.f[folder.title])
+					tagtree.testfail('!folder.parentNode.f[folder.title]', folder);
+				folder = folder.parentNode;
+				if (folder == browser.bookmarks) break;
+			}
 		}
 	}
+
+	// check for missing bookmarks in tagtree.urls
+	tagtree.checkWithTree(browser.bookmarks);
+
 	console.log('tagtree passed the integrity test.')
+}
+
+tagtree.checkWithTree = function (folder) {
+	// check whether all bookmars in the tree are in tagtree
+	var url;
+	for (url in folder.bm) {
+		var bm = folder.bm[url];
+		if (!tagtree.urls[url])
+			tagtree.testfail('!tagtree.urls[url]', bm);
+		var uBm = tagtree.urls[url];
+		if (tagtree.urls[url].bm.indexOf(bm) < 0)
+			tagtree.testfail('tagtree.urls[url].bm.indexOf(bm) < 0', [uBm, bm]);
+	}
+	var title;
+	for (title in folder.f) {
+		var subfolder = folder.f[title];
+		tagtree.checkWithTree(subfolder);
+	}
 }
 
 tagtree.testfail = function (error, element) {
