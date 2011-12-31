@@ -303,6 +303,14 @@ function init () {
 
 function link_finished(link) {
 
+	if (debug) {
+		if (link.selftest) {
+			link.selftest();
+		}
+		// FIXME not very nice here
+		tagtree.selftest();
+	}
+
 	// check for possible bugs
 	if (link.actions && link.actions.length > 10) {
 		if (!confirm('There have been many changes in '+link.name+' ('+
@@ -341,6 +349,12 @@ function link_finished(link) {
 		console.log('Merging bookmarks with '+link.fullName+'...');
 		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
 		console.log('Finished merging with '+link.fullName+'.');
+
+		if (debug) {
+			if (browser.selftest) {
+				browser.selftest();
+			}
+		}
 
 		// set status (again)
 		link.updateStatus(statuses.READY);

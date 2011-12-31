@@ -228,8 +228,11 @@ function import_link (link, isBrowser) {
 	};
 
 	link.commit = function () {
-		console.warn(link.id+' commit -- backtrace:');
-		console.trace();
+		if (debug) {
+			console.warn(link.id+' commit -- backtrace:');
+			console.trace();
+			link.selftest();
+		}
 		link.queue_start(); // start running
 	}
 
@@ -360,6 +363,56 @@ function import_link (link, isBrowser) {
 		link.stop();
 	}
 
+	/* Self-check */
+
+	link.testfail = function (error, element) {
+		console.log(element);
+		throw ((link.fullName || link.name)+' Failed test: '+error);
+	}
+
+	link.selftest = function () {
+		link.subselftest(link.bookmarks);
+		console.log(link.fullName+' has passed the intergity test');
+	}
+
+	link.subselftest = function (folder) {
+		var url;
+		for (url in folder.bm) {
+			var bm = folder.bm[url];
+			if (!bm.url == url)
+				link.testfail('bm.url != folder.bm[url]', bm);
+			if (bm.parentNode != folder) {
+				link.testfail('bm.parentNode != folder', bm);
+			}
+			if (link == browser) {
+				if (!bm.id)
+					link.testfail('!bm.id', bm);
+			} else {
+				if (!bm[link.id+'_id'])
+					link.testfail('!bm.*_id', bm);
+			}
+		}
+		var title;
+		for (title in folder.f) {
+			var subfolder = folder.f[title];
+			if (!subfolder.title == title)
+				link.testfail('subfolder.title != title', subfolder);
+			if (!subfolder.bm)
+				link.testfail('!subfolder.bm');
+			if (!subfolder.f)
+				link.testfail('!subfolder.f');
+			if (!link.flag_tagStructure) {
+				if (link == browser) {
+					if (!subfolder.id)
+						link.testfail('!subfolder.id', subfolder);
+				} else {
+					if (!subfolder[link.id+'_id'])
+						link.testfail('!subfolder.*_id', subfolder);
+				}
+			}
+			link.subselftest(subfolder);
+		}
+	}
 };
 
 

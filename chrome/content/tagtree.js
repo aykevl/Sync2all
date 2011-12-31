@@ -115,3 +115,18 @@ tagtree.bm_mod_title = false;
 tagtree.commit       = false;
 tagtree.syncFinished = false;
 
+/* Self-check */
+
+tagtree.selftest = function () {
+	if (!tagtree.enabled) return;
+	var url;
+	for (url in tagtree.urls) {
+	}
+	console.log('tagtree passed the integrity test.')
+}
+
+tagtree.testfail = function (error, element) {
+	console.log(element);
+	throw 'tagtree failed test: '+error;
+}
+
