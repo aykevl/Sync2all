@@ -348,6 +348,9 @@ function link_finished(link) {
 		// merge the bookmarks
 		console.log('Merging bookmarks with '+link.fullName+'...');
 		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
+		// are not needed anymore, and should not be used
+		delete link.bookmarks;
+		delete link.ids;
 		console.log('Finished merging with '+link.fullName+'.');
 
 		// set status (again)

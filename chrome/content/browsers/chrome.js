@@ -229,7 +229,7 @@ gchr.evt_onChanged = function (id, changeInfo) {
 gchr.evt_onMoved = function (id, moveInfo) {
 	console.log('evt_onMoved');
 
-	move_event(gchr, id, moveInfo.parentId, moveInfo.oldParentId);
+	gchr.onMoved(id, moveInfo.parentId, moveInfo.oldParentId);
 }
 
 

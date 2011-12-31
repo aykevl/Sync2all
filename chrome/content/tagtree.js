@@ -130,21 +130,21 @@ tagtree.selftest = function () {
 		var bm;
 		for (var i=0; bm=uBm.bm[i]; i++) {
 			if (uBm.url != bm.url)
-				console.log('uBm.url != bm.url', [uBm, bm]);
+				tagtree.testfail('uBm.url != bm.url', [uBm, bm]);
 
 			// check for orphaned bookmarks
 			if (bm.parentNode.bm[url] != bm)
-				console.log('bm.parentNode.bm[url] != bm', [uBm, bm]);
+				tagtree.testfail('bm.parentNode.bm[url] != bm', [uBm, bm]);
 
 			// check for orphaned folders
 			var folder = bm.parentNode;
 			while (true) {
+				if (folder == browser.bookmarks) break;
 				if (!folder.parentNode)
 					tagtree.testfail('!folder.parentNode', folder);
 				if (!folder.parentNode.f[folder.title])
 					tagtree.testfail('!folder.parentNode.f[folder.title]', folder);
 				folder = folder.parentNode;
-				if (folder == browser.bookmarks) break;
 			}
 		}
 	}

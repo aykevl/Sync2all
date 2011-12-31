@@ -30,4 +30,108 @@ function import_browserlink (link) {
 		}
 		commit();
 	}
+
+	/** Called when something has been moved.
+	 */
+	link.onMoved = function (id, newParentId, oldParentId) {
+		// get info
+		var node      = link.ids[id];
+		var oldParent = link.ids[oldParentId];
+		var newParent = link.ids[newParentId];
+
+		// if the bookmark has been moved by Sync2all, ignore this event
+		if (node && newParent && node.parentNode == newParent) {
+			console.log('Move: the node has been moved by this extension, so doing nothing now.');
+			return;
+		}
+
+		// if node is moved to outside synced folder
+		if (!newParent) {
+			// if the node comes from outside the synced folder
+			if (!oldParent) {
+				if (!node) {
+					console.log('Bookmark/folder outside synchronized folder moved. Ignoring.');
+					return;
+				} else {
+					console.log('BUG: only the node is known, not the rest \
+							(including the parent!)');
+					return;
+				}
+			} else { // the 'else' is not really needed
+				if (!node) {
+					console.log('BUG: only the old parent is known, not the node \
+							nor the new parent');
+					return;
+				} else {
+					// newParent is not known, node and oldParent are known.
+					console.log('Move: new parent not found. Thus this bookmark/folder is \
+							moved to outside the synced folder.');
+
+					// remove the node
+					delete link.ids[node.id];
+					rmNode(link, node); // parent needed for bookmarks
+					commit()
+					return;
+				}
+			}
+		} else {
+			// the node is moved to inside the synced folder
+			if (!node) {
+				// the node is moved from outside the synced folder to therein.
+				if (!oldParent) { // check it twice, should also be undefined.
+
+					console.log('Move: node id and oldParent not found. I assume this \
+	bookmark comes from outside the synchronized tree. So doing a crete now');
+					link.import_node(id);
+					commit();
+					return;
+				} else {
+					console.log('BUG: the node is not known, but the old parent \
+							and the new parent are.');
+					return;
+				}
+			} else {
+				if (!oldParent) {
+					console.log('BUG: only the old parent is not known. The node \
+							and the new parent are.');
+					return;
+				} else {
+					// the bookmark has been moved within the synced folder tree.
+					// Nothing strange has happened.
+				}
+			}
+		}
+
+		// newParent, node and oldParent are 'defined' variables. (i.e. not
+		// 'undefined').
+
+		if (newParent == oldParent) {
+			// node moved inside folder (so nothing has happened, don't know
+			// whether this is really needed, Chrome might catch this).
+			console.log('Move: newParent and oldParent are the same, so nothing moved.');
+			return;
+		}
+
+		
+		// Bookmark is moved inside synced folder.
+
+		node.parentNode = newParent;
+
+		if (node.url) {
+			// bookmark
+			console.log('Moved '+node.url+' from '+(oldParent?oldParent.title:'somewhere in the Other Bookmarks menu')+' to '+newParent.title);
+			newParent.bm[node.url] = node;
+			delete oldParent.bm[node.url];
+			broadcastMessage('bm_mv', link, [node, oldParent]);
+		} else {
+			// folder
+			if (newParent.f[node.title]) {
+				console.log('FIXME: duplicate folder overwritten (WILL FAIL AT SOME POINT!!!)');
+			}
+			newParent.f[node.title] = node;
+			delete oldParent.f[node.title];
+			broadcastMessage('f_mv', link, [node, oldParent]);
+		}
+		commit();
+	}
 }
