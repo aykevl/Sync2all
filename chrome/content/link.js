@@ -413,6 +413,16 @@ function import_link (link, isBrowser) {
 			link.subselftest(subfolder);
 		}
 	}
+
+	link.copyBookmark = function (bm) {
+		var newbm = {url: bm.url, title: bm.title, parentNode: bm.parentNode, mtime: bm.mtime};
+		if (link == browser) {
+			newbm.id = bm.id;
+		} else {
+			newbm[link.id+'_id'] = bm[link.id+'_id'];
+		}
+		return newbm;
+	}
 };
 
 
@@ -477,6 +487,12 @@ function import_queue (obj) {
 
 		this.updateStatus(statuses.READY);
 		console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
+
+		if (debug) {
+			if (browser.selftest) {
+				browser.selftest();
+			}
+		}
 
 		// save current state when everything has been uploaded
 		// this occurs also when there is nothing in the queue when the

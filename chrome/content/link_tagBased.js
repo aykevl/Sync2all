@@ -10,7 +10,7 @@ import_tagBasedLink = function (link) {
 			// new bookmark (only sometimes the case)
 			tagtree.urls[uBm.url] = {url: uBm.url, bm: []}
 		}
-		tagtree.urls[uBm.url][link.id+'_id'] = uBm.id;
+		tagtree.urls[uBm.url][link.id+'_id'] = uBm[link.id+'_id'];
 
 		for (var tagIndex=0; tagIndex<uBm.tags.length; tagIndex++) {
 			var tag = uBm.tags[tagIndex];
@@ -38,14 +38,14 @@ import_tagBasedLink = function (link) {
 					parentNode = link.tags[tag];
 				}
 			}
-			var bookmark = {url: uBm.url, title: uBm.title, parentNode: parentNode,
-				mtime: uBm.mtime};
+			var bookmark = link.copyBookmark(uBm);
+			bookmark.parentNode = parentNode;
 			parentNode.bm[bookmark.url] = bookmark;
 		}
 		if (!uBm.tags.length) {
 			// this bookmark has no labels, add it to root
-			var bookmark = {url: uBm.url, title: uBm.title, parentNode: link.bookmarks,
-				mtime: uBm.mtime};
+			var bookmark = link.copyBookmark(uBm);
+			bookmark.parentNode = link.bookmarks;
 			link.bookmarks.bm[bookmark.url] = bookmark;
 		}
 	}

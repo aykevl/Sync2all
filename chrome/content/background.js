@@ -350,12 +350,6 @@ function link_finished(link) {
 		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
 		console.log('Finished merging with '+link.fullName+'.');
 
-		if (debug) {
-			if (browser.selftest) {
-				browser.selftest();
-			}
-		}
-
 		// set status (again)
 		link.updateStatus(statuses.READY);
 	}

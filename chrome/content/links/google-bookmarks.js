@@ -159,7 +159,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 			tags.push(tag);
 		}
 
-		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, id: id};
+		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, gbm_id: id};
 
 		// import it into the tree
 		gbm.importBookmark(urlBookmark);
