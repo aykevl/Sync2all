@@ -13,7 +13,7 @@ var browser;
 
 var isPopupOpen = false;
 
-var debug = false;
+var debug = true;
 
 // webLinks doesn't include browser links (obvious)
 var webLinks = [];
