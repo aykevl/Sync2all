@@ -231,7 +231,6 @@ function import_link (link, isBrowser) {
 		if (debug) {
 			console.warn(link.id+' commit -- backtrace:');
 			console.trace();
-			link.selftest();
 		}
 		link.queue_start(); // start running
 	}
@@ -455,29 +454,22 @@ function import_queue (obj) {
 
 	// execute the next function in the queue
 	obj.queue_next = function () {
-		try {
-			var queue_item = this.queue.shift();
-			if (!queue_item) {
+		var queue_item = this.queue.shift();
+		if (!queue_item) {
 
-				// queue has finished!
-				this.queue_stop();
+			// queue has finished!
+			this.queue_stop();
 
-				// don't go further
-				return;
-			}
-
-			// send amount of lasting uploads to the popup
-			this.updateStatus(statuses.UPLOADING);
-
-			var callback = queue_item[0];
-			var data     = queue_item[1];
-			callback(data);
-		} catch (err) {
-			console.error('queue_next');
-			console.trace();
-			throw (err);
+			// don't go further
+			return;
 		}
 
+		// send amount of lasting uploads to the popup
+		this.updateStatus(statuses.UPLOADING);
+
+		var callback = queue_item[0];
+		var data     = queue_item[1];
+		callback(data);
 	};
 
 	obj.queue_stop = function () {
