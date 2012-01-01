@@ -383,13 +383,7 @@ function import_link (link, isBrowser) {
 			if (bm.parentNode != folder) {
 				link.testfail('bm.parentNode != folder', [folder, bm]);
 			}
-			if (link == browser) {
-				if (!bm.id)
-					link.testfail('!bm.id', bm);
-			} else {
-				if (!bm[link.id+'_id'])
-					link.testfail('!bm.*_id', bm);
-			}
+			link.testId(bm);
 		}
 		var title;
 		for (title in folder.f) {
@@ -400,16 +394,32 @@ function import_link (link, isBrowser) {
 				link.testfail('!subfolder.bm');
 			if (!subfolder.f)
 				link.testfail('!subfolder.f');
-			if (!link.flag_tagStructure) {
-				if (link == browser) {
-					if (!subfolder.id)
-						link.testfail('!subfolder.id', subfolder);
-				} else {
-					if (!subfolder[link.id+'_id'])
-						link.testfail('!subfolder.*_id', subfolder);
+			link.testId(subfolder);
+			link.subselftest(subfolder);
+		}
+	}
+
+	link.testId = function (node) {
+		if (link == browser) {
+			if (!node.id)
+				link.testfail('!node.id', node);
+			var webLink;
+			for (var i=0; webLink=enabledWebLinks[i]; i++) {
+				if (webLink.enabled && !webLink.queue.running && !webLink.status) {
+					if (!webLink.flag_tagStructure) {
+						if (!node[webLink.id+'_id'])
+							link.testfail('!node.*_id', [node, webLink.id]);
+					} else {
+						if (node[webLink.id+'_id'])
+							link.testfail('node.*_id', [node, webLink.id]);
+					}
 				}
 			}
-			link.subselftest(subfolder);
+		} else {
+			if (!link.flag_tagStructure) {
+				if (!node[link.id+'_id'])
+					link.testfail('!node.*_id', node);
+			}
 		}
 	}
 
@@ -418,7 +428,9 @@ function import_link (link, isBrowser) {
 		if (link == browser) {
 			newbm.id = bm.id;
 		} else {
-			newbm[link.id+'_id'] = bm[link.id+'_id'];
+			if (!link.flag_tagStructure) {
+				newbm[link.id+'_id'] = bm[link.id+'_id'];
+			}
 		}
 		return newbm;
 	}
