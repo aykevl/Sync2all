@@ -225,6 +225,9 @@ gbm.fixBookmark = function (bookmark) {
 		// google doesn't allow URLs with only a hash on the end
 		bookmark.url = bookmark.url.substr(0, bookmark.url.length-1);
 	}
+	if (bookmark.url.indexOf("%27") >= 0) {
+		bookmark.url = bookmark.url.replace(/%27/g, "'");
+	}
 
 	// notify others when the url has changed
 	if (bookmark.url != oldurl) {
