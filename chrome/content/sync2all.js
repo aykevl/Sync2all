@@ -124,17 +124,6 @@ function commit() {
 // Bookmark-tree modifying:
 // The functions prefixed with _ don't report it to other links.
 
-function addNode(link, node, parentNode) {
-	if (!parentNode) {
-		throw 'undefined parentNode';
-	}
-	node.parentNode = parentNode;
-	if (node.url) {
-		return addBookmark(link, node);
-	} else {
-		return addFolder(link, node);
-	}
-}
 function addBookmark(link, bm) {
 	if (!bm.parentNode) {
 		console.log(bm);
