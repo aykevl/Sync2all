@@ -34,12 +34,20 @@
 	<script type="text/javascript" src="/chrome/content/links/opera-link.js"></script>
 	<script type="text/javascript" src="/chrome/content/links/firefox-sync.js"></script>
 
-	<!-- sync engine -->
-	<script type="text/javascript" src="/chrome/content/background.js"></script>
+	<!-- main object -->
+	<script type="text/javascript" src="/chrome/content/sync2all.js"></script>
+
+	<!-- Initialize the extension -->
+	<script>
+
+	var sync2all = new Sync2all();
+
+	</script>
+
 
 </head>
 
-<body onload="onLoad();">
+<body>
 </body>
 
 </html>

@@ -20,46 +20,61 @@
 	f: {...}    // dictionary of folder   nodes (key = title)
 	parentNode  // It's parent. Doesn't exist for the root.
 	mtime:      // like bookmark.mtime
-	*_id:       // link-specific IDs
+	*_id:       // link-specific IDs (only when they are folder-based)
    }
 */
 
-// these functions are called when the popup is created or closed
+function Sync2all() {
 
-function popupCreated(_popupDOM) {
-	isPopupOpen = true;
+	this.bookmarks = null;
 
-	if (browser.name == 'firefox') {
-		browser.popupDOM = _popupDOM;
+	// Start synchronisation. This starts all other things, like Google Bookmarks and Opera Link
+	this.init = function () {
+
+		// TODO move initializing to the links itself
+		for (var i=0; i<webLinks.length; i++) {
+			webLinks[i].init();
+		}
+
+		// initialize when needed
+		browser.init();
+
+		// and start the browser link
+		browser.start();
 	}
 
-	// Opera support deprecated (till they support bookmarks editing from
-	// extension), so is not needed.
-	/*if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
-		// display input
-		opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
-	}*/
+	this.onPopupCreation = function (_popupDOM) {
+		isPopupOpen = true;
 
-	var link;
-	for (var i=0; link=webLinks[i]; i++) {
-		link.updateStatus();
+		if (browser.name == 'firefox') {
+			browser.popupDOM = _popupDOM;
+		}
+
+		// Opera support deprecated (till they support bookmarks editing from
+		// extension), so is not needed.
+		/*if (browser.name == 'opera' && opl.status == statuses.AUTHORIZING) {
+			// display input
+			opera.extension.broadcastMessage({action: 'opl-verifierInput-on'});
+		}*/
+
+		var link;
+		for (var i=0; link=webLinks[i]; i++) {
+			link.updateStatus();
+		}
 	}
-}
 
-function popupClosed() {
-	isPopupOpen = false;
+	this.onPopupClosing = function () {
+		isPopupOpen = false;
 
-	if (browser.name == 'firefox') {
-		// save resources (may leak the whole window!)
-		delete browser.popupDOM;
+		if (browser.name == 'firefox') {
+			// save resources (may leak the whole window!)
+			delete browser.popupDOM;
+		}
 	}
 
+	this.init();
 }
 
-/* Called when the extension has loaded */
-function onLoad() {
-	init();
-}
 
 /* Call all links except #sourceLink and links that have declared they want
  * all notifications
@@ -286,20 +301,6 @@ function folderHasContents(folder) {
 	return false;
 }
 
-
-// Start synchronisation. This starts all other things, like Google Bookmarks or Opera Link
-function init () {
-
-	for (var i=0; i<webLinks.length; i++) {
-		webLinks[i].init();
-	}
-
-	// initialize when needed
-	browser.init();
-
-	// and start the browser link
-	browser.start();
-}
 
 function link_finished(link) {
 
@@ -672,6 +673,10 @@ function delLBookmark(target, bm) {
 	// TODO
 	//broadcastMessage('bm_del', target, [bm]);
 	return 0;
+}
+
+function onLoad () {
+	this.sync2all = new Sync2all();
 }
 
 

@@ -2,7 +2,7 @@ var Sync2allService = Components
 	.classes['@github.com/sync2all;1']
 	.getService(Components.interfaces.nsISync2allService).wrappedJSObject;
 
-var sync2all = {
+/*var sync2all = {
   onLoad: function() {
     // initialization code
     this.initialized = true;
@@ -23,3 +23,4 @@ var sync2all = {
 };
 
 window.addEventListener("load", function () { sync2all.onLoad(); }, false);
+*/

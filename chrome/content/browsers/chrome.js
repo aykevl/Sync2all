@@ -1,14 +1,37 @@
 
 
+function Chrome () {
+	// inherit Browser
+	this.Browser = Browser;
+	this.Browser();
+
+	this.fullName = 'Google Chrome';
+	this.id = 'gchr'; // deprecated
+	this.name = 'chrome'
+	this.flag_treeStructure = true;
+	this.bookmarksRootTitle = 'Bookmarks Bar';
+	this.bookmarksRootId    = '1';
+
+	this.init = function () {
+	}
+
+	this.init();
+}
+
+// TODO remove the 'gchr' altogether when finished refactoring
+// prefix: gchr (Google CHRome)
+var gchr = new Chrome();
+browser = gchr;
+
 /* Message passing code below. */
 
 // handle general requests
 function onRequest (request, sender, sendResponse) {
 	if (request.action == 'popupCreated') {
-		popupCreated();
+		sync2all.onPopupCreation();
 		sendResponse(undefined); // only because I have to
 	} else if (request.action == 'popupClosed') {
-		popupClosed();
+		sync2all.onPopupClosion();
 		sendResponse(undefined); // because I have to
 	}
 }
@@ -17,20 +40,9 @@ chrome.extension.onRequest.addListener(onRequest);
 
 /* Chrome link below. */
 
-// prefix: gchr (Google CHRome)
-var gchr = {};
-browser = gchr;
-
-gchr.fullName = 'Google Chrome';
-gchr.id = 'gchr';
-gchr.name = 'chrome'
-gchr.flag_treeStructure = true;
-gchr.bookmarksRootTitle = 'Bookmarks Bar';
-gchr.bookmarksRootId    = '1';
 
 // import libraries, kind of inheritance
 import_treeBasedLink(gchr, true);
-import_browserlink(gchr);
 import_queue(gchr);
 
 

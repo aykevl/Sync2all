@@ -27,7 +27,7 @@ var SYNC2ALL_SOURCES = [
   'chrome://sync2all/content/links/opera-link.js',
 
   // sync engine
-  'chrome://sync2all/content/background.js',
+  'chrome://sync2all/content/sync2all.js',
 ];
 
 const loader = Components.classes['@mozilla.org/moz/jssubscript-loader;1']

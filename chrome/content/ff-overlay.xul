@@ -17,9 +17,9 @@
 			tooltiptext="&sync2allToolbarButton.tooltip;"
 			type="menu">
 			<menupopup id="sync2all-popup"
-				onpopupshowing="Sync2allService.popupCreated(
+				onpopupshowing="Sync2allService.sync2all.onPopupCreation (
 					document);"
-				onpopuphidden="Sync2allService.popupClosed();">
+				onpopuphidden="Sync2allService.sync2all.onPopupClosing ();">
 				<vbox>
 					<vbox id="sync2all-gbm">
 						<hbox>
