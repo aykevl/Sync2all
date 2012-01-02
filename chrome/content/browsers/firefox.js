@@ -14,10 +14,12 @@ var fx = {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
 		fx.getTree();
 
-		// add myself as observer
 		fx.bmsvc.addObserver(fx, false);
-
 		fx.startingFinished();
+	},
+
+	addListeners: function () {
+		// add myself as observer
 	},
 
 	stopSync: function () {

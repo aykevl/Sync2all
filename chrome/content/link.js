@@ -71,22 +71,20 @@ function import_link (link, isBrowser) {
 			return;
 		}
 
-		if (link.enabled) {
-			if (!restart) return;
-		} else {
-			// mark enabled
-			link.enabled = true;
-			if (link != browser) {
+		if (link != browser) {
+			if (link.enabled) {
+				if (!restart) return;
+			} else {
+				// mark enabled
+				link.enabled = true;
 				localStorage[link.id+'_enabled'] = JSON.stringify(true);
-			}
 
-			if (link != browser) {
 				enabledWebLinks.push(link);
-			}
 
-			// whether this link needs extra url/tag indices
-			if (link.flag_tagStructure && !link.flag_treeStructure) {
-				tagtree.addLink(link);
+				// whether this link needs extra url/tag indices
+				if (link.flag_tagStructure && !link.flag_treeStructure) {
+					tagtree.addLink(link);
+				}
 			}
 		}
 

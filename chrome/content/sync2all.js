@@ -38,9 +38,11 @@ function Sync2all() {
 
 		this.messageListeners = [browser];
 
-		// and start the browser link
-		browser.start();
-		browser.addListeners();
+		setTimeout(function () {
+			// and start the browser link
+			browser.start();
+			browser.addListeners();
+		}, 100);
 	}
 
 	this.onPopupCreation = function (_popupDOM) {
