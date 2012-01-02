@@ -169,8 +169,8 @@ function import_link (link, isBrowser) {
 			delete state; // big variable (44KB with my bookmarks in JSON)
 		}
 
-		if (messageListeners.indexOf(link) < 0) {
-			messageListeners.push(link);
+		if (sync2all.messageListeners.indexOf(link) < 0) {
+			sync2all.messageListeners.push(link);
 		}
 
 		// start merging
@@ -197,8 +197,8 @@ function import_link (link, isBrowser) {
 		}
 		// check whether this link has finished after starting. It is possible
 		// that there's an error while it starts, and that it disables itself.
-		if (messageListeners.indexOf(link) >= 0) {
-			Array_remove(messageListeners, link);
+		if (sync2all.messageListeners.indexOf(link) >= 0) {
+			Array_remove(sync2all.messageListeners, link);
 		}
 
 		// whether this link needs extra url/tag indices

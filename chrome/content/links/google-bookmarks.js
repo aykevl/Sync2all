@@ -217,10 +217,17 @@ gbm.parseRssBookmarks = function (xmlTree) {
 // check for things that will be modified by Google. Change the url of the
 // bookmark and notify other links.
 gbm.fixBookmark = function (bookmark) {
+	// save the old url
+	var oldurl = bookmark.url;
+
+	// do a few (potential) fixes
 	if (bookmark.url.substr(-1) == '#') {
 		// google doesn't allow URLs with only a hash on the end
-		var oldurl = bookmark.url;
 		bookmark.url = bookmark.url.substr(0, bookmark.url.length-1);
+	}
+
+	// notify others when the url has changed
+	if (bookmark.url != oldurl) {
 		broadcastMessage('bm_mod_url', gbm, [bookmark, oldurl]);
 	}
 }

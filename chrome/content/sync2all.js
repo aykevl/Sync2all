@@ -36,6 +36,8 @@ function Sync2all() {
 			browser.init();
 		}
 
+		this.messageListeners = [browser];
+
 		// and start the browser link
 		browser.start();
 	}
@@ -90,7 +92,7 @@ function broadcastMessage(methodName, sourceLink, params) {
 	if (params) params.unshift(sourceLink); // add link at the start
 
 	var link;
-	for (var i=0; link=messageListeners[i]; i++) {
+	for (var i=0; link=sync2all.messageListeners[i]; i++) {
 		// ignore the calling link, except when a flag is set.
 		if (link == sourceLink && !sourceLink.has_own_data) continue;
 

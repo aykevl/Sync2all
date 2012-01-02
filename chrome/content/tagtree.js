@@ -20,7 +20,7 @@ tagtree.start = function () {
 	tagtree.enabled = true;
 	tagtree.urls = {}; // dictionary: url => list of bookmarks
 	tagtree.importUrls(browser.bookmarks);
-	messageListeners.unshift(tagtree); // insert as first
+	sync2all.messageListeners.unshift(tagtree); // insert as first
 }
 
 tagtree.importUrls = function (folder) {
@@ -48,7 +48,7 @@ tagtree.stop = function () {
 	}
 	tagtree.enabled = false;
 	delete tagtree.urls;
-	Array_remove(messageListeners, tagtree);
+	Array_remove(sync2all.messageListeners, tagtree);
 }
 
 tagtree.addLink = function (link) {
