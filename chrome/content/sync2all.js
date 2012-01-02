@@ -31,13 +31,10 @@ function Sync2all() {
 	// Start synchronisation. This starts all other things, like Google Bookmarks and Opera Link
 	this.init = function () {
 
-		// TODO move initializing to the links itself
-		for (var i=0; i<webLinks.length; i++) {
-			webLinks[i].init();
-		}
-
 		// initialize when needed
-		browser.init();
+		if (browser.init) {
+			browser.init();
+		}
 
 		// and start the browser link
 		browser.start();
@@ -623,12 +620,7 @@ function syncLFolder(target, folder) {
 function syncRBookmark(target, bookmark, lfolder) {
 	// sync single bookmark
 	// if the bookmark is new and this isn't the first sync
-	if (bookmark.mtime <= target.lastSyncTime && target.lastSyncTime != 0) {
-		// this bookmark is really old
-		return delRBookmark(target, bookmark, lfolder);
-	} else {
-		return pushRBookmark(target, bookmark, lfolder);
-	}
+	return pushRBookmark(target, bookmark, lfolder);
 }
 function delRBookmark(target, bookmark, lfolder) {
 	console.log('Old remote bookmark :'+bookmark.url);
@@ -645,11 +637,7 @@ function pushRBookmark(link, bookmark, lfolder) {
 
 // bookmark exists only locally
 function syncLBookmark(target, bookmark) {
-	if (target.lastSyncTime == 0 || bookmark.mtime >= target.lastSyncTime) { // initial sync or really new bookmark
-		return pushLBookmark(target, bookmark);
-	} else {
-		return delLBookmark(target, bookmark);
-	}
+	return pushLBookmark(target, bookmark);
 }
 function pushLBookmark(target, bm) {
 	console.log('New local bookmark: '+bm.url);

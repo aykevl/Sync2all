@@ -33,14 +33,12 @@ if (browser.name == 'chrome') {
 }
 // Opera is the default, so no fixing required
 
-opl.onInit = function () {
-	// initialize opera.link
-	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
-	opera.link.loadToken();
+// initialize opera.link
+opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
+opera.link.loadToken();
 
-	opl.authorized = false;
-	opl.verifier = null; // initialize variable
-};
+opl.authorized = false;
+opl.verifier = null; // initialize variable
 
 // (re)start
 opl.startSync = function () {

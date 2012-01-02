@@ -14,8 +14,6 @@
  *     stops sync. May only be called when started.
  *
  * Functions that links should implement:
- * onInit:
- *     called when the extension loads.
  * onUpdateStatus:
  *     called when the status is updated.
  * startSync:
@@ -32,35 +30,24 @@
  *     Delete a folder tree
  */
 
-function import_link (link, isBrowser) {
-
+function Link (isBrowser) {
 	// initialisation of global variables
 	if (!isBrowser) {
-		webLinks.push(link);
-
+		webLinks.push(this);
 	}
 
-	// should be called only once
-	link.init = function () {
-		link.started = false;
-		link.enabled = false;//JSON.parse(localStorage[link.id+'_enabled']);
-		if (link.onInit) {
-			link.onInit(); // should also be called only once
-		}
-	}
+	// various default variables
+	this.started = false;
+	this.enabled = false;//JSON.parse(localStorage[link.id+'_enabled']);
+	this.status = statuses.READY; // only to initialize
+	this.loaded = true;
+}
+function import_link (link, isBrowser) {
+
+	link.Link = Link;
+	link.Link(isBrowser);
 
 	link.load = function () {
-		link.status = statuses.READY; // only to initialize
-		link.loaded = true;
-
-		if (localStorage[link.id+'_lastSyncTime']) {
-			link.lastSyncTime = JSON.parse(localStorage[link.id]);
-		} else {
-			link.lastSyncTime = 0;
-		}
-
-		// get the current time in seconds, with the precision of milliseconds.
-		link.startSyncTime = (new Date()).getTime()/1000;
 
 		// load enabled/disabled state
 		if (localStorage[link.id+'_enabled']) {

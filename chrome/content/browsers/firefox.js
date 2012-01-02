@@ -3,15 +3,12 @@ var fx = {
 	id: 'fx',
 	fullName: 'Mozilla Firefox',
 	name: 'firefox',
-
-	onInit: function () {
-		fx.historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
-		                              .getService(Components.interfaces.nsINavHistoryService);
-		fx.bmsvc = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
-		                     .getService(Components.interfaces.nsINavBookmarksService);
-		fx.ios = Components.classes["@mozilla.org/network/io-service;1"]
-		                    .getService(Components.interfaces.nsIIOService);
-	},
+	historyService: Components.classes["@mozilla.org/browser/nav-history-service;1"]
+								  .getService(Components.interfaces.nsINavHistoryService),
+	bmsvc:          Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
+						          .getService(Components.interfaces.nsINavBookmarksService),
+	ios:            Components.classes["@mozilla.org/network/io-service;1"]
+		                      .getService(Components.interfaces.nsIIOService),
 
 	startSync: function () {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
