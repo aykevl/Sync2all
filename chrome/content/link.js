@@ -38,9 +38,15 @@ function Link (isBrowser) {
 
 	// various default variables
 	this.started = false;
-	this.enabled = false;//JSON.parse(localStorage[link.id+'_enabled']);
 	this.status = statuses.READY; // only to initialize
 	this.loaded = true;
+
+	// load enabled/disabled state
+	if (localStorage[this.id+'_enabled']) {
+		this.enabled = JSON.parse(localStorage[this.id+'_enabled']);
+	} else {
+		this.enabled = false;
+	}
 }
 function import_link (link, isBrowser) {
 
@@ -48,21 +54,12 @@ function import_link (link, isBrowser) {
 	link.Link(isBrowser);
 
 	link.load = function () {
-
-		// load enabled/disabled state
-		if (localStorage[link.id+'_enabled']) {
-			link.enabled = JSON.parse(localStorage[link.id+'_enabled']);
-		} else {
-			link.enabled = false;
-		}
-
 		// start if enabled
 		if (link.enabled) {
 			// disable it first and then re-enable it in link.start
 			link.enabled = false;
 			link.start();
 		}
-
 	};
 
 	// Start the link
@@ -79,7 +76,9 @@ function import_link (link, isBrowser) {
 		} else {
 			// mark enabled
 			link.enabled = true;
-			localStorage[link.id+'_enabled'] = JSON.stringify(true);
+			if (link != browser) {
+				localStorage[link.id+'_enabled'] = JSON.stringify(true);
+			}
 
 			if (link != browser) {
 				enabledWebLinks.push(link);
