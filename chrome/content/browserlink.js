@@ -1,5 +1,5 @@
 
-function Browser() {
+function BrowserBase() {
 	// add when link.init has been removed
 	/*this.init = function () {
 	}*/

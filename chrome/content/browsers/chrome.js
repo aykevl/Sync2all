@@ -1,9 +1,9 @@
 
 
-function Chrome () {
+function Browser () {
 	// inherit Browser
-	this.Browser = Browser;
-	this.Browser();
+	this.BrowserBase = BrowserBase;
+	this.BrowserBase();
 
 	this.fullName = 'Google Chrome';
 	this.id = 'gchr'; // deprecated
@@ -11,6 +11,26 @@ function Chrome () {
 	this.flag_treeStructure = true;
 	this.bookmarksRootTitle = 'Bookmarks Bar';
 	this.bookmarksRootId    = '1';
+
+	this.startSync = function () {
+		var self = this;
+		chrome.bookmarks.getSubTree(this.bookmarks.id,
+				function (tree) {
+					self.gotTree(tree[0], gchr.bookmarks);
+					link_finished(gchr);
+				}
+		);
+	};
+
+	this.addListeners = function () {
+		// add event handlers
+		chrome.bookmarks.onCreated.addListener(this.evt_onCreated);
+		chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved);
+		chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  );
+		chrome.bookmarks.onChanged.addListener(this.evt_onChanged);
+		return;
+	};
+
 
 	this.init = function () {
 	}
@@ -20,7 +40,7 @@ function Chrome () {
 
 // TODO remove the 'gchr' altogether when finished refactoring
 // prefix: gchr (Google CHRome)
-var gchr = new Chrome();
+var gchr = new Browser();
 browser = gchr;
 
 /* Message passing code below. */
@@ -45,16 +65,6 @@ chrome.extension.onRequest.addListener(onRequest);
 import_treeBasedLink(gchr, true);
 import_queue(gchr);
 
-
-gchr.startSync = function () {
-	chrome.bookmarks.getSubTree(gchr.bookmarks.id,
-			function (tree) {
-				gchr.gotTree(tree[0], gchr.bookmarks);
-				gchr.addListeners();
-				gchr.startingFinished();
-			}
-	);
-};
 
 gchr.gotTree = function (gchr_parentNode, folder) {
 	var node;
@@ -99,15 +109,6 @@ gchr.import_bms = function (results) {
 		}
 	}
 	commit(); // not the most ideal place
-};
-
-gchr.addListeners = function () {
-	// add event handlers
-	chrome.bookmarks.onCreated.addListener(gchr.evt_onCreated);
-	chrome.bookmarks.onRemoved.addListener(gchr.evt_onRemoved);
-	chrome.bookmarks.onMoved.addListener  (gchr.evt_onMoved  );
-	chrome.bookmarks.onChanged.addListener(gchr.evt_onChanged);
-	return;
 };
 
 gchr.f_add  = function (source, folder) {

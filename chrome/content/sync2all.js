@@ -40,6 +40,7 @@ function Sync2all() {
 
 		// and start the browser link
 		browser.start();
+		browser.addListeners();
 	}
 
 	this.onPopupCreation = function (_popupDOM) {

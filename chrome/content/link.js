@@ -352,7 +352,7 @@ function import_link (link, isBrowser) {
 
 	link.testfail = function (error, element) {
 		console.log(element);
-		throw ((link.fullName || link.name)+' Failed test: '+error);
+		throw (link.fullName || link.name)+' Failed test: '+error;
 	}
 
 	link.selftest = function () {
@@ -391,7 +391,7 @@ function import_link (link, isBrowser) {
 				link.testfail('!node.id', node);
 			var webLink;
 			for (var i=0; webLink=enabledWebLinks[i]; i++) {
-				if (webLink.enabled && !webLink.queue.running && !webLink.status) {
+				if (webLink.enabled && !webLink.queue.running && !webLink.queue.length && !webLink.status) {
 					if (!webLink.flag_tagStructure) {
 						if (!node[webLink.id+'_id'])
 							link.testfail('!node.*_id', [node, webLink.id]);
