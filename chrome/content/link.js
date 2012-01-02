@@ -479,11 +479,16 @@ function import_queue (obj) {
 		console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
 
 		if (debug) {
-			if (!browser.queue.running) {
+			var finished_uploading = true;
+			var webLink;
+			for (var i=0; webLink=webLinks[i]; i++) {
+				if (webLink.enabled && webLink.queue.running) {
+					is_finished = false;
+				}
+			}
+			if (!browser.queue.running && finished_uploading) {
 				var link = browser; // just to be sure it works
 				browser.selftest();
-				// not a very good place...
-				tagtree.selftest();
 			}
 		}
 
