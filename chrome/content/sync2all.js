@@ -177,12 +177,10 @@ function broadcastMessage(methodName, sourceLink, params) {
 			console.warn('WARNING: '+link.name+' hasn\'t implemented '+methodName+' (set function to false to ignore)');
 			link[methodName] = false; // prevent future logs causing lots of data
 		} else {
-			// FIXME should this really use 'self'?
-			var self = link;
 			if (params) {
-				self[methodName].apply(this, params);
+				link[methodName].apply(this, params);
 			} else {
-				self[methodName].apply(this);
+				link[methodName].apply(this);
 			}
 		}
 	}

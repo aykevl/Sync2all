@@ -13,13 +13,11 @@ function Browser () {
 	this.bookmarksRootId    = '1';
 
 	this.startSync = function () {
-		var self = this;
 		chrome.bookmarks.getSubTree(this.bookmarks.id,
-				function (tree) {
-					self.gotTree(tree[0], gchr.bookmarks);
+				(function (tree) {
+					this.gotTree(tree[0], gchr.bookmarks);
 					sync2all.onLinkFinished(gchr);
-				}
-		);
+				}).bind(this));
 	};
 
 	this.addListeners = function () {
