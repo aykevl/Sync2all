@@ -17,7 +17,7 @@ function Browser () {
 		chrome.bookmarks.getSubTree(this.bookmarks.id,
 				function (tree) {
 					self.gotTree(tree[0], gchr.bookmarks);
-					link_finished(gchr);
+					sync2all.onLinkFinished(gchr);
 				}
 		);
 	};

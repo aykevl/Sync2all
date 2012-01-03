@@ -76,7 +76,74 @@ Sync2all.prototype = {
 
 	commit: function () {
 		broadcastMessage('commit', null);
-	}
+	},
+
+	onLinkFinished: function (link) {
+
+		if (debug) {
+			if (link.selftest) {
+				link.selftest();
+			}
+			// FIXME not very nice here
+			tagtree.selftest();
+		}
+
+		// check for possible bugs
+		if (link.actions && link.actions.length > 10) {
+			if (!confirm('There have been many changes in '+link.name+' ('+
+					link.actions.length+' deletes/moves). '+
+					'Are you sure you want to apply them?\n\n'+
+					'This might be a bug in this extension.')) {
+				link.stop(); // removes status information too
+				return;
+			}
+		}
+
+		// apply actions
+		if (link.actions) {
+			var action;
+			for (var i=0; action=link.actions[i]; i++) {
+				apply_action(link, action);
+			}
+		}
+
+		// is this the browser itself? start the rest!
+		if (link == browser) {
+			var webLink;
+			startingLinksAfterInit = 0;
+			for (var i=0; webLink=webLinks[i]; i++) {
+				webLink.load();
+				if (webLink.enabled) {
+					startingLinksAfterInit += 1;
+				}
+			}
+		} else { //or, when it is a link, merge the data with the browser.
+			// set status to merging the tree
+			link.updateStatus(statuses.MERGING);
+
+			// merge the bookmarks
+			console.log('Merging bookmarks with '+link.fullName+'...');
+			mergeBookmarks(browser.bookmarks, link.bookmarks, link);
+			// are not needed anymore, and should not be used
+			delete link.bookmarks;
+			delete link.ids;
+			console.log('Finished merging with '+link.fullName+'.');
+
+			// set status (again)
+			link.updateStatus(statuses.READY);
+		}
+
+		if (!link.has_saved_state && startingLinksAfterInit) { // if this is the first time the link starts (not a resynchronisation)
+			startingLinksAfterInit -= 1;
+		}
+
+		// is the syncing finished? Commit changes!
+		if (!startingLinksAfterInit) {
+			this.commit();
+			broadcastMessage('syncFinished', null);
+			console.log('Finished start');
+		}
+	},
 }
 
 
@@ -288,75 +355,6 @@ function folderHasContents(folder) {
 		return true;
 	}
 	return false;
-}
-
-
-function link_finished(link) {
-
-	if (debug) {
-		if (link.selftest) {
-			link.selftest();
-		}
-		// FIXME not very nice here
-		tagtree.selftest();
-	}
-
-	// check for possible bugs
-	if (link.actions && link.actions.length > 10) {
-		if (!confirm('There have been many changes in '+link.name+' ('+
-				link.actions.length+' deletes/moves). '+
-				'Are you sure you want to apply them?\n\n'+
-				'This might be a bug in this extension.')) {
-			link.stop(); // removes status information too
-			return;
-		}
-	}
-
-	// apply actions
-	if (link.actions) {
-		var action;
-		for (var i=0; action=link.actions[i]; i++) {
-
-			apply_action(link, action);
-		}
-	}
-
-	// is this the browser itself? start the rest!
-	if (link == browser) {
-		var webLink;
-		startingLinksAfterInit = 0;
-		for (var i=0; webLink=webLinks[i]; i++) {
-			webLink.load();
-			if (webLink.enabled) {
-				startingLinksAfterInit += 1;
-			}
-		}
-	} else { //or, when it is a link, merge the data with the browser.
-		// set status to merging the tree
-		link.updateStatus(statuses.MERGING);
-
-		// merge the bookmarks
-		console.log('Merging bookmarks with '+link.fullName+'...');
-		mergeBookmarks(browser.bookmarks, link.bookmarks, link);
-		// are not needed anymore, and should not be used
-		delete link.bookmarks;
-		delete link.ids;
-		console.log('Finished merging with '+link.fullName+'.');
-
-		// set status (again)
-		link.updateStatus(statuses.READY);
-	}
-
-	if (!link.has_saved_state && startingLinksAfterInit) { // if this is the first time the link starts (not a resynchronisation)
-		startingLinksAfterInit -= 1;
-	}
-
-	// is the syncing finished? Commit changes!
-	if (!startingLinksAfterInit) {
-		sync2all.commit();
-		broadcastMessage('syncFinished', null);
-		console.log('Finished start');
-	}
 }
 
 // apply action, parts are the same as broadcastMessage.

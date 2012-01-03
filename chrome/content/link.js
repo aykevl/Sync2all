@@ -172,7 +172,7 @@ function import_link (link, isBrowser) {
 		}
 
 		// start merging
-		link_finished(link);
+		sync2all.onLinkFinished(link);
 	}
 
 	// called when sync has been finished.
