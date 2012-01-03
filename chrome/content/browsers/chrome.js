@@ -108,7 +108,7 @@ gchr.import_bms = function (results) {
 			chrome.bookmarks.getChildren(subfolder.id, gchr.import_bms);
 		}
 	}
-	commit(); // not the most ideal place
+	sync2all.commit(); // not the most ideal place
 };
 
 gchr.f_add  = function (source, folder) {
@@ -228,7 +228,7 @@ gchr.evt_onRemoved = function (id, removeInfo) {
 		console.log('Removed folder: '+node.title);
 		rmFolder(gchr, node);
 	}
-	commit();
+	sync2all.commit();
 }
 
 gchr.evt_onChanged = function (id, changeInfo) {
@@ -236,7 +236,7 @@ gchr.evt_onChanged = function (id, changeInfo) {
 	var node = gchr.ids[id];
 	if (!node) return; // somewhere outside the synced folder (or bug)
 	onChanged(gchr, node, changeInfo);
-	commit();
+	sync2all.commit();
 }
 
 gchr.evt_onMoved = function (id, moveInfo) {

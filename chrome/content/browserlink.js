@@ -31,7 +31,7 @@ function BrowserBase() {
 			this.ids[node.id] = folder;
 			addFolder(this, folder);
 		}
-		commit();
+		sync2all.commit();
 	}
 
 	/** Called when something has been moved.
@@ -73,7 +73,7 @@ function BrowserBase() {
 					// remove the node
 					delete this.ids[node.id];
 					rmNode(this, node); // parent needed for bookmarks
-					commit()
+					sync2all.commit()
 					return;
 				}
 			}
@@ -86,7 +86,7 @@ function BrowserBase() {
 					console.log('Move: node id and oldParent not found. I assume this \
 	bookmark comes from outside the synchronized tree. So doing a crete now');
 					this.import_node(id);
-					commit();
+					sync2all.commit();
 					return;
 				} else {
 					console.log('BUG: the node is not known, but the old parent \
@@ -135,7 +135,7 @@ function BrowserBase() {
 			delete oldParent.f[node.title];
 			broadcastMessage('f_mv', this, [node, oldParent]);
 		}
-		commit();
+		sync2all.commit();
 	}
 
 	// this.init(); // TODO

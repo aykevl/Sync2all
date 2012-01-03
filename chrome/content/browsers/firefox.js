@@ -90,7 +90,7 @@ var fx = {
 		var node = fx.ids[id];
 		delete fx.ids[id];
 		rmNode(fx, node);
-		commit();
+		sync2all.commit();
 	},
 	onBeginUpdateBatch: function () {
 		fx.update_batch = true;
@@ -114,7 +114,7 @@ var fx = {
 			fx.ids[folder.id] = folder;
 			addFolder(fx, folder);
 		}
-		commit();
+		sync2all.commit();
 	},
 	onItemChanged: function (id, property, is_annotation, newValue) {
 		if (!fx.ids[id]) return; // not our item
@@ -127,7 +127,7 @@ var fx = {
 			var changeInfo = {title: newValue};
 			onChanged(fx, node, changeInfo);
 
-			commit();
+			sync2all.commit();
 		} else if (property == 'favicon') {
 		} else {
 			console.warn('unknown property: '+property+'; '+typeof(property));
@@ -172,7 +172,7 @@ var fx = {
 				}
 			}
 		}
-		commit();*/
+		sync2all.commit();*/
 	},
 	onItemReplaced: function () {
 		// TODO

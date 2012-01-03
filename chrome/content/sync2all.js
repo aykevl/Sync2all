@@ -73,6 +73,10 @@ Sync2all.prototype = {
 			delete browser.popupDOM;
 		}
 	},
+
+	commit: function () {
+		broadcastMessage('commit', null);
+	}
 }
 
 
@@ -115,10 +119,6 @@ function broadcastMessage(methodName, sourceLink, params) {
 			}
 		}
 	}
-}
-
-function commit() {
-	broadcastMessage('commit', null);
 }
 
 // Bookmark-tree modifying:
@@ -353,7 +353,7 @@ function link_finished(link) {
 
 	// is the syncing finished? Commit changes!
 	if (!startingLinksAfterInit) {
-		commit();
+		sync2all.commit();
 		broadcastMessage('syncFinished', null);
 		console.log('Finished start');
 	}
