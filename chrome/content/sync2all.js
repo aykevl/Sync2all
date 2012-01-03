@@ -28,10 +28,12 @@ function Sync2all() {
 
 	this.bookmarks = null;
 	this.messageListeners = [browser];
+}
 
 
 	// Start synchronisation. This starts all other things, like Google Bookmarks and Opera Link
-	this.run = function () {
+Sync2all.prototype = {
+	run: function () {
 
 		// initialize when needed
 		if (browser.init) {
@@ -41,9 +43,9 @@ function Sync2all() {
 		// and start the browser link
 		browser.start();
 		browser.addListeners();
-	}
+	},
 
-	this.onPopupCreation = function (_popupDOM) {
+	onPopupCreation: function (_popupDOM) {
 		isPopupOpen = true;
 
 		if (browser.name == 'firefox') {
@@ -61,16 +63,16 @@ function Sync2all() {
 		for (var i=0; link=webLinks[i]; i++) {
 			link.updateStatus();
 		}
-	}
+	},
 
-	this.onPopupClosing = function () {
+	onPopupClosing: function () {
 		isPopupOpen = false;
 
 		if (browser.name == 'firefox') {
 			// save resources (may leak the whole window!)
 			delete browser.popupDOM;
 		}
-	}
+	},
 }
 
 
