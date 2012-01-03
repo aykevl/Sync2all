@@ -1,12 +1,11 @@
 
 function BrowserBase() {
-	// add when link.init has been removed
-	/*this.init = function () {
-	}*/
+}
 
 	// To call when a bookmark node has been added. The node may be a modified
 	// object got with the event.
-	this.onCreated = function (node) {
+BrowserBase.prototype = {
+	onCreated: function (node) {
 		console.log('evt_onCreated');
 		if (node.parentId == this.creating_parentId &&
 				(node.url == this.creating_url || node.title == this.creating_title)) {
@@ -32,11 +31,11 @@ function BrowserBase() {
 			addFolder(this, folder);
 		}
 		sync2all.commit();
-	}
+	},
 
 	/** Called when something has been moved.
 	 */
-	this.onMoved = function (id, newParentId, oldParentId) {
+	onMoved: function (id, newParentId, oldParentId) {
 		// get info
 		var node      = this.ids[id];
 		var oldParent = this.ids[oldParentId];
@@ -137,6 +136,4 @@ function BrowserBase() {
 		}
 		sync2all.commit();
 	}
-
-	// this.init(); // TODO
 }

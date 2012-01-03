@@ -1,40 +1,39 @@
 
 
 function Browser () {
-	// inherit Browser
-	this.BrowserBase = BrowserBase;
-	this.BrowserBase();
+	// inherit BrowserBase
+	BrowserBase.call(this);
+}
 
-	this.fullName = 'Google Chrome';
-	this.id = 'gchr'; // deprecated
-	this.name = 'chrome'
-	this.flag_treeStructure = true;
-	this.bookmarksRootTitle = 'Bookmarks Bar';
-	this.bookmarksRootId    = '1';
 
-	this.startSync = function () {
+Browser.prototype = {
+	prototype: BrowserBase.prototype,
+
+	fullName: 'Google Chrome',
+	id:       'gchr', // deprecated
+	name:     'chrome',
+	flag_treeStructure: true,
+	bookmarksRootTitle: 'Bookmarks Bar',
+	bookmarksRootId:    '1',
+
+	startSync: function () {
 		chrome.bookmarks.getSubTree(this.bookmarks.id,
 				(function (tree) {
 					this.gotTree(tree[0], gchr.bookmarks);
 					sync2all.onLinkFinished(gchr);
 				}).bind(this));
-	};
+	},
 
-	this.addListeners = function () {
+	addListeners: function () {
 		// add event handlers
 		chrome.bookmarks.onCreated.addListener(this.evt_onCreated);
 		chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved);
 		chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  );
 		chrome.bookmarks.onChanged.addListener(this.evt_onChanged);
 		return;
-	};
-
-
-	this.init = function () {
 	}
-
-	this.init();
 }
+
 
 // TODO remove the 'gchr' altogether when finished refactoring
 // prefix: gchr (Google CHRome)
