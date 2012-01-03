@@ -27,22 +27,20 @@
 function Sync2all() {
 
 	this.bookmarks = null;
+	this.messageListeners = [browser];
+
 
 	// Start synchronisation. This starts all other things, like Google Bookmarks and Opera Link
-	this.init = function () {
+	this.run = function () {
 
 		// initialize when needed
 		if (browser.init) {
 			browser.init();
 		}
 
-		this.messageListeners = [browser];
-
-		setTimeout(function () {
-			// and start the browser link
-			browser.start();
-			browser.addListeners();
-		}, 100);
+		// and start the browser link
+		browser.start();
+		browser.addListeners();
 	}
 
 	this.onPopupCreation = function (_popupDOM) {
@@ -73,8 +71,6 @@ function Sync2all() {
 			delete browser.popupDOM;
 		}
 	}
-
-	this.init();
 }
 
 
@@ -659,6 +655,7 @@ function delLBookmark(target, bm) {
 
 function onLoad () {
 	this.sync2all = new Sync2all();
+	this.sync2all.run();
 }
 
 
