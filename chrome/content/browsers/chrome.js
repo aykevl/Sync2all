@@ -33,6 +33,7 @@ chrome.extension.onRequest.addListener(onRequest);
 function Browser () {
 	this.fullName = 'Google Chrome';
 	this.name     = 'chrome';
+	this.isPopupOpen = false;
 };
 
 Browser.prototype = new BrowserBase();

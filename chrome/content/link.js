@@ -235,7 +235,7 @@ function import_link (link, isBrowser) {
 			link.onUpdateStatus(status !== undefined);
 		}
 
-		if (!isPopupOpen) return;
+		if (!sync2all.browser.isPopupOpen) return;
 
 		// make make human-readable message
 		var msgtext = 'Not synchronized';

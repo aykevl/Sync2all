@@ -35,6 +35,7 @@ function Sync2all() {
 Sync2all.prototype = {
 
 	run: function () {
+		this.browser = browser;
 		browser.loadBookmarks(function (bookmarks, ids) {
 				this.bookmarks   = bookmarks;
 				this.bookmarkIds = ids;
@@ -48,7 +49,7 @@ Sync2all.prototype = {
 	},
 
 	onPopupCreation: function (_popupDOM) {
-		isPopupOpen = true;
+		this.browser.isPopupOpen = true;
 
 		if (browser.name == 'firefox') {
 			browser.popupDOM = _popupDOM;
@@ -68,7 +69,7 @@ Sync2all.prototype = {
 	},
 
 	onPopupClosing: function () {
-		isPopupOpen = false;
+		this.browser.isPopupOpen = false;
 
 		if (browser.name == 'firefox') {
 			// save resources (may leak the whole window!)
