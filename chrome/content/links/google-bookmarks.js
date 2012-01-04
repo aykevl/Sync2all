@@ -319,7 +319,7 @@ gbm.bookmark_get_labels = function (url) {
 		if (!folder) {
 			throw 'undefined folder, bm url='+url;
 		}
-		if (folder == browser.bookmarks) {
+		if (folder == sync2all.bookmarks) {
 			label = gbm.rootNodeLabel;
 		} else {
 			label = gbm.folder_get_label(folder);

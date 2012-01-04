@@ -84,7 +84,7 @@ function import_tagBasedLink (link) {
 
 	link.f_mv = function (callingLink, folder, oldParent) {
 		link.markFolderChanged(folder); // FIXME there is a better way, see below, but it doesn't work. Make it work.
-		//var oldlabel = oldParent == browser.bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
+		//var oldlabel = oldParent == sync2all.bookmarks ? folder.title : gbm.folder_get_label(oldParent)+gbm.folderSep+folder.title;
 		//var labels = oldlabel+','+gbm.folder_get_label(folder);
 		//gbm.add_to_queue({op: 'modlabel', labels: labels});
 	};

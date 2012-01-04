@@ -42,6 +42,8 @@ Sync2all.prototype = {
 
 		// and start the browser link
 		browser.loadBookmarks(function (bookmarks, ids) {
+				this.bookmarks       = bookmarks;
+				this.bookmarkIdIndex = ids;
 				this.onLinkFinished(browser);
 			}.bind(this));
 		browser.startObserver();
@@ -125,7 +127,7 @@ Sync2all.prototype = {
 
 			// merge the bookmarks
 			console.log('Merging bookmarks with '+link.fullName+'...');
-			mergeBookmarks(browser.bookmarks, link.bookmarks, link);
+			mergeBookmarks(this.bookmarks, link.bookmarks, link);
 			// are not needed anymore, and should not be used
 			delete link.bookmarks;
 			delete link.ids;

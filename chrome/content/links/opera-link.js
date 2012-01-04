@@ -12,8 +12,6 @@ opl.id = 'opl';
 import_treeBasedLink(opl);
 import_queue(opl);
 
-var oauth;
-
 // fix opera.link for specific browsers
 if (browser.name == 'chrome') {
 	opera.link.authorizeFunction = function (url) {
@@ -30,7 +28,7 @@ if (browser.name == 'chrome') {
 		browser.popupDOM.getElementById('sync2all-opl-verifier-container').style.display = 'none';
 	};
 }
-// Opera is the default, so no fixing required
+// Opera is the default in operalink.js, so no fixing required
 
 // initialize opera.link
 opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
@@ -481,7 +479,7 @@ opl.bm_add = function (target, bm, folder) {
 	if (bm.opl_id) return; // already uploaded
 	opl.queue_add(
 			function (bm) {
-				if (!folder.opl_id && folder != browser.bookmarks) {
+				if (!folder.opl_id && folder != sync2all.bookmarks) {
 					console.warn('No parent ID! Bookmark:');
 					console.warn(bm);
 					opl.queue_next();
@@ -502,7 +500,7 @@ opl.bm_add = function (target, bm, folder) {
 
 opl.f_add = function (target, folder) {
 	opl.queue_add(function (folder) {
-				if (!folder.parentNode.opl_id && folder.parentNode != browser.bookmarks) {
+				if (!folder.parentNode.opl_id && folder.parentNode != sync2all.bookmarks) {
 					console.warn('No parent ID! Folder:');
 					console.warn(folder);
 					opl.queue_next();

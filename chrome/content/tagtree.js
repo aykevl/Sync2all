@@ -20,7 +20,7 @@ tagtree.start = function () {
 	}
 	tagtree.enabled = true;
 	tagtree.urls = {}; // dictionary: url => list of bookmarks
-	tagtree.importUrls(browser.bookmarks);
+	tagtree.importUrls(sync2all.bookmarks);
 	sync2all.messageListeners.unshift(tagtree); // insert as first
 }
 
@@ -145,7 +145,7 @@ tagtree.selftest = function () {
 			// check for orphaned folders
 			var folder = bm.parentNode;
 			while (true) {
-				if (folder == browser.bookmarks) break;
+				if (folder == sync2all.bookmarks) break;
 				if (!folder.parentNode)
 					tagtree.testfail('!folder.parentNode', folder);
 				if (!folder.parentNode.f[folder.title])
@@ -156,7 +156,7 @@ tagtree.selftest = function () {
 	}
 
 	// check for missing bookmarks in tagtree.urls
-	tagtree.checkWithTree(browser.bookmarks);
+	tagtree.checkWithTree(sync2all.bookmarks);
 
 	console.log('tagtree passed the integrity test.')
 }

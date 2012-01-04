@@ -140,7 +140,7 @@ function import_link (link, isBrowser) {
 				// WARNING: when the link_id is not known, this will give strange
 				// behaviour (when a moved bookmark or folder moves to the
 				// bookmarks root)
-				link.ownId_to_lId = {undefined: browser.bookmarks.id};
+				link.ownId_to_lId = {undefined: sync2all.bookmarks.id};
 				link.mapLinkIdsToLocalIds(state);
 			}
 
@@ -233,7 +233,7 @@ function import_link (link, isBrowser) {
 		} else {
 			var state = {bm: [], f: {}};
 		}
-		link.get_state(state, browser.bookmarks);
+		link.get_state(state, sync2all.bookmarks);
 		localStorage[link.id+'_state'] = JSON.stringify(state);
 	}
 
@@ -341,7 +341,11 @@ function import_link (link, isBrowser) {
 	}
 
 	link.selftest = function () {
-		link.subselftest(link.bookmarks);
+		if (link == browser) {
+			link.subselftest(sync2all.bookmarks);
+		} else {
+			link.subselftest(link.bookmarks);
+		}
 		console.log(link.fullName+' has passed the intergity test');
 	}
 
