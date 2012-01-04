@@ -148,8 +148,8 @@ opl.calculate_actions = function (parentState, parentNode) {
 
 				// get the destination (local) folder, the parent of otherNode
 				var localParentNodeId= opl.ownId_to_lId[node.parentNode.opl_id];
-				if (browser.ids[localParentNodeId]) {
-					var localParentNode = browser.ids[localParentNodeId];
+				if (sync2all.bookmarkIds[localParentNodeId]) {
+					var localParentNode = sync2all.bookmarkIds[localParentNodeId];
 				} else {
 					var localParentNode = null;
 				}
@@ -170,14 +170,14 @@ opl.calculate_actions = function (parentState, parentNode) {
 				// node doesn't exist, remove it.
 				if (isfolder) {
 					opl.calculate_actions(item.children, undefined);
-					if (item.id && browser.ids[item.id]) {
-						browser.ids[item.id].opl_id = item.opl_id;
+					if (item.id && sync2all.bookmarkIds[item.id]) {
+						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
 						opl.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists
-					if (browser.ids[item.id]) {
-						browser.ids[item.id].opl_id = item.opl_id;
+					if (sync2all.bookmarkIds[item.id]) {
+						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
 						opl.actions.push(['bm_del', item.id]);
 					}
 				}
@@ -193,16 +193,16 @@ opl.calculate_actions = function (parentState, parentNode) {
 
 					// then remove this folder
 					// but check first whether the folder actually exists
-					if (item.id && browser.ids[item.id]) {
-						browser.ids[item.id].opl_id = item.opl_id;
-						console.log('opl: old f: '+browser.ids[item.id].title);
+					if (item.id && sync2all.bookmarkIds[item.id]) {
+						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
+						console.log('opl: old f: '+sync2all.bookmarkIds[item.id].title);
 						opl.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists.
-					if (browser.ids[item.id]) {
+					if (sync2all.bookmarkIds[item.id]) {
 						console.log('opl: old bm: '+item.opl_id);
-						browser.ids[item.id].opl_id = item.opl_id;
+						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
 						opl.actions.push(['bm_del', item.id]);
 					}
 				}

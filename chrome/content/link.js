@@ -320,7 +320,7 @@ function import_link (link, isBrowser) {
 			link['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
 		}
 	}
-	if (browser.name == 'chrome') {
+	if (browser.name == 'chrome' && link != browser) {
 		chrome.extension.onRequest.addListener(link.onRequest);
 	} else if (browser.name == 'firefox') {
 	}

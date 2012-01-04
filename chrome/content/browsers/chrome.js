@@ -21,7 +21,6 @@ chrome.extension.onRequest.addListener(onRequest);
 
 function Browser () {
 	this.fullName = 'Google Chrome';
-	this.id       = 'gchr'; // deprecated
 	this.name     = 'chrome';
 };
 
@@ -40,10 +39,10 @@ Browser.prototype.loadBookmarks = function (callback) {
 
 Browser.prototype.startObserver = function () {
 	// add event handlers
-	chrome.bookmarks.onCreated.addListener(this.evt_onCreated);
-	chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved);
-	chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  );
-	chrome.bookmarks.onChanged.addListener(this.evt_onChanged);
+	chrome.bookmarks.onCreated.addListener(this.evt_onCreated.bind(this));
+	chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved.bind(this));
+	chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  .bind(this));
+	chrome.bookmarks.onChanged.addListener(this.evt_onChanged.bind(this));
 	return;
 };
 
@@ -178,66 +177,63 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
 			}.bind(this), node);
 }
 
-// TODO remove the 'gchr' altogether when finished refactoring
-// prefix: gchr (Google CHRome)
-var gchr = new Browser();
-browser = gchr;
+browser = new Browser();
 
 // import libraries, kind of inheritance
-import_treeBasedLink(gchr, true);
-import_queue(gchr);
+import_treeBasedLink(browser, true);
+import_queue(browser);
 
 
 /*************************************
  * Listen to bookmark events
  ************************************/
 
-gchr.evt_onCreated = function (id, node) {
+Browser.prototype.evt_onCreated = function (id, node) {
 	// make this object ready
 	node.mtime = node.dateAdded/1000;
 	// let the browser library handle the rest
-	gchr.onCreated(node);
+	this.onCreated(node);
 };
 
-gchr.evt_onRemoved = function (id, removeInfo) {
+Browser.prototype.evt_onRemoved = function (id, removeInfo) {
 	console.log('evt_onRemoved');
-	if (!(id in gchr.ids)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
-	var node = gchr.ids[id];
+	if (!(id in sync2all.bookmarkIds)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+	var node = sync2all.bookmarkIds[id];
 	if (node.url) {
 		// bookmark
 		var bookmark = node;
-		rmBookmark(gchr, bookmark);
+		rmBookmark(this, bookmark);
 	} else {
 		// folder
 		console.log('Removed folder: '+node.title);
-		rmFolder(gchr, node);
+		rmFolder(this, node);
 	}
 	sync2all.commit();
 }
 
-gchr.evt_onChanged = function (id, changeInfo) {
+Browser.prototype.evt_onChanged = function (id, changeInfo) {
 	console.log('evt_onChanged');
-	var node = gchr.ids[id];
+	var node = sync2all.bookmarkIds[id];
 	if (!node) return; // somewhere outside the synced folder (or bug)
-	onChanged(gchr, node, changeInfo);
+	onChanged(this, node, changeInfo);
 	sync2all.commit();
 }
 
-gchr.evt_onMoved = function (id, moveInfo) {
+Browser.prototype.evt_onMoved = function (id, moveInfo) {
 	console.log('evt_onMoved');
 
-	gchr.onMoved(id, moveInfo.parentId, moveInfo.oldParentId);
+	this.onMoved(id, moveInfo.parentId, moveInfo.oldParentId);
 }
 
 
-gchr.import_node = function (id) {
-	gchr.queue_add(
+Browser.prototype.import_node = function (id) {
+	this.queue_add(
 			function (id) {
 				chrome.bookmarks.get(id,
 						function (results) {
-							gchr.import_bms(results);
-							gchr.queue_next();
-						});
-			}, id);
+							this.import_bms(results);
+							this.queue_next();
+						}.bind(this));
+			}.bind(this), id);
 };
 
