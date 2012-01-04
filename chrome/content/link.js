@@ -41,8 +41,8 @@ function Link (isBrowser) {
 	this.loaded = true;
 
 	// load enabled/disabled state
-	if (localStorage[this.id+'_enabled']) {
-		this.enabled = JSON.parse(localStorage[this.id+'_enabled']);
+	if (localStorage[this.id+'_synced']) {
+		this.enabled = JSON.parse(localStorage[this.id+'_synced']);
 	} else {
 		this.enabled = false;
 	}
@@ -74,9 +74,9 @@ function import_link (link, isBrowser) {
 			} else {
 				// mark enabled
 				link.enabled = true;
-				localStorage[link.id+'_enabled'] = JSON.stringify(true);
+				localStorage[link.id+'_synced'] = JSON.stringify(true);
 
-				sync2all.enabledWebLinks.push(link);
+				sync2all.syncedWebLinks.push(link);
 
 				// whether this link needs extra url/tag indices
 				if (link.flag_tagStructure && !link.flag_treeStructure) {
@@ -161,10 +161,10 @@ function import_link (link, isBrowser) {
 
 	// Stop link. remove memory-eating status if the keepStatus flag is not set.
 	link.stop = link.msg_stop = function (keepStatus) {
-		localStorage[link.id+'_enabled'] = JSON.stringify(false);
+		localStorage[link.id+'_synced'] = JSON.stringify(false);
 		link.enabled = false;
 		if (link != browser) {
-			Array_remove(sync2all.enabledWebLinks, link);
+			Array_remove(sync2all.syncedWebLinks, link);
 		}
 		// check whether this link has finished after starting. It is possible
 		// that there's an error while it starts, and that it disables itself.
@@ -352,7 +352,7 @@ function import_link (link, isBrowser) {
 			if (!node.id)
 				link.testfail('!node.id', node);
 			var webLink;
-			for (var i=0; webLink=sync2all.enabledWebLinks[i]; i++) {
+			for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
 				if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
 					if (!webLink.flag_tagStructure) {
 						if (!node[webLink.id+'_id'])

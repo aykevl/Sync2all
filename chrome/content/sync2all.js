@@ -30,7 +30,7 @@ function Sync2all() {
 	this.messageListeners = [browser];
 
 	// webLinks doesn't include browser links (obvious)
-	this.enabledWebLinks = [];
+	this.syncedWebLinks = [];
 }
 
 
