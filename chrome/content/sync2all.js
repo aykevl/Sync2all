@@ -33,18 +33,16 @@ function Sync2all() {
 
 	// Start synchronisation. This starts all other things, like Google Bookmarks and Opera Link
 Sync2all.prototype = {
+
 	run: function () {
-
-		// initialize when needed
-		if (browser.init) {
-			browser.init();
-		}
-
-		// and start the browser link
 		browser.loadBookmarks(function (bookmarks, ids) {
 				this.bookmarks   = bookmarks;
 				this.bookmarkIds = ids;
-				this.onLinkFinished(browser);
+				browser.selftest();
+				var webLink;
+				for (var i=0; webLink=webLinks[i]; i++) {
+					webLink.load();
+				}
 			}.bind(this));
 		browser.startObserver();
 	},
@@ -111,41 +109,36 @@ Sync2all.prototype = {
 			}
 		}
 
-		// is this the browser itself? start the rest!
-		if (link == browser) {
-			var webLink;
-			startingLinksAfterInit = 0;
-			for (var i=0; webLink=webLinks[i]; i++) {
-				webLink.load();
-				if (webLink.enabled) {
-					startingLinksAfterInit += 1;
-				}
+		// set status to merging the tree
+		link.updateStatus(statuses.MERGING);
+
+		// merge the bookmarks
+		console.log('Merging bookmarks with '+link.fullName+'...');
+		mergeBookmarks(this.bookmarks, link.bookmarks, link);
+		// are not needed anymore, and should not be used
+		delete link.bookmarks;
+		delete link.ids;
+		console.log('Finished merging with '+link.fullName+'.');
+
+		// set status (again)
+		link.updateStatus(statuses.READY);
+
+		/*if (!link.has_saved_state && this.startingLinksAfterInit) { // if this is the first time the link starts (not a resynchronisation)
+			this.startingLinksAfterInit -= 1;
+		}*/
+
+		var startingWebLinks = 0;
+		var webLink;
+		for (var i=0; webLink=webLinks[i]; i++) {
+			if (webLink.status && webLink.status < statuses.MERGING) {
+				startingWebLinks += 1;
 			}
-		} else { //or, when it is a link, merge the data with the browser.
-			// set status to merging the tree
-			link.updateStatus(statuses.MERGING);
-
-			// merge the bookmarks
-			console.log('Merging bookmarks with '+link.fullName+'...');
-			mergeBookmarks(this.bookmarks, link.bookmarks, link);
-			// are not needed anymore, and should not be used
-			delete link.bookmarks;
-			delete link.ids;
-			console.log('Finished merging with '+link.fullName+'.');
-
-			// set status (again)
-			link.updateStatus(statuses.READY);
-		}
-
-		if (!link.has_saved_state && startingLinksAfterInit) { // if this is the first time the link starts (not a resynchronisation)
-			startingLinksAfterInit -= 1;
 		}
 
 		// is the syncing finished? Commit changes!
-		if (!startingLinksAfterInit) {
+		if (!startingWebLinks) {
 			this.commit();
-			broadcastMessage('syncFinished', null);
-			console.log('Finished start');
+			console.log('All weblinks ready');
 		}
 	},
 }

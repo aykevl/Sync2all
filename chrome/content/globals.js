@@ -20,6 +20,4 @@ var debug = true;
 var webLinks = [];
 var enabledWebLinks = [];
 var tagStructuredWebLinks = [];
-// the amount of links that have started with the start of the extension but have not yet finished
-var startingLinksAfterInit;
 

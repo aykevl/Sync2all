@@ -119,7 +119,6 @@ tagtree.bm_mod_title = false;
 
 // Messages to which I won't listen
 tagtree.commit       = false;
-tagtree.syncFinished = false;
 
 /* Self-check */
 
