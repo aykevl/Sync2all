@@ -39,7 +39,11 @@ Sync2all.prototype = {
 		browser.loadBookmarks(function (bookmarks, ids) {
 				this.bookmarks   = bookmarks;
 				this.bookmarkIds = ids;
-				browser.selftest();
+
+				// check for consistency
+				if (debug) browser.selftest();
+
+				// start all other links
 				var webLink;
 				for (var i=0; webLink=webLinks[i]; i++) {
 					webLink.load();
