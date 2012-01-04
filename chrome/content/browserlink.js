@@ -1,3 +1,4 @@
+'use strict';
 
 function BrowserBase() {
 	this.flag_treeStructure = true;

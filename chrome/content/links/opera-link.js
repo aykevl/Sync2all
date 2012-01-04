@@ -1,3 +1,4 @@
+'use strict';
 
 // prefix: opl (OPera Link
 

@@ -1,7 +1,8 @@
+'use strict';
 
 // prefix: ffs_
 
-ffs = {};
+var ffs = {};
 
 ffs.name = 'Firefox Sync';
 ffs.id = 'ffs';

@@ -1,3 +1,4 @@
+'use strict';
 
 function Array_remove(array, element) {
 	var index = array.indexOf(element);

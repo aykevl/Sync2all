@@ -1,5 +1,6 @@
+'use strict';
 
-import_tagBasedLink = function (link) {
+function import_tagBasedLink (link) {
 	link.flag_tagStructure = true;
 	import_link(link);
 
@@ -22,7 +23,7 @@ import_tagBasedLink = function (link) {
 					// Add the new folder to the list
 					var folderNameList = tag.split(link.folderSep);
 					parentNode = link.bookmarks;
-					var folderNameList;
+					var folderName;
 					for (var folderNameIndex=0; folderName=folderNameList[folderNameIndex]; folderNameIndex++) {
 						// is this a new directory?
 						if (parentNode.f[folderName] == undefined) {

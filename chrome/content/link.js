@@ -1,3 +1,4 @@
+'use strict';
 
 /* Library for sync targets
  *
@@ -49,7 +50,6 @@ function Link (isBrowser) {
 	}
 }
 function import_link (link, isBrowser) {
-
 	link.Link = Link;
 	link.Link(isBrowser);
 
@@ -162,9 +162,6 @@ function import_link (link, isBrowser) {
 				console.log(link.id+'.actions:');
 				console.log(link.actions);
 			}
-
-			// delete unused variables
-			delete state; // big variable (44KB with my bookmarks in JSON)
 		}
 
 		if (sync2all.messageListeners.indexOf(link) < 0) {
@@ -481,7 +478,7 @@ function import_queue (obj) {
 			var webLink;
 			for (var i=0; webLink=webLinks[i]; i++) {
 				if (webLink.enabled && webLink.queue.running) {
-					is_finished = false;
+					finished_uploading = false;
 				}
 			}
 			if (!browser.queue.running && finished_uploading) {

@@ -1,5 +1,6 @@
+'use strict';
 
-import_treeBasedLink = function (link, isBrowser) {
+function import_treeBasedLink (link, isBrowser) {
 	link.flag_treeStructure = true;
 	import_link(link, isBrowser)
 

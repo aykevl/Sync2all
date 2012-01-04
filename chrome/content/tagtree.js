@@ -1,9 +1,10 @@
+'use strict';
 
 /* Code to make it easier to work with tagged structures, by moving part of the
  * work to a separate file.
  */
 
-tagtree = {};
+var tagtree = {};
 tagtree.name = 'tagtree';
 tagtree.id = 'tagtree';
 

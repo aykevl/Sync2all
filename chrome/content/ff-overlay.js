@@ -1,3 +1,5 @@
+'use strict';
+
 var Sync2allService = Components
 	.classes['@github.com/sync2all;1']
 	.getService(Components.interfaces.nsISync2allService).wrappedJSObject;

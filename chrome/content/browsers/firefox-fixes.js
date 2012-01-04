@@ -1,3 +1,4 @@
+'use strict';
 
 // Make a generic console. Outputs to the system console
 // TODO: dump to error console

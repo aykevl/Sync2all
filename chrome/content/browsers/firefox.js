@@ -1,3 +1,4 @@
+'use strict';
 
 var fx = {
 	id: 'fx',
