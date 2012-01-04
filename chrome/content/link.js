@@ -101,16 +101,6 @@ function import_link (link, isBrowser) {
 		// first, initialize the link
 
 		link.bookmarks = {bm: {}, f: {}};
-		if (link.bookmarksRootId) {
-			if (link == browser) {
-				link.bookmarks.id = link.bookmarksRootId;
-			} else {
-				link.bookmarks[link.id+'_id'] = link.bookmarksRootId;
-			}
-		}
-		if (link.bookmarksRootTitle) {
-			link.bookmarks.title = link.bookmarksRootTitle;
-		}
 
 		if (link.flag_treeStructure) {
 			// local IDs mapped to own bookmark objects, should be deleted after merging

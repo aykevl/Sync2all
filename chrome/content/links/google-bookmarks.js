@@ -12,7 +12,6 @@ var gbm = {};
 gbm.name = 'Google Bookmarks'; // OBSOLETE
 gbm.fullName = 'Google Bookmarks';
 gbm.id = 'gbm';
-gbm.bookmarksRootTitle = 'Bookmarks Bar';
 
 
 /* imports */

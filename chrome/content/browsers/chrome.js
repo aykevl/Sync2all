@@ -23,8 +23,6 @@ function Browser () {
 	this.fullName = 'Google Chrome';
 	this.id       = 'gchr'; // deprecated
 	this.name     = 'chrome';
-	this.bookmarksRootTitle = 'Bookmarks Bar';
-	this.bookmarksRootId    = '1';
 };
 
 Browser.prototype = new BrowserBase();

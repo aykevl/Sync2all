@@ -7,8 +7,6 @@ var opl = {};
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 opl.id = 'opl';
-opl.bookmarksRootTitle = null;
-opl.bookmarksRootId    = null;
 
 // imports (or include if you want)
 import_treeBasedLink(opl);
