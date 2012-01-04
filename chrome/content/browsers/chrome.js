@@ -1,45 +1,4 @@
 
-
-function Browser () {
-	// inherit BrowserBase
-	BrowserBase.call(this);
-}
-
-
-Browser.prototype = {
-	prototype: BrowserBase.prototype,
-
-	fullName: 'Google Chrome',
-	id:       'gchr', // deprecated
-	name:     'chrome',
-	flag_treeStructure: true,
-	bookmarksRootTitle: 'Bookmarks Bar',
-	bookmarksRootId:    '1',
-
-	startSync: function () {
-		chrome.bookmarks.getSubTree(this.bookmarks.id,
-				(function (tree) {
-					this.gotTree(tree[0], gchr.bookmarks);
-					sync2all.onLinkFinished(gchr);
-				}).bind(this));
-	},
-
-	addListeners: function () {
-		// add event handlers
-		chrome.bookmarks.onCreated.addListener(this.evt_onCreated);
-		chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved);
-		chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  );
-		chrome.bookmarks.onChanged.addListener(this.evt_onChanged);
-		return;
-	}
-}
-
-
-// TODO remove the 'gchr' altogether when finished refactoring
-// prefix: gchr (Google CHRome)
-var gchr = new Browser();
-browser = gchr;
-
 /* Message passing code below. */
 
 // handle general requests
@@ -55,151 +14,181 @@ function onRequest (request, sender, sendResponse) {
 
 chrome.extension.onRequest.addListener(onRequest);
 
-/* Chrome link below. */
 
 
-// import libraries, kind of inheritance
-import_treeBasedLink(gchr, true);
-import_queue(gchr);
+/* Browser extension (Chrome) */
 
+function Browser () {
+	this.fullName = 'Google Chrome';
+	this.id       = 'gchr'; // deprecated
+	this.name     = 'chrome';
+	this.bookmarksRootTitle = 'Bookmarks Bar';
+	this.bookmarksRootId    = '1';
+};
 
-gchr.gotTree = function (gchr_parentNode, folder) {
-	var node;
-	for (var i=0; node=gchr_parentNode.children[i]; i++) {
-		gchr.gotTree_handleNode(node, folder);
+Browser.prototype = new BrowserBase();
+
+Browser.prototype.loadBookmarks = function (callback) {
+	var bookmarks = {bm: [], f: [], title: 'Bookmarks Bar', id: '1'};
+	var idIndex   = {'1': bookmarks};
+	this.bookmarks = bookmarks;
+	this.ids       = idIndex;
+	chrome.bookmarks.getSubTree(bookmarks.id,
+			(function (tree) {
+				this.gotTree(idIndex, tree[0], bookmarks);
+				callback(bookmarks, idIndex);
+			}).bind(this));
+};
+
+Browser.prototype.startObserver = function () {
+	// add event handlers
+	chrome.bookmarks.onCreated.addListener(this.evt_onCreated);
+	chrome.bookmarks.onRemoved.addListener(this.evt_onRemoved);
+	chrome.bookmarks.onMoved.addListener  (this.evt_onMoved  );
+	chrome.bookmarks.onChanged.addListener(this.evt_onChanged);
+	return;
+};
+
+Browser.prototype.gotTree = function (idIndex, browserParentNode, folder) {
+	var browserNode;
+	for (var i=0; browserNode=browserParentNode.children[i]; i++) {
+		this.gotTree_handleNode(idIndex, browserNode, folder);
 	}
 };
 
-// handle chrome bookmark tree nodes, helper function for gchr.gotTree
-gchr.gotTree_handleNode = function (node, folder) {
+// handle chrome bookmark tree nodes, helper function for Browser.prototype.gotTree
+Browser.prototype.gotTree_handleNode = function (idIndex, node, folder) {
 	if (node.url) {
 		// bookmark
 
 		var bookmark = {title: node.title, url: node.url, parentNode: folder, mtime: node.dateAdded/1000, id: node.id};
-		gchr.importBookmark(bookmark);
+		this.importBookmark(idIndex, bookmark);
 	} else {
 		// folder
 
 		// create the local node
 		var subfolder = {title: node.title, parentNode: folder, bm: {}, f: {}, id: node.id};
-		gchr.gotTree(node, subfolder); // recurse into subfolders
+		this.gotTree(idIndex, node, subfolder); // recurse into subfolders
 
-		gchr.importFolder(subfolder);
+		this.importFolder(idIndex, subfolder);
 
 	}
 };
 
 // import an array of BookmarkTreeNodes
-gchr.import_bms = function (results) {
+Browser.prototype.import_bms = function (results) {
 	var result;
 	for (var i=0; result=results[i]; i++) {
-		var folder = gchr.ids[result.parentId];
+		var folder = this.ids[result.parentId];
 		if (result.url) {
 			// bookmark
 			var bm = {title: result.title, url: result.url, mtime: result.dateAdded, parentNode: folder, id: result.id};
-			if (addBookmark(gchr, bm)) continue; // error
+			if (addBookmark(this, bm)) continue; // error
 		} else {
 			// folder
 			var subfolder = {bm: {}, f: {}, title: result.title, parentNode: folder, id: result.id};
-			addFolder(gchr, subfolder);
-			chrome.bookmarks.getChildren(subfolder.id, gchr.import_bms);
+			addFolder(this, subfolder);
+			chrome.bookmarks.getChildren(subfolder.id, this.import_bms);
 		}
 	}
 	sync2all.commit(); // not the most ideal place
 };
 
-gchr.f_add  = function (source, folder) {
-	gchr.queue_add(
+
+
+
+/* Chrome link below. */
+
+Browser.prototype.f_add  = function (source, folder) {
+	this.queue_add(
 			function (folder) {
 				if (!folder.parentNode.id) {
 					console.log('ERROR; No parentId for folder:');
 					console.log(folder);
-					gchr.queue_next();
+					this.queue_next();
 					return;
 				}
-				gchr.creating_parentId = folder.parentNode.id;
-				gchr.creating_title    = folder.title;
+				this.creating_parentId = folder.parentNode.id;
+				this.creating_title    = folder.title;
 				chrome.bookmarks.create({parentId: folder.parentNode.id, title: folder.title}, 
 						function (result) {
 							folder.id = result.id;
-							gchr.ids[folder.id] = folder;
-							gchr.queue_next();
-						});
-			}, folder);
+							this.ids[folder.id] = folder;
+							this.queue_next();
+						}.bind(this));
+			}.bind(this), folder);
 };
 
-gchr.f_del = function (source, folder) {
+Browser.prototype.f_del = function (source, folder) {
 	// remove own references
-	delete gchr.ids[folder.id];
+	delete this.ids[folder.id];
 	// remove global references
 	_rmFolder(folder);
 	// keep in the queue to prevent possible errors
-	gchr.queue_add(
+	this.queue_add(
 			function (folder) {
-				chrome.bookmarks.removeTree(folder.id);
-				gchr.queue_next();
-			}, folder);
+				chrome.bookmarks.removeTree(folder.id, this.queue_next.bind(this)); // can run without waiting
+			}.bind(this), folder);
 };
 
-gchr.bm_add = function (source, bm, lfolder) {
+Browser.prototype.bm_add = function (source, bm, lfolder) {
 	if (!lfolder) lfolder = bm.parentNode;
-	console.log('gchr.bm_add:');
-	console.log(bm);
-	gchr.queue_add(
+	this.queue_add(
 			function (data) {
-				gchr.creating_parentId = data.lfolder.id;
-				gchr.creating_url      = data.bm.url;
+				this.creating_parentId = data.lfolder.id;
+				this.creating_url      = data.bm.url;
 				chrome.bookmarks.create({parentId: data.lfolder.id, title: data.bm.title, url: data.bm.url},
 						function (result) {
 							data.bm.id = result.id;
-							gchr.ids[data.bm.id] = data.bm;
-							gchr.queue_next();
-						});
-			}, {bm: bm, lfolder: lfolder});
+							this.ids[data.bm.id] = data.bm;
+							this.queue_next();
+						}.bind(this));
+			}.bind(this), {bm: bm, lfolder: lfolder});
 };
 
-gchr.bm_del = function (source, bm) {
+Browser.prototype.bm_del = function (source, bm) {
 	// remove this from our data
 	// this keeps evt_onRemoved from calling broadcastMessage('bm_del', ...)
-	delete gchr.ids[bm.id];
+	delete this.ids[bm.id];
 	// delete global reference
 	_rmBookmark(bm); // _ before it so it won't call bm_del on all links
 	// just to keep it safe, in the queue
-	gchr.queue_add(
+	this.queue_add(
 			function (bm) {
-				chrome.bookmarks.remove(bm.id,
-						function (result) {
-							// this MUST be in a separate function
-							// (queue_next MUST be called on gchr, otherwise it doesn't have
-							//  a 'this' object)
-							gchr.queue_next();
-						});
-			}, bm);
+				chrome.bookmarks.remove(bm.id, this.queue_next.bind(this));
+			}.bind(this), bm);
 };
 
-gchr.bm_mv = gchr.f_mv = function (target, node, oldParent) {
-	gchr.queue_add(
+Browser.prototype.bm_mv = Browser.prototype.f_mv = function (target, node, oldParent) {
+	this.queue_add(
 			function (node) {
-				chrome.bookmarks.move(node.id, {parentId: node.parentNode.id},
-					function (result) { gchr.queue_next(); });
-			}, node);
+				chrome.bookmarks.move(node.id, {parentId: node.parentNode.id}, this.queue_next.bind(this));
+			}.bind(this), node);
 }
 
-gchr.bm_mod_title = gchr.f_mod_title = function (target, node, oldtitle) {
-	gchr.queue_add(
+Browser.prototype.bm_mod_title = Browser.prototype.f_mod_title = function (target, node, oldtitle) {
+	this.queue_add(
 			function (node) {
-				chrome.bookmarks.update(node.id, {title: node.title},
-					function (result) { gchr.queue_next(); });
-			}, node);
+				chrome.bookmarks.update(node.id, {title: node.title}, this.queue_next.bind(this));
+			}.bind(this), node);
 }
 
-gchr.bm_mod_url = function (target, node, oldurl) {
-	gchr.queue_add(
+Browser.prototype.bm_mod_url = function (target, node, oldurl) {
+	this.queue_add(
 			function (node) {
-				chrome.bookmarks.update(node.id, {url: node.url},
-					function (result) { gchr.queue_next(); });
-			}, node);
+				chrome.bookmarks.update(node.id, {url: node.url}, this.queue_next.bind(this));
+			}.bind(this), node);
 }
+
+// TODO remove the 'gchr' altogether when finished refactoring
+// prefix: gchr (Google CHRome)
+var gchr = new Browser();
+browser = gchr;
+
+// import libraries, kind of inheritance
+import_treeBasedLink(gchr, true);
+import_queue(gchr);
+
 
 /*************************************
  * Listen to bookmark events

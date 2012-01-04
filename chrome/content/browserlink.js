@@ -1,5 +1,6 @@
 
 function BrowserBase() {
+	this.flag_treeStructure = true;
 }
 
 	// To call when a bookmark node has been added. The node may be a modified

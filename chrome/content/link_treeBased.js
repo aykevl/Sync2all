@@ -4,7 +4,7 @@ import_treeBasedLink = function (link, isBrowser) {
 	import_link(link, isBrowser)
 
 	// import bookmark into own tree, thereby cleaning up duplicates etc.
-	link.importBookmark = function (bookmark) {
+	link.importBookmark = function (idIndex, bookmark) {
 		// this is the folder where the bookmark is in.
 		var parentNode = bookmark.parentNode;
 
@@ -38,14 +38,14 @@ import_treeBasedLink = function (link, isBrowser) {
 
 		// add bookmark ID
 		if (link == browser) {
-			link.ids[bookmark.id] = bookmark;
+			idIndex[bookmark.id] = bookmark;
 		} else {
-			link.ids[bookmark[link.id+'_id']] = bookmark;
+			idIndex[bookmark[link.id+'_id']] = bookmark;
 		}
 	}
 
 	// import folder, cleans up duplicates too
-	link.importFolder = function (folder) {
+	link.importFolder = function (idIndex, folder) {
 		var parentNode = folder.parentNode;
 
 		// ignore folders without a title
@@ -76,7 +76,7 @@ import_treeBasedLink = function (link, isBrowser) {
 				// move bookmark
 				bookmark.parentNode = otherFolder;
 				delete folder.bm[bookmark.url];
-				link.importBookmark(bookmark);
+				link.importBookmark(idIndex, bookmark);
 				// move bookmark on web storage / in the browser
 				link.bm_mv(link, bookmark, folder);
 			}
@@ -92,9 +92,9 @@ import_treeBasedLink = function (link, isBrowser) {
 
 		// add folder ID
 		if (link == browser) {
-			link.ids[folder.id] = folder;
+			idIndex[folder.id] = folder;
 		} else {
-			link.ids[folder[link.id+'_id']] = folder;
+			idIndex[folder[link.id+'_id']] = folder;
 		}
 	}
 }

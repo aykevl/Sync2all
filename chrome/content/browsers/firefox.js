@@ -10,27 +10,24 @@ var fx = {
 	ios:            Components.classes["@mozilla.org/network/io-service;1"]
 		                      .getService(Components.interfaces.nsIIOService),
 
-	startSync: function () {
+	loadBookmarks: function (callback) {
 		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
-		fx.getTree();
+		fx.ids = {};
+		fx.ids[fx.bookmarks.id] = fx.bookmarks;
+		fx.getSubTree(fx.bookmarks);
 
+		callback(fx.bookmarks, fx.ids);
+	},
+
+	startObserver: function () {
 		fx.bmsvc.addObserver(fx, false);
-		fx.startingFinished();
 	},
 
-	addListeners: function () {
-		// add myself as observer
-	},
-
-	stopSync: function () {
+	stopObserver: function () {
 		// remove myself as observer when I don't need to know the changes
 		fx.bmsvc.removeObserver(fx);
 	},
 
-	getTree: function () {
-		fx.getSubTree(fx.bookmarks);
-	},
-	
 	getSubTree: function (folder) {
 		// https://developer.mozilla.org/en/Retrieving_part_of_the_bookmarks_tree
 		var options = fx.historyService.getNewQueryOptions();

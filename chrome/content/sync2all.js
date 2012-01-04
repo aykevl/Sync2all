@@ -41,8 +41,10 @@ Sync2all.prototype = {
 		}
 
 		// and start the browser link
-		browser.start();
-		browser.addListeners();
+		browser.loadBookmarks(function (bookmarks, ids) {
+				this.onLinkFinished(browser);
+			}.bind(this));
+		browser.startObserver();
 	},
 
 	onPopupCreation: function (_popupDOM) {
