@@ -48,8 +48,7 @@ function Link (isBrowser) {
 	}
 }
 function import_link (link, isBrowser) {
-	link.Link = Link;
-	link.Link(isBrowser);
+	Link.call(link, isBrowser);
 
 	link.load = function () {
 		// start if enabled
@@ -77,7 +76,7 @@ function import_link (link, isBrowser) {
 				link.enabled = true;
 				localStorage[link.id+'_enabled'] = JSON.stringify(true);
 
-				enabledWebLinks.push(link);
+				sync2all.enabledWebLinks.push(link);
 
 				// whether this link needs extra url/tag indices
 				if (link.flag_tagStructure && !link.flag_treeStructure) {
@@ -165,7 +164,7 @@ function import_link (link, isBrowser) {
 		localStorage[link.id+'_enabled'] = JSON.stringify(false);
 		link.enabled = false;
 		if (link != browser) {
-			Array_remove(enabledWebLinks, link);
+			Array_remove(sync2all.enabledWebLinks, link);
 		}
 		// check whether this link has finished after starting. It is possible
 		// that there's an error while it starts, and that it disables itself.
@@ -353,8 +352,8 @@ function import_link (link, isBrowser) {
 			if (!node.id)
 				link.testfail('!node.id', node);
 			var webLink;
-			for (var i=0; webLink=enabledWebLinks[i]; i++) {
-				if (webLink.enabled && !webLink.queue.running && !webLink.queue.length && !webLink.status) {
+			for (var i=0; webLink=sync2all.enabledWebLinks[i]; i++) {
+				if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
 					if (!webLink.flag_tagStructure) {
 						if (!node[webLink.id+'_id'])
 							link.testfail('!node.*_id', [node, webLink.id]);

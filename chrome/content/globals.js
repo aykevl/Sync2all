@@ -13,8 +13,7 @@ var browser;
 
 var debug = true;
 
-// webLinks doesn't include browser links (obvious)
 var webLinks = [];
-var enabledWebLinks = [];
+
 var tagStructuredWebLinks = [];
 
