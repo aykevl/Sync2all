@@ -180,9 +180,9 @@ function broadcastMessage(methodName, sourceLink, params) {
 			link[methodName] = false; // prevent future logs causing lots of data
 		} else {
 			if (params) {
-				link[methodName].apply(this, params);
+				link[methodName].apply(link, params);
 			} else {
-				link[methodName].apply(this);
+				link[methodName].apply(link);
 			}
 		}
 	}

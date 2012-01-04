@@ -100,6 +100,11 @@ tagtree.bm_mod_url = function (callingLink, bm, oldurl) {
 
 	// add the other
 	tagtree.bm_add(callingLink, bm);
+
+	var webLink;
+	for (var i=0; webLink=tagStructuredWebLinks[i]; i++) {
+		webLink.bm_add(callingLink, bm);
+	}
 }
 
 // Moved bookmarks get automatically new labels (code for that is in the links)
