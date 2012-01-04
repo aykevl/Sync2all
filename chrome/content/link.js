@@ -312,19 +312,6 @@ function import_link (link, isBrowser) {
 		this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
 	}
 
-	link.onRequest = function (request, sender, sendResponse) {
-		// handle request
-		if (request.action.substr(0, link.id.length+1) == link.id+'_') {
-
-			// convert linkid_action to msg_action
-			link['msg_'+request.action.substr(request.action.indexOf('_')+1)](request, sender);
-		}
-	}
-	if (browser.name == 'chrome' && link != browser) {
-		chrome.extension.onRequest.addListener(link.onRequest);
-	} else if (browser.name == 'firefox') {
-	}
-
 	/* Errors */
 
 	link.errorStarting = function (msg) {

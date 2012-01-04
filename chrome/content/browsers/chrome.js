@@ -7,9 +7,20 @@ function onRequest (request, sender, sendResponse) {
 	if (request.action == 'popupCreated') {
 		sync2all.onPopupCreation();
 		sendResponse(undefined); // only because I have to
-	} else if (request.action == 'popupClosed') {
+		return;
+	}
+	if (request.action == 'popupClosed') {
 		sync2all.onPopupClosion();
 		sendResponse(undefined); // because I have to
+		return;
+	}
+	var webLink;
+	for (var i=0; webLink=webLinks[i]; i++) {
+		if (request.action.substr(0, webLink.id.length+1) == webLink.id+'_') {
+			// convert linkid_action to msg_action
+			webLink['msg_'+request.action.substr(request.action.indexOf('_')+1)].call(webLink, request, sender);
+			return;
+		}
 	}
 }
 
