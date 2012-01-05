@@ -7,16 +7,13 @@ See http://www.mmartins.com/mmartins/googlebookmarksapi/
 for details of the Google Bookmarks API
 */
 
-var gbm = {};
+var gbm = new TagBasedLink('gbm');
 
 gbm.name = 'Google Bookmarks'; // OBSOLETE
 gbm.fullName = 'Google Bookmarks';
-gbm.id = 'gbm';
 
 
 /* imports */
-
-import_tagBasedLink(gbm);
 import_queue(gbm);
 
 

@@ -1,7 +1,11 @@
 'use strict';
 
+function TreeBasedLink (isBrowser) {
+	this.flag_treeStructure = true;
+}
+
 function import_treeBasedLink (link, isBrowser) {
-	link.flag_treeStructure = true;
+	TreeBasedLink.call(link, isBrowser);
 	import_link(link, isBrowser)
 
 	// import bookmark into own tree, thereby cleaning up duplicates etc.
