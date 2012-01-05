@@ -3,13 +3,13 @@
 // prefix: opl (OPera Link
 
 var opl = {};
+webLinks.push(opl);
 
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
-opl.id = 'opl';
 
 // imports (or include if you want)
-import_treeBasedLink(opl);
+import_treeBasedLink(opl, 'opl');
 import_queue(opl);
 
 // fix opera.link for specific browsers

@@ -8,47 +8,39 @@ for details of the Google Bookmarks API
 */
 
 function GoogleBookmarksLink() {
+	this.name = 'Google Bookmarks'; // OBSOLETE
+	this.fullName = 'Google Bookmarks';
+
+	this.api_url = 'https://www.google.com/bookmarks/mark';
 }
-GoogleBookmarksLink.prototype = new TagBasedLink();
+GoogleBookmarksLink.prototype = new TagBasedLink('gbm');
 
-var gbm = new TagBasedLink('gbm');
-
-gbm.name = 'Google Bookmarks'; // OBSOLETE
-gbm.fullName = 'Google Bookmarks';
+var gbm = new GoogleBookmarksLink();
+webLinks.push(gbm);
 
 
 /* imports */
-import_queue(gbm);
-
-
-/* constants */
-
-gbm.api_url = 'https://www.google.com/bookmarks/mark';
-// Copied from GMarks, from the top of the file components/nsIGmarksCom_google.js
-gbm.BKMKLET_URL = "https://www.google.com/bookmarks/find?q=javascript&src=gmarksbkmklet";
-// whether or not this link has it's own data structures and needs to be
-// notified of changes that it has posted itself
-//gbm.has_own_data = true;
+import_queue(GoogleBookmarksLink.prototype);
 
 
 // (re) start
-gbm.startSync = function () {
+GoogleBookmarksLink.prototype.startSync = function () {
 
 	// will be set to false once the status has been saved
-	gbm.initial_commit = true;
+	this.initial_commit = true;
 
 	// set status and start download
-	gbm.updateStatus(statuses.DOWNLOADING);
-	gbm.reqXml = new XMLHttpRequest();
-	gbm.reqXml.open (
+	this.updateStatus(statuses.DOWNLOADING);
+	this.reqXml = new XMLHttpRequest();
+	this.reqXml.open (
 				"GET",
 				"https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=xml&num=10000",
 				true);
-	gbm.reqXml.onreadystatechange = gbm.onXmlRSC;
-	gbm.reqXml.send(null);
+	this.reqXml.onreadystatechange = this.onXmlRSC.bind(this);
+	this.reqXml.send(null);
 }
 
-gbm.get_state = function (state, folder) {
+GoogleBookmarksLink.prototype.get_state = function (state, folder) {
 	state.id = folder.id;
 	var url;
 	for (url in folder.bm) {
@@ -57,11 +49,11 @@ gbm.get_state = function (state, folder) {
 	var title;
 	for (title in folder.f) {
 		state.f[title] = {bm: [], f: {}};
-		gbm.get_state(state.f[title], folder.f[title]);
+		this.get_state(state.f[title], folder.f[title]);
 	}
 };
 
-gbm.calculate_actions = function (state, folder) {
+GoogleBookmarksLink.prototype.calculate_actions = function (state, folder) {
 	// only look for removed bookmarks, not for added bookmarks (and moved bookmarks are 'removed' and 'added', TODO fix in a future version).
 	var data = undefined;
 	var id, url;
@@ -75,7 +67,7 @@ gbm.calculate_actions = function (state, folder) {
 			// Ignore already removed bookmarks.
 			if (sync2all.bookmarkIds[id]) {
 				console.log('Bookmark deleted: '+url);
-				gbm.actions.push(['bm_del', id]);
+				this.actions.push(['bm_del', id]);
 			}
 		}
 	}
@@ -91,48 +83,48 @@ gbm.calculate_actions = function (state, folder) {
 			if (sync2all.bookmarkIds[substate]) {
 				// mark all bookmarks inside it as deleted, and mark all folders as
 				// 'delete-if-empty'
-				gbm.mark_state_deleted(substate);
+				this.mark_state_deleted(substate);
 			}
 
 			// don't recurse, because folder.f[title] doesn't exist
 			// (sync2all.bookmarkIds[substate.id] can't be used because
-			// folder.f[title] is part of gbm.bookmarks
+			// folder.f[title] is part of this.bookmarks
 			continue;
 		}
-		gbm.calculate_actions(substate, folder.f[title]);
+		this.calculate_actions(substate, folder.f[title]);
 	}
 }
 
 
 // RSC = ReadyStateChange
-gbm.onXmlRSC = function () {
-	if (gbm.reqXml.readyState != 4) return;
+GoogleBookmarksLink.prototype.onXmlRSC = function () {
+	if (this.reqXml.readyState != 4) return;
 
 	// finished loading
 
-	if (gbm.reqXml.status != 200) {
-		gbm.errorStarting('Failed to retrieve bookmarks (XML). Is there an internet connection and are you logged in to Google?');
+	if (this.reqXml.status != 200) {
+		this.errorStarting('Failed to retrieve bookmarks (XML). Is there an internet connection and are you logged in to Google?');
 	} else {
 		// parse XML.
-		if (gbm.parseXmlBookmarks(gbm.reqXml.responseXML)) {
+		if (this.parseXmlBookmarks(this.reqXml.responseXML)) {
 			// something went wrong
 			return;
 		}
 
 		// XML parsing finished successfully, so download RSS now (for the signature)
-		gbm.reqRss = new XMLHttpRequest();
-		gbm.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1&start=0", true); // will always give at least 25 bookmarks
-		gbm.reqRss.onreadystatechange = gbm.onRssRSC;
-		gbm.reqRss.send(null);
+		this.reqRss = new XMLHttpRequest();
+		this.reqRss.open("GET", "https://www.google.com/bookmarks/?zx="+(new Date()).getTime()+"&output=rss&num=1&start=0", true); // will always give at least 25 bookmarks
+		this.reqRss.onreadystatechange = this.onRssRSC.bind(this);
+		this.reqRss.send(null);
 	}
 }
 
 // parse the XML Google Bookmarks. Return true when there is an error.
-gbm.parseXmlBookmarks = function (xmlTree) {
+GoogleBookmarksLink.prototype.parseXmlBookmarks = function (xmlTree) {
 	try {
 		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
 	} catch (err) {
-		gbm.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
+		this.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return true;
 	}
 
@@ -163,7 +155,7 @@ gbm.parseXmlBookmarks = function (xmlTree) {
 		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, gbm_id: id};
 
 		// import it into the tree
-		gbm.importBookmark(urlBookmark);
+		this.importBookmark(urlBookmark);
 	}
 }
 
@@ -171,30 +163,29 @@ gbm.parseXmlBookmarks = function (xmlTree) {
  * now seem to be accepted by Google... Don't know why they always disabled
  * them. */
 /* TODO: use RSS for the descriptions of bookmarks */
-
-gbm.onRssRSC = function () {
-	if (gbm.reqRss.readyState != 4) return;
+GoogleBookmarksLink.prototype.onRssRSC = function () {
+	if (this.reqRss.readyState != 4) return;
 
 	// readyState = 4
-	gbm.updateStatus(statuses.PARSING);
+	this.updateStatus(statuses.PARSING);
 
-	if (gbm.reqRss.status != 200) {
-		gbm.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
+	if (this.reqRss.status != 200) {
+		this.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 	} else {
-		gbm.parseRssBookmarks(gbm.reqRss.responseXML);
-		gbm.startingFinished();
+		this.parseRssBookmarks(this.reqRss.responseXML);
+		this.startingFinished();
 	}
 }
 
 // TODO
-gbm.parseRssBookmarks = function (xmlTree) {
+GoogleBookmarksLink.prototype.parseRssBookmarks = function (xmlTree) {
 	try {
 		var channel = xmlTree.firstChild.firstChild;
 		var sig_element = channel.getElementsByTagName('signature')[0] ||
 			channel.getElementsByTagName('smh:signature')[0]; // firefox
-		gbm.sig     = sig_element.firstChild.nodeValue;
+		this.sig     = sig_element.firstChild.nodeValue;
 	} catch (err) {
-		gbm.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
+		this.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
 	}
 	/*var element;
@@ -217,7 +208,7 @@ gbm.parseRssBookmarks = function (xmlTree) {
 
 // check for things that will be modified by Google. Change the url of the
 // bookmark and notify other links.
-gbm.fixBookmark = function (bookmark) {
+GoogleBookmarksLink.prototype.fixBookmark = function (bookmark) {
 	// save the old url
 	var oldurl = bookmark.url;
 
@@ -232,61 +223,61 @@ gbm.fixBookmark = function (bookmark) {
 
 	// notify others when the url has changed
 	if (bookmark.url != oldurl) {
-		broadcastMessage('bm_mod_url', gbm, [bookmark, oldurl]);
+		broadcastMessage('bm_mod_url', this, [bookmark, oldurl]);
 	}
 }
 
 // do an upload (for when an bookmark has been created/updated/label deleted)
 // this needs a bookmark object because it uploads the latest title of the bookmark
-gbm.upload_bookmark = function (bookmark) {
+GoogleBookmarksLink.prototype.upload_bookmark = function (bookmark) {
 	console.log('gbm: upload_bookmark');
-	var labels = gbm.bookmark_get_labels(bookmark.url);
-	gbm.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
+	var labels = this.bookmark_get_labels(bookmark.url);
+	this.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
 			function (request) {
 				tagtree.urls[bookmark.url].gbm_id = request.responseText;
 			});
 };
 
 // this doesn't need a dictionary of changes, because they will be removed anyway
-gbm.delete_bookmark = function (id) {
+GoogleBookmarksLink.prototype.delete_bookmark = function (id) {
 	console.log('gbm: delete_bookmark');
-	gbm.add_to_queue({dlq: id});
+	this.add_to_queue({dlq: id});
 };
 
-gbm.commit = function () {
+GoogleBookmarksLink.prototype.commit = function () {
 	var has_changes = false;
 	var url;
-	for (url in gbm.changed) {
+	for (url in this.changed) {
 		has_changes = true;
 
 		var gbookmark = tagtree.urls[url];
 		if (!gbookmark.bm.length) {
 			// no labels, delete this bookmark
-			gbm.delete_bookmark(gbookmark.gbm_id);
+			this.delete_bookmark(gbookmark.gbm_id);
 		} else {
 			// has still at least one label, upload  (changing the
 			// bookmark).
-			gbm.upload_bookmark(gbm.changed[url]);
+			this.upload_bookmark(this.changed[url]);
 		}
 	}
-	if (!has_changes && gbm.initial_commit) {
-		gbm.may_save_state();
+	if (!has_changes && this.initial_commit) {
+		this.may_save_state();
 	}
-	gbm.changed = {};
-	gbm.queue_start();
+	this.changed = {};
+	this.queue_start();
 };
 
-gbm.add_to_queue = function (params, callback) {
+GoogleBookmarksLink.prototype.add_to_queue = function (params, callback) {
 	params.zx   = new Date().getTime();
-	if (!gbm.sig) {
+	if (!this.sig) {
 		alert('No signature for Google Bookmarks (bug)!');
 		console.error('No signature for Google Bookmarks (bug)!');
 	}
-	params.sig  = gbm.sig;
+	params.sig  = this.sig;
 	params.prev = '';
-	gbm.queue_add(function (dict_params) {
+	this.queue_add(function (dict_params) {
 				var req = new XMLHttpRequest();
-				req.open("POST", gbm.api_url, true);
+				req.open("POST", this.api_url, true);
 				var params = '';
 				var key;
 				for (key in dict_params) {
@@ -300,13 +291,13 @@ gbm.add_to_queue = function (params, callback) {
 						console.error('Request failed, status='+req.status+', params='+params);
 					}
 					if (callback) callback(req);
-					gbm.queue_next();
-				}
+					this.queue_next();
+				}.bind(this);
 				req.send(params);
-			}, params);
+			}.bind(this), params);
 }
 
-gbm.bookmark_get_labels = function (url) {
+GoogleBookmarksLink.prototype.bookmark_get_labels = function (url) {
 	if (!tagtree.urls[url] || tagtree.urls[url].bm.length == 0) {
 		// no labels
 		return false;
@@ -321,15 +312,14 @@ gbm.bookmark_get_labels = function (url) {
 			throw 'undefined folder, bm url='+url;
 		}
 		if (folder == sync2all.bookmarks) {
-			label = gbm.rootNodeLabel;
+			label = this.rootNodeLabel;
 		} else {
-			label = gbm.folder_get_label(folder);
+			label = this.folder_get_label(folder);
 		}
 		labels = labels+((labels=='')?'':',')+label;
 	}
-	if (labels == gbm.rootNodeLabel) {
+	if (labels == this.rootNodeLabel) {
 		labels = '';
 	}
 	return labels;
 };
-

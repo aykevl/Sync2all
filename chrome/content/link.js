@@ -29,28 +29,31 @@
  *     Delete a folder tree
  */
 
-function Link (isBrowser) {
-	// initialisation of global variables
-	if (!isBrowser) {
-		webLinks.push(this);
-	}
+function Link (id) {
+	// initialize object
+	this.id = id;
 
 	// various default variables
 	this.started = false;
 	this.status = statuses.READY; // only to initialize
 	this.loaded = true;
 
-	// load enabled/disabled state
-	if (localStorage[this.id+'_synced']) {
-		this.enabled = JSON.parse(localStorage[this.id+'_synced']);
-	} else {
-		this.enabled = false;
-	}
 }
-function import_link (link, isBrowser) {
-	Link.call(link, isBrowser);
+function import_link (link, id) {
+	Link.call(link, id);
 
 	link.load = function () {
+		link.enabled = false;
+		if (link != browser) {
+			// self-test
+			if (!link.id) throw 'no id: '+link.name;
+
+			// load enabled/disabled state
+			if (localStorage[this.id+'_synced']) {
+				link.enabled = JSON.parse(localStorage[this.id+'_synced']);
+			}
+		}
+
 		// start if enabled
 		if (link.enabled) {
 			// disable it first and then re-enable it in link.start

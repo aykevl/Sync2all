@@ -1,12 +1,12 @@
 'use strict';
 
-function TreeBasedLink (isBrowser) {
+function TreeBasedLink (id) {
 	this.flag_treeStructure = true;
 }
 
-function import_treeBasedLink (link, isBrowser) {
-	TreeBasedLink.call(link, isBrowser);
-	import_link(link, isBrowser)
+function import_treeBasedLink (link, id) {
+	TreeBasedLink.call(link, id);
+	import_link(link, id)
 
 	// import bookmark into own tree, thereby cleaning up duplicates etc.
 	link.importBookmark = function (idIndex, bookmark) {
