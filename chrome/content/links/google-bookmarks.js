@@ -7,6 +7,10 @@ See http://www.mmartins.com/mmartins/googlebookmarksapi/
 for details of the Google Bookmarks API
 */
 
+function GoogleBookmarksLink() {
+}
+GoogleBookmarksLink.prototype = new TagBasedLink();
+
 var gbm = new TagBasedLink('gbm');
 
 gbm.name = 'Google Bookmarks'; // OBSOLETE
