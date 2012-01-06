@@ -3,7 +3,6 @@
 function TreeBasedLink (id) {
 	Link.call(this, id);
 	this.flag_treeStructure = true;
-	import_treeBasedLink(this, id);
 }
 
 // import bookmark into own tree, thereby cleaning up duplicates etc.
