@@ -8,12 +8,13 @@ for details of the Google Bookmarks API
 */
 
 function GoogleBookmarksLink() {
+	TagBasedLink.call(this, 'gbm');
 	this.name = 'Google Bookmarks'; // OBSOLETE
 	this.fullName = 'Google Bookmarks';
 
 	this.api_url = 'https://www.google.com/bookmarks/mark';
 }
-GoogleBookmarksLink.prototype = new TagBasedLink('gbm');
+GoogleBookmarksLink.prototype.__proto__ = TagBasedLink.prototype;
 
 var gbm = new GoogleBookmarksLink();
 webLinks.push(gbm);

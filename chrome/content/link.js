@@ -38,9 +38,9 @@ function Link (id) {
 	this.status = statuses.READY; // only to initialize
 	this.loaded = true;
 
+	import_link(this, id);
 }
 function import_link (link, id) {
-	Link.call(link, id);
 
 	link.load = function () {
 		link.enabled = false;

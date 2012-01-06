@@ -1,8 +1,10 @@
 'use strict';
 
 function BrowserBase() {
+	TreeBasedLink.call(this);
 	this.flag_treeStructure = true;
 }
+BrowserBase.prototype.__proto__ = TreeBasedLink.prototype;
 
 // To call when a bookmark node has been added. The node may be a modified
 // object got with the event.

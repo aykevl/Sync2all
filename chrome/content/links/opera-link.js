@@ -2,14 +2,13 @@
 
 // prefix: opl (OPera Link
 
-var opl = {};
+var opl = new TreeBasedLink('opl');
 webLinks.push(opl);
 
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 
 // imports (or include if you want)
-import_treeBasedLink(opl, 'opl');
 import_queue(opl);
 
 // fix opera.link for specific browsers

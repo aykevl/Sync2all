@@ -31,12 +31,14 @@ chrome.extension.onRequest.addListener(onRequest);
 /* Browser extension (Chrome) */
 
 function Browser () {
+	BrowserBase.call(this);
+
 	this.fullName = 'Google Chrome';
 	this.name     = 'chrome';
 	this.isPopupOpen = false;
 };
 
-Browser.prototype = new BrowserBase();
+Browser.prototype.__proto__ = BrowserBase.prototype;
 
 Browser.prototype.loadBookmarks = function (callback) {
 	var bookmarks = {bm: [], f: [], title: 'Bookmarks Bar', id: '1'};
@@ -192,7 +194,6 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
 browser = new Browser();
 
 // import libraries, kind of inheritance
-import_treeBasedLink(browser, true);
 import_queue(browser);
 
 

@@ -3,9 +3,8 @@
 // import a single-url, tagged bookmark (without a tree)
 // I'm not very happy with this name, but couldn't find a better one
 function TagBasedLink (id) {
+	Link.call(this, id);
 	this.flag_tagStructure = true;
-
-	import_link(this, id);
 }
 
 TagBasedLink.prototype.importBookmark = function (uBm) {
