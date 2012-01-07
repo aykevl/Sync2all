@@ -2,13 +2,28 @@
 
 // prefix: opl (OPera Link
 
-var opl = new TreeBasedLink('opl');
+function OperaLink () {
+	TreeBasedLink.call(this, 'opl');
+
+	this.name = 'Opera Link'; // OBSOLETE
+	this.fullName = 'Opera Link';
+
+	// initialize opera.link
+	// TODO make opera.link object-oriented
+	opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
+	opera.link.loadToken();
+
+	this.authorized = false;
+	this.verifier = null; // initialize variable
+}
+OperaLink.prototype.__proto__ = TreeBasedLink.prototype;
+
+var opl = new OperaLink();
 webLinks.push(opl);
 
-opl.name = 'Opera Link'; // OBSOLETE
-opl.fullName = 'Opera Link';
 
 // fix opera.link for specific browsers
+// TODO put this in Browser with generic functions
 if (browser.name == 'chrome') {
 	opera.link.authorizeFunction = function (url) {
 		chrome.tabs.create({url: url});
@@ -17,33 +32,27 @@ if (browser.name == 'chrome') {
 	opera.link.authorizeFunction = function (url) {
 		Application.activeWindow.open(IOService.newURI(url, null, null));
 	};
-	opl.fx_display_verifierInput = function () {
+	OperaLink.prototype.fx_display_verifierInput = function () {
 		browser.popupDOM.getElementById('sync2all-opl-verifier-container').style.display = '';
 	};
-	opl.fx_hide_verifierInput= function () {
+	OperaLink.prototype.fx_hide_verifierInput= function () {
 		browser.popupDOM.getElementById('sync2all-opl-verifier-container').style.display = 'none';
 	};
 }
-// Opera is the default in operalink.js, so no fixing required
+// Opera is the default in operalink.js, so no fixing required for Opera
 
-// initialize opera.link
-opera.link.consumer("immqSD074yPY83JWSKAzmjUUpOcC7u40", "RmLYnd49QRcDW89rCUkPgmBuTmkTfse6");
-opera.link.loadToken();
-
-opl.authorized = false;
-opl.verifier = null; // initialize variable
 
 // (re)start
-opl.startSync = function () {
+OperaLink.prototype.startSync = function () {
 
 	// initialize variables
-	opl.has_saved_state = false;
+	this.has_saved_state = false;
 
 	// start downloading
-	opl.loadBookmarks();
+	this.loadBookmarks();
 };
 
-opl.get_state = function (state, folder) {
+OperaLink.prototype.get_state = function (state, folder) {
 	// save all bookmarks in this folder
 	var url;
 	for (url in folder.bm) {
@@ -63,7 +72,7 @@ opl.get_state = function (state, folder) {
 	// save all subfolders of this folder
 	var title;
 	for (title in folder.f) {
-		// do it here and not at the start of opl.get_state, because the root of
+		// do it here and not at the start of this.get_state, because the root of
 		// Opera Link has no ID.
 
 		// get the subfolder
@@ -84,26 +93,26 @@ opl.get_state = function (state, folder) {
 		state.push(substate);
 
 		// recurse into subfolders
-		opl.get_state(substate.children, subfolder);
+		this.get_state(substate.children, subfolder);
 	}
 }
 
-opl.mapLinkIdsToLocalIds = function (state) {
+OperaLink.prototype.mapLinkIdsToLocalIds = function (state) {
 	var item;
 	for (var i=0; item=state[i]; i++) {
-		opl.ownId_to_lId[item.opl_id] = item.id;
+		this.ownId_to_lId[item.opl_id] = item.id;
 
 		// if this node has children (that means this is a folder).
 		if (item.children) {
-			opl.mapLinkIdsToLocalIds(item.children);
+			this.mapLinkIdsToLocalIds(item.children);
 		}
 	}
 }
 
-opl.make_stable_lId = function (node) {
+OperaLink.prototype.make_stable_lId = function (node) {
 	var sid = [];
 	while (node) {
-		sid.push([opl.ownId_to_lId[node.opl_id], node.url?node.url:node.title]);
+		sid.push([this.ownId_to_lId[node.opl_id], node.url?node.url:node.title]);
 		node = node.parentNode;
 	}
 	return sid;
@@ -112,7 +121,7 @@ opl.make_stable_lId = function (node) {
 // @var parentNode The current folder (represents #state), undefined if this folder
 // is deleted (and should be checked for moved items).
 // @var state The array of children of this folder.
-opl.calculate_actions = function (parentState, parentNode) {
+OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 	var item;
 
 	/* check for removed and moved items */
@@ -137,13 +146,13 @@ opl.calculate_actions = function (parentState, parentNode) {
 			// moved outside this folder. Not really needed, but it is better
 			// to move folders and bookmarks than to re-create them. (Preserves
 			// more data, for example descriptions and favicons).
-			if (opl.ids[item.opl_id]) {
+			if (this.ids[item.opl_id]) {
 				// this node does still exist but in another place, mark it as moved.
 
-				var node = opl.ids[item.opl_id];
+				var node = this.ids[item.opl_id];
 
 				// get the destination (local) folder, the parent of otherNode
-				var localParentNodeId= opl.ownId_to_lId[node.parentNode.opl_id];
+				var localParentNodeId= this.ownId_to_lId[node.parentNode.opl_id];
 				if (sync2all.bookmarkIds[localParentNodeId]) {
 					var localParentNode = sync2all.bookmarkIds[localParentNodeId];
 				} else {
@@ -154,57 +163,57 @@ opl.calculate_actions = function (parentState, parentNode) {
 					// check whether this bookmark has already been moved
 					// If not, add an action
 					if (localParentNode && !localParentNode.bm[node.url]) {
-						opl.actions.push(['bm_mv', item.id, localParentNode]);
+						this.actions.push(['bm_mv', item.id, localParentNode]);
 					}
 				} else {
 					// check whether this folder has already been moved local
 					if (localParentNode && !localParentNode.f[node.title]) {
-						opl.actions.push(['f_mv',  item.id, localParentNode]);
+						this.actions.push(['f_mv',  item.id, localParentNode]);
 					}
 				}
 			} else {
 				// node doesn't exist, remove it.
 				if (isfolder) {
-					opl.calculate_actions(item.children, undefined);
+					this.calculate_actions(item.children, undefined);
 					if (item.id && sync2all.bookmarkIds[item.id]) {
 						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
-						opl.actions.push(['f_del_ifempty',  item.id]);
+						this.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists
 					if (sync2all.bookmarkIds[item.id]) {
 						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
-						opl.actions.push(['bm_del', item.id]);
+						this.actions.push(['bm_del', item.id]);
 					}
 				}
 			}
 		} else {
 			// this folder does exist (is most often the case).
-			if (!opl.ids[item.opl_id]){
+			if (!this.ids[item.opl_id]){
 				if (isfolder) {
 
 					// first check for folders and bookmarks moved out of this
 					// folder.
-					opl.calculate_actions(item.children, undefined);
+					this.calculate_actions(item.children, undefined);
 
 					// then remove this folder
 					// but check first whether the folder actually exists
 					if (item.id && sync2all.bookmarkIds[item.id]) {
 						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
 						console.log('opl: old f: '+sync2all.bookmarkIds[item.id].title);
-						opl.actions.push(['f_del_ifempty',  item.id]);
+						this.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists.
 					if (sync2all.bookmarkIds[item.id]) {
 						console.log('opl: old bm: '+item.opl_id);
 						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
-						opl.actions.push(['bm_del', item.id]);
+						this.actions.push(['bm_del', item.id]);
 					}
 				}
 
-			} else if (opl.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
-				var movedTo = opl.ids[item.opl_id].parentNode;
+			} else if (this.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
+				var movedTo = this.ids[item.opl_id].parentNode;
 
 				// useful information for debugging
 				console.log('opl: moved: '+item.opl_id);
@@ -212,57 +221,57 @@ opl.calculate_actions = function (parentState, parentNode) {
 				console.log(movedTo);
 
 				// get stable ID
-				var stableToId = opl.make_stable_lId(movedTo);
+				var stableToId = this.make_stable_lId(movedTo);
 
 				// add type-specifc information
 				if (isfolder) {
-					opl.actions.push(['f_mv',  item.id, stableToId]);
+					this.actions.push(['f_mv',  item.id, stableToId]);
 					// search for changes within this folder
-					opl.calculate_actions(item.children, opl.ids[item.opl_id]);
+					this.calculate_actions(item.children, this.ids[item.opl_id]);
 				} else {
-					opl.actions.push(['bm_mv', item.id, stableToId]);
+					this.actions.push(['bm_mv', item.id, stableToId]);
 				}
 
 			} else {
 				// nothing has happened, search recursively for changes.
 				if (isfolder) {
-					opl.calculate_actions(item.children, opl.ids[item.opl_id]);
+					this.calculate_actions(item.children, this.ids[item.opl_id]);
 				}
 			}
 		}
 	}
 }
 
-opl.msg_verifier = function (request) {
+OperaLink.prototype.msg_verifier = function (request) {
 
-	if (opl.authorized) return; // strange, shouldn't happen
-	if (opl.verifier == request.verifier) return;  // shouldn't happen too, but it happens (???)
+	if (this.authorized) return; // strange, shouldn't happen
+	if (this.verifier == request.verifier) return;  // shouldn't happen too, but it happens (???)
 
 	// log status
 	console.log('Got verifier code: '+request.verifier);
 
 
-	opl.verifier = request.verifier;
-	if (!opl.verifier) { // check for validity
-		opl.status = statuses.READY;
-		opl.stop();
+	this.verifier = request.verifier;
+	if (!this.verifier) { // check for validity
+		this.status = statuses.READY;
+		this.stop();
 		return;
 	}
 
 
 	// use verifier
-	opera.link.getAccessToken(opl.requestToken, opl.requestTokenSecret, opl.verifier, opl.accessTokenCallback, opl.accessTokenError);
+	opera.link.getAccessToken(this.requestToken, this.requestTokenSecret, this.verifier, this.accessTokenCallback, this.accessTokenError);
 };
 
-opl.onUpdateStatus = function (statusChanged) {
+OperaLink.prototype.onUpdateStatus = function (statusChanged) {
 	if (browser.name == 'firefox') {
 		if (sync2all.browser.isPopupOpen) {
 			// status will also be updated when the popup opens, so this function
 			// is always called.
-			if (opl.status == statuses.AUTHORIZING) {
-				opl.fx_display_verifierInput();
+			if (this.status == statuses.AUTHORIZING) {
+				this.fx_display_verifierInput();
 			} else {
-				opl.fx_hide_verifierInput();
+				this.fx_hide_verifierInput();
 			}
 		}
 	}
@@ -270,14 +279,14 @@ opl.onUpdateStatus = function (statusChanged) {
 
 
 // Callback for when the request tokens have been got.
-opl.requestTokenCallback = function (e) {
+OperaLink.prototype.requestTokenCallback = function (e) {
 
 	// log status
 	console.log('Got request token, asking user to authorize...');
 
 	// save temporary tokens tokens
-	opl.requestToken = e.token;
-	opl.requestTokenSecret = e.secret;
+	this.requestToken = e.token;
+	this.requestTokenSecret = e.secret;
 
 	// listen to the verifier from the content script
 	if (browser.name == 'chrome') {
@@ -287,7 +296,7 @@ opl.requestTokenCallback = function (e) {
 };
 
 
-opl.requestTokenError = function (e) {
+OperaLink.prototype.requestTokenError = function (e) {
 	// report error
 	console.error('error getting request token:');
 	console.log(e);
@@ -302,22 +311,22 @@ opl.requestTokenError = function (e) {
 	opera.link.deauthorize();
 
 	// disable Opera Link
-	opl.updateStatus(statuses.READY);
-	opl.stop();
+	this.updateStatus(statuses.READY);
+	this.stop();
 };
 
-opl.accessTokenCallback = function (e) {
+OperaLink.prototype.accessTokenCallback = function (e) {
 	// save the token to localStorage
 	opera.link.saveToken();
 
 	// mark this link as being authorized
-	opl.authorized = true;
+	this.authorized = true;
 
 	// start loading the bookmarks
-	opl.loadBookmarks();
+	this.loadBookmarks();
 };
 
-opl.accessTokenError = function (e) {
+OperaLink.prototype.accessTokenError = function (e) {
 	// report the error
 	console.log('error getting access token:');
 	console.log(e);
@@ -336,17 +345,17 @@ opl.accessTokenError = function (e) {
 	}
 };*/
 
-opl.loadBookmarks = function () {
-	opl.updateStatus(statuses.DOWNLOADING);
-	opera.link.bookmarks.getAll(opl.bookmarksLoaded);
+OperaLink.prototype.loadBookmarks = function () {
+	this.updateStatus(statuses.DOWNLOADING);
+	opera.link.bookmarks.getAll(this.bookmarksLoaded.bind(this));
 };
 
-opl.bookmarksLoaded = function (result) {
+OperaLink.prototype.bookmarksLoaded = function (result) {
 	if (result.status == 401) { // unauthorized
 		// authorize now
 		opera.link.deauthorize();
-		opl.updateStatus(statuses.AUTHORIZING);
-		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
+		this.updateStatus(statuses.AUTHORIZING);
+		opera.link.requestToken(this.requestTokenCallback.bind(this), this.requestTokenError.bind(this));
 		return;
 	}
 	if (result.status >= 400 || result.status < 100) {
@@ -359,7 +368,7 @@ opl.bookmarksLoaded = function (result) {
 		console.log(result);
 
 		// stop syncing the next time
-		opl.stop();
+		this.stop();
 
 		// don't parse, will lead to errors:
 		return; // BUGFIX: would otherwise remove all bookmarks!!!
@@ -375,7 +384,7 @@ opl.bookmarksLoaded = function (result) {
 		if (!confirm('Are you sure you want to remove all bookmarks?'+
 				'\nWhen you haven\'t removed all bookmarks this is a bug.')) {
 			console.log('doesn\'t want to remove all bookmarks');
-			opl.stop();
+			this.stop();
 			return;
 		} else {
 			// yes, (s)he wants to (!?!)
@@ -385,16 +394,16 @@ opl.bookmarksLoaded = function (result) {
 	// there is no problem with Opera Link
 
 	// updat the status in the popup
-	opl.updateStatus(statuses.PARSING);
+	this.updateStatus(statuses.PARSING);
 
 	// parse the bookmarks
-	opl.parse_bookmarks(result.response, opl.bookmarks);
+	this.parse_bookmarks(result.response, this.bookmarks);
 
 	// send signal to sync engine to start merging
-	opl.startingFinished();
+	this.startingFinished();
 };
 
-opl.parse_bookmarks = function (array, folder) {
+OperaLink.prototype.parse_bookmarks = function (array, folder) {
 	var item;
 	for (var i=0; item=array[i]; i++) {
 		if (item.item_type == 'bookmark_folder') {
@@ -408,147 +417,147 @@ opl.parse_bookmarks = function (array, folder) {
 					parentNode: folder, bm: {}, f: {}, opl_id: item.id};
 
 			if (item.children) {
-				opl.parse_bookmarks(item.children, subfolder);
+				this.parse_bookmarks(item.children, subfolder);
 			}
 
 			// add this subfolder to the bookmarks tree
-			if (opl.importFolder(opl.ids, subfolder)) continue; // error
+			if (this.importFolder(this.ids, subfolder)) continue; // error
 		} else if (item.item_type == 'bookmark') {
 			var bookmark = {parentNode: folder, url: item.properties.uri,
 					title: item.properties.title, opl_id: item.id};
-			if (opl.importBookmark(opl.ids, bookmark)) continue;
+			if (this.importBookmark(this.ids, bookmark)) continue;
 		}
 	}
 };
 
 // Callbacks for Opera Link
 // TODO merge these, because they are nearly the same
-opl.itemCreated = function (result) {
+OperaLink.prototype.itemCreated = function (result) {
 	if (result.status != 200) {
 		console.error('ERROR creating bookmark/folder:');
 		console.error(result);
-		opl.queue_error();
+		this.queue_error();
 		return;
 	}
-	opl.current_item.opl_id = result.response.id;
-	opl.queue_next();
+	this.current_item.opl_id = result.response.id;
+	this.queue_next();
 };
-opl.itemDeleted = function (result) {
+OperaLink.prototype.itemDeleted = function (result) {
 	if (!result.status == 204) {
 		console.error('ERROR deleting:');
 		console.log(result);
-		opl.queue_error();
+		this.queue_error();
 		return;
 	}
-	opl.queue_next();
+	this.queue_next();
 };
-opl.itemMoved = function (result) {
+OperaLink.prototype.itemMoved = function (result) {
 	if (!result.status == 200) {
 		console.error('ERROR moving:');
 		console.log(result);
-		opl.queue_error();
+		this.queue_error();
 		return;
 	}
-	opl.queue_next();
+	this.queue_next();
 };
-opl.itemUpdated = function (result) {
+OperaLink.prototype.itemUpdated = function (result) {
 	if (!result.status == 200) {
 		console.error('ERROR updating:');
 		console.log(result);
-		opl.queue_error();
+		this.queue_error();
 		return;
 	}
-	opl.queue_next();
+	this.queue_next();
 };
 
-opl.fixBookmark = function (bm) {
+OperaLink.prototype.fixBookmark = function (bm) {
 	if (!bm.title) {
 		// fix title. Opera Link needs a title
 		var oldtitle = bm.title;
 		bm.title = bm.url;
-		broadcastMessage('bm_mod_title', opl, [bm, oldtitle]);
+		broadcastMessage('bm_mod_title', this, [bm, oldtitle]);
 	}
 }
 
-opl.bm_add = function (target, bm, folder) {
+OperaLink.prototype.bm_add = function (target, bm, folder) {
 	if (!folder) var folder = bm.parentNode;
 	if (bm.opl_id) return; // already uploaded
-	opl.queue_add(
+	this.queue_add(
 			function (bm) {
 				if (!folder.opl_id && folder != sync2all.bookmarks) {
 					console.warn('No parent ID! Bookmark:');
 					console.warn(bm);
-					opl.queue_next();
+					this.queue_next();
 					return;
 				}
-				opl.current_item = bm;
+				this.current_item = bm;
 				// TODO: last visited timestamp, comments (from Google Bookmarks)
 				console.log('bm_add');
 
-				opl.fixBookmark(bm);
+				this.fixBookmark(bm);
 				if (folder.opl_id) {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, opl.itemCreated); //, created: timestamp(new Date(bm.mtime))
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
 				} else {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, opl.itemCreated); //, created: timestamp(new Date(bm.mtime))
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
 				}
-			}, bm);
+			}.bind(this), bm);
 }
 
-opl.f_add = function (target, folder) {
-	opl.queue_add(function (folder) {
+OperaLink.prototype.f_add = function (target, folder) {
+	this.queue_add(function (folder) {
 				if (!folder.parentNode.opl_id && folder.parentNode != sync2all.bookmarks) {
 					console.warn('No parent ID! Folder:');
 					console.warn(folder);
-					opl.queue_next();
+					this.queue_next();
 					return;
 				}
-				opl.current_item = folder;
+				this.current_item = folder;
 				console.log('f_add');
 
 				// createFolder(params, [parent,] callback);
 				if (folder.parentNode.opl_id) {
-					opera.link.bookmarks.createFolder({title: folder.title}, folder.parentNode.opl_id, opl.itemCreated);
+					opera.link.bookmarks.createFolder({title: folder.title}, folder.parentNode.opl_id, this.itemCreated.bind(this));
 				} else {
-					opera.link.bookmarks.createFolder({title: folder.title}, opl.itemCreated);
+					opera.link.bookmarks.createFolder({title: folder.title}, this.itemCreated.bind(this));
 				}
-			}, folder);
+			}.bind(this), folder);
 }
 
-opl.bm_del = opl.f_del = function (target, node) {
-	opl.queue_add(
+OperaLink.prototype.bm_del = this.f_del = function (target, node) {
+	this.queue_add(
 			function (node) {
 				if (!node.opl_id) {
 					console.error('No opl_id in bookmark node (bug somewhere else!):');
 					console.log(node);
-					opl.queue_next(); // WARNING this just skips this error
+					this.queue_next(); // WARNING this just skips this error
 				}
-				opera.link.bookmarks.deleteItem(node.opl_id, opl.itemDeleted);
-			}, node);
+				opera.link.bookmarks.deleteItem(node.opl_id, this.itemDeleted.bind(this));
+			}.bind(this), node);
 }
 
-opl.bm_mv = opl.f_mv = function (target, node, oldParent) {
+OperaLink.prototype.bm_mv = this.f_mv = function (target, node, oldParent) {
 	console.log('move:');
 	console.log(node);
-	opl.queue_add(
+	this.queue_add(
 			function (node) {
 				// the parent ID should be an empty string when moving to the root.
-				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', opl.itemMoved);
-			}, node);
+				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', this.itemMoved.bind(this));
+			}.bind(this), node);
 };
 
-opl.f_mod_title = opl.bm_mod_title = function (target, node, oldtitle) {
-	opl.sendChanges(node, {title: node.title});
+OperaLink.prototype.f_mod_title = this.bm_mod_title = function (target, node, oldtitle) {
+	this.sendChanges(node, {title: node.title});
 }
 
-opl.bm_mod_url = function (target, node, oldurl) {
-	opl.sendChanges(node, {uri: node.url});
+OperaLink.prototype.bm_mod_url = function (target, node, oldurl) {
+	this.sendChanges(node, {uri: node.url});
 }
 
 
-opl.sendChanges = function (node, changes) {
-	opl.queue_add(
+OperaLink.prototype.sendChanges = function (node, changes) {
+	this.queue_add(
 			function (node) {
-				opera.link.bookmarks.update(node.opl_id, changes, opl.itemUpdated);
-			}, node);
+				opera.link.bookmarks.update(node.opl_id, changes, this.itemUpdated.bind(this));
+			}.bind(this), node);
 }
 
