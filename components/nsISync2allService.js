@@ -4,12 +4,12 @@ var SYNC2ALL_IID = Components.interfaces.nsISync2allService;
 
 var SYNC2ALL_SOURCES = [
 
+  // Firefox-specific library (to let it use webstandards in XPCOM
+  'chrome://sync2all/content/browsers/firefox-fixes.js',
+
   // Generic libraries
   'chrome://sync2all/content/globals.js',
   'chrome://sync2all/content/utils.js',
-
-  // Firefox-specific library (to let it use webstandards in XPCOM
-  'chrome://sync2all/content/browsers/firefox-fixes.js',
 
   // Specific libraries
   'chrome://sync2all/content/oauth.js',

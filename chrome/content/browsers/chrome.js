@@ -38,6 +38,8 @@ function Browser () {
 	this.isPopupOpen = false;
 };
 
+browser = new Browser();
+
 Browser.prototype.__proto__ = BrowserBase.prototype;
 
 Browser.prototype.loadBookmarks = function (callback) {
@@ -190,8 +192,6 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
 				chrome.bookmarks.update(node.id, {url: node.url}, this.queue_next.bind(this));
 			}.bind(this), node);
 }
-
-browser = new Browser();
 
 
 /*************************************

@@ -1,6 +1,11 @@
 'use strict';
 
-var fx = {
+function Browser () {
+	BrowserBase.call(this);
+}
+
+Browser.prototype = {
+	__proto__: BrowserBase.prototype,
 	id: 'fx',
 	fullName: 'Mozilla Firefox',
 	name: 'firefox',
@@ -268,8 +273,6 @@ var fx = {
 	}
 }
 
+var fx = new Browser();
 browser = fx;
-
-import_treeBasedLink(fx, true);
-import_queue(fx);
 
