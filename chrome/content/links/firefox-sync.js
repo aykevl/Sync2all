@@ -227,11 +227,11 @@ FirefoxSyncLink.prototype.test = function () {
 
 if (debug) {
 	var ffs = new FirefoxSyncLink();
-	console.log('Connecting with Firefox Sync...');
+	console.log('ffs: connecting...');
 	ffs.connect(function () {
-			console.log('Loading bookmarks...');
+			console.log('ffs: loading bookmarks...');
 			ffs.loadBookmarks(function (bookmarks) {
-					console.log('Bookmarks loaded:');
+					console.log('ffs: bookmarks loaded:');
 					console.log(bookmarks);
 				});
 		});

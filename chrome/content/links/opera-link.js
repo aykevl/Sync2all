@@ -260,7 +260,8 @@ OperaLink.prototype.msg_verifier = function (request) {
 
 
 	// use verifier
-	opera.link.getAccessToken(this.requestToken, this.requestTokenSecret, this.verifier, this.accessTokenCallback, this.accessTokenError);
+	opera.link.getAccessToken(this.requestToken, this.requestTokenSecret,
+			this.verifier, this.accessTokenCallback.bind(this), this.accessTokenError.bind(this));
 };
 
 OperaLink.prototype.onUpdateStatus = function (statusChanged) {
