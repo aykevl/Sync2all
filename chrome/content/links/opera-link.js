@@ -523,7 +523,7 @@ OperaLink.prototype.f_add = function (target, folder) {
 			}.bind(this), folder);
 }
 
-OperaLink.prototype.bm_del = this.f_del = function (target, node) {
+OperaLink.prototype.bm_del = OperaLink.prototype.f_del = function (target, node) {
 	this.queue_add(
 			function (node) {
 				if (!node.opl_id) {
@@ -535,7 +535,7 @@ OperaLink.prototype.bm_del = this.f_del = function (target, node) {
 			}.bind(this), node);
 }
 
-OperaLink.prototype.bm_mv = this.f_mv = function (target, node, oldParent) {
+OperaLink.prototype.bm_mv = OperaLink.prototype.f_mv = function (target, node, oldParent) {
 	console.log('move:');
 	console.log(node);
 	this.queue_add(
@@ -545,7 +545,7 @@ OperaLink.prototype.bm_mv = this.f_mv = function (target, node, oldParent) {
 			}.bind(this), node);
 };
 
-OperaLink.prototype.f_mod_title = this.bm_mod_title = function (target, node, oldtitle) {
+OperaLink.prototype.f_mod_title = OperaLink.prototype.bm_mod_title = function (target, node, oldtitle) {
 	this.sendChanges(node, {title: node.title});
 }
 
