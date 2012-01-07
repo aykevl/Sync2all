@@ -40,62 +40,64 @@ function Link (id) {
 
 	import_link(this, id);
 }
+
+Link.prototype.load = function () {
+	this.enabled = false;
+	if (this != browser) {
+		// self-test
+		if (!this.id) throw 'no id: '+this.name;
+
+		// load enabled/disabled state
+		if (localStorage[this.id+'_synced']) {
+			this.enabled = JSON.parse(localStorage[this.id+'_synced']);
+		}
+	}
+
+	// start if enabled
+	if (this.enabled) {
+		// disable it first and then re-enable it in this.start
+		this.enabled = false;
+		this.start();
+	}
+};
+
+// Start the link
+// @var force Force this link to start, also when it is already started
+Link.prototype.start = function (restart) {
+	// link should first be loaded
+	if (!this.loaded && this != browser) { // browser doesn't need loading
+		console.error('link '+this.id+' started when it was not initialized');
+		return;
+	}
+
+	if (this != browser) {
+		if (this.enabled) {
+			if (!restart) return;
+		} else {
+			// mark enabled
+			this.enabled = true;
+			localStorage[this.id+'_synced'] = JSON.stringify(true);
+
+			sync2all.syncedWebLinks.push(this);
+
+			// whether this link needs extra url/tag indices
+			if (this.flag_tagStructure && !this.flag_treeStructure) {
+				tagtree.addLink(this);
+			}
+		}
+	}
+
+	if (this.status) {
+		console.error('BUG: '+this.id+'.startSync called while link is busy (status is non-zero)');
+		return;
+	}
+
+	// now start the link. Should be done when it is enabled
+	this._startSync();
+};
+
+
 function import_link (link, id) {
-
-	link.load = function () {
-		link.enabled = false;
-		if (link != browser) {
-			// self-test
-			if (!link.id) throw 'no id: '+link.name;
-
-			// load enabled/disabled state
-			if (localStorage[this.id+'_synced']) {
-				link.enabled = JSON.parse(localStorage[this.id+'_synced']);
-			}
-		}
-
-		// start if enabled
-		if (link.enabled) {
-			// disable it first and then re-enable it in link.start
-			link.enabled = false;
-			link.start();
-		}
-	};
-
-	// Start the link
-	// @var force Force this link to start, also when it is already started
-	link.start = function (restart) {
-		// link should first be loaded
-		if (!link.loaded && link != browser) { // browser doesn't need loading
-			console.error('link '+link.id+' started when it was not initialized');
-			return;
-		}
-
-		if (link != browser) {
-			if (link.enabled) {
-				if (!restart) return;
-			} else {
-				// mark enabled
-				link.enabled = true;
-				localStorage[link.id+'_synced'] = JSON.stringify(true);
-
-				sync2all.syncedWebLinks.push(link);
-
-				// whether this link needs extra url/tag indices
-				if (link.flag_tagStructure && !link.flag_treeStructure) {
-					tagtree.addLink(link);
-				}
-			}
-		}
-
-		if (link.status) {
-			console.error('BUG: '+link.id+'.startSync called while link is busy (status is non-zero)');
-			return;
-		}
-
-		// now start the link. Should be done when it is enabled
-		link._startSync();
-	};
 
 	link._startSync = function () {
 		// first, initialize the link
@@ -387,92 +389,74 @@ function import_link (link, id) {
 	}
 };
 
+/* variables */
+Link.prototype.queue = [];
+Link.prototype.queue.id = Math.random(); // DEBUG FIXME
 
-function import_queue (obj) {
+// add a function to the queue
+Link.prototype.queue_add = function (callback, data) {
+	this.queue.push([callback, data]);
+};
 
-	/* variables */
+// start walking through the queue if it isn't already started
+Link.prototype.queue_start = function () {
+	if (this.queue.running) {
+		console.error('Queue is already running! '+this.queue.id+this.queue.running);
+		return;
+	}
+	this.updateStatus(statuses.UPLOADING);
+	this.queue.running = true;
+	this.queue_next();
+};
 
-	obj.queue = [];
-	obj.queue.id = Math.random();
+// execute the next function in the queue
+Link.prototype.queue_next = function () {
+	var queue_item = this.queue.shift();
+	if (!queue_item) {
 
-
-	/* functions */
-
-
-	// add a function to the queue
-	obj.queue_add = function (callback, data) {
-		this.queue.push([callback, data]);
-	};
-
-	// start walking through the queue if it isn't already started
-	obj.queue_start = function () {
-		if (this.queue.running) {
-			console.warn('Queue is already running! '+this.queue.id+this.queue.running);
-			return;
-		}
-		this.updateStatus(statuses.UPLOADING);
-		this.queue.running = true;
-		this.queue_next();
-	};
-
-	// execute the next function in the queue
-	obj.queue_next = function () {
-		var queue_item = this.queue.shift();
-		if (!queue_item) {
-
-			// queue has finished!
-			this.queue_stop();
-
-			// don't go further
-			return;
-		}
-
+		// queue has finished!
+		this.queue_stop();
+	} else {
 		// send amount of lasting uploads to the popup
-		this.updateStatus(statuses.UPLOADING);
+		this.updateStatus();
 
 		var callback = queue_item[0];
 		var data     = queue_item[1];
 		callback(data);
-	};
-
-	obj.queue_stop = function () {
-		// queue has been finished!!!
-		this.queue.running = false;
-		this.queue.length = 0; // for when the queue has been forced to stop, clear the queue
-
-		this.updateStatus(statuses.READY);
-		console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
-
-		if (debug) {
-			var finished_uploading = true;
-			var webLink;
-			for (var i=0; webLink=webLinks[i]; i++) {
-				if (webLink.enabled && webLink.queue.running) {
-					finished_uploading = false;
-				}
-			}
-			if (!browser.queue.running && finished_uploading) {
-				var link = browser; // just to be sure it works
-				browser.selftest();
-			}
-		}
-
-		// save current state when everything has been uploaded
-		// this occurs also when there is nothing in the queue when the
-		// first commit happens.
-		this.may_save_state();
-
-		// if this is the browser
-		if (this == browser) {
-			// save all states when they are ready
-			//broadcastMessage('may_save_state');
-		}
-	};
-	obj.queue_error = function () {
-		// disable link on error
-		this.queue_stop();
-		this.stop();
 	}
-}
+};
+
+Link.prototype.queue_stop = function () {
+	// queue has been finished (or has been interrupted?)
+	this.queue.running = false;
+	this.queue.length = 0; // for when the queue has been forced to stop, clear the queue
+
+	this.updateStatus(statuses.READY);
+	console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
+
+	if (debug) {
+		var finished_uploading = true;
+		var webLink;
+		for (var i=0; webLink=webLinks[i]; i++) {
+			if (webLink.enabled && webLink.queue.running) {
+				finished_uploading = false;
+			}
+		}
+		if (!browser.queue.running && finished_uploading) {
+			browser.selftest();
+		}
+	}
+
+	// save current state when everything has been uploaded
+	// this occurs also when there is nothing in the queue when the
+	// first commit happens.
+	this.may_save_state();
+};
+
+Link.prototype.queue_error = function () {
+	// disable link on error
+	this.queue_stop();
+	this.stop();
+};
 
 

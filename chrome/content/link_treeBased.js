@@ -5,6 +5,8 @@ function TreeBasedLink (id) {
 	this.flag_treeStructure = true;
 }
 
+TreeBasedLink.prototype.__proto__ = Link.prototype;
+
 // import bookmark into own tree, thereby cleaning up duplicates etc.
 TreeBasedLink.prototype.importBookmark = function (idIndex, bookmark) {
 	// this is the folder where the bookmark is in.

@@ -193,9 +193,6 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
 
 browser = new Browser();
 
-// import libraries, kind of inheritance
-import_queue(browser);
-
 
 /*************************************
  * Listen to bookmark events

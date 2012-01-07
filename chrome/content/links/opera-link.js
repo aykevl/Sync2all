@@ -8,9 +8,6 @@ webLinks.push(opl);
 opl.name = 'Opera Link'; // OBSOLETE
 opl.fullName = 'Opera Link';
 
-// imports (or include if you want)
-import_queue(opl);
-
 // fix opera.link for specific browsers
 if (browser.name == 'chrome') {
 	opera.link.authorizeFunction = function (url) {

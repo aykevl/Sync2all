@@ -20,10 +20,6 @@ var gbm = new GoogleBookmarksLink();
 webLinks.push(gbm);
 
 
-/* imports */
-import_queue(GoogleBookmarksLink.prototype);
-
-
 // (re) start
 GoogleBookmarksLink.prototype.startSync = function () {
 

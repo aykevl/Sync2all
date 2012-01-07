@@ -7,6 +7,8 @@ function TagBasedLink (id) {
 	this.flag_tagStructure = true;
 }
 
+TagBasedLink.prototype.__proto__ = Link.prototype;
+
 TagBasedLink.prototype.importBookmark = function (uBm) {
 	if (!tagtree.urls[uBm.url]) {
 		// new bookmark (only sometimes the case)
