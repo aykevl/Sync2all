@@ -3,7 +3,7 @@
 // prefix: ffs_
 
 function FirefoxSyncLink () {
-	//TreeBasedLink.call(this, 'ffs');
+	TreeBasedLink.call(this, 'ffs');
 
 	this.name     = 'firefoxSync';
 	this.fullName = 'Firefox Sync';
@@ -13,6 +13,8 @@ function FirefoxSyncLink () {
 	this.password   = localStorage.ffs_password;
 	this.synckey_ui = localStorage.ffs_synckey_ui;
 }
+
+FirefoxSyncLink.prototype.__proto__ = TreeBasedLink.prototype;
 
 FirefoxSyncLink.prototype.getUsername = function () {
 	if (!this.username) {
@@ -33,21 +35,25 @@ FirefoxSyncLink.prototype.getPassword = function () {
 
 FirefoxSyncLink.prototype.getSyncKey = function () {
 	if (!this.synckey) {
-		this.synckey = this.synckey_ui.replace(/-/g, '').replace(/9/g, 'o').replace(/8/g, 'l');
+		this.synckey = b32decode(this.synckey_ui.replace(/-/g, '').replace(/9/g, 'o').replace(/8/g, 'l').toUpperCase());
 	}
 	return this.synckey;
 }
 
 FirefoxSyncLink.prototype.getEncryptionKey = function () {
 	if (!this.encryptionKey) {
-		this.encryptionKey = Crypto.HMAC(Crypto.SHA256, this.getSyncKey(), this.HMAC_INPUT + this.getUsername() + "\x01")
+		this.encryptionKey = Crypto.HMAC(Crypto.SHA256,
+				this.HMAC_INPUT + this.getUsername() + "\x01",
+				Crypto.charenc.Binary.stringToBytes(this.getSyncKey()), {asString: true});
 	}
 	return this.encryptionKey;
 }
 
 FirefoxSyncLink.prototype.getHmacKey = function () {
 	if (!this.hmacKey) {
-		this.hmacKey = Crypto.HMAC(Crypto.SHA256, this.getSyncKey(), this.getEncryptionKey() + this.HMAC_INPUT + this.getUsername() + "\x02")
+		this.hmacKey = Crypto.HMAC(Crypto.SHA256,
+				Crypto.charenc.Binary.stringToBytes(this.getSyncKey()),
+				Crypto.charenc.Binary.stringToBytes(this.getEncryptionKey()) + this.HMAC_INPUT + this.getUsername() + "\x02");
 	}
 	return this.hmacKey;
 }
@@ -59,9 +65,7 @@ FirefoxSyncLink.prototype.sendRequest = function (path, callback) {
 	xhr.onload  = function () {
 		if (xhr.status == 401) throw '401 unauthorized';
 		var data = JSON.parse(xhr.responseText);
-		// TODO decrypt if necessary
-		var payload = JSON.parse(data.payload);
-		callback(payload);
+		callback(data);
 	}.bind(this);
 	xhr.onerror = function () {
 		callback(undefined, xhr);
@@ -77,20 +81,37 @@ FirefoxSyncLink.prototype.connect = function (callback) {
 	nodeXhr.open('GET', 'https://auth.services.mozilla.com/user/1.0/'+this.getUsername()+'/node/weave', true);
 	nodeXhr.onload = function () {
 		this.server_node_url = nodeXhr.responseText;
-		this.sendRequest('/storage/meta/global', function (metadata) {
+		this.sendRequest('/storage/meta/global', function (data) {
+				var metadata = JSON.parse(data.payload);
 				// check for valid metadata
 				if (!metadata) throw 'Failed to load metadata';
 				if (metadata.storageVersion != 5) throw 'This client is getting old.';
 				this.metadata = metadata;
-				this.sendRequest('/storage/crypto/keys', function (keys) {
-						console.log(keys);
-						this.keys_result = keys;
+				this.sendRequest('/storage/crypto/keys', function (data) {
+						var keys = JSON.parse(data.payload);
+						this.loadKeys(keys);
 					}.bind(this));
 				callback();
 			}.bind(this));
 	}.bind(this);
 	nodeXhr.send();
 };
+
+FirefoxSyncLink.prototype.loadKeys = function (keys) {
+	// First, decode the needed properties
+	var IV         = atob(keys.IV);
+	var ciphertext = atob(keys.ciphertext);
+	var hmac       = atob(keys.hmac);
+	var bulkKeys = JSON.parse(Weave.Crypto.AES.decrypt(this.getEncryptionKey(), IV, ciphertext));
+	if (bulkKeys.id != 'keys' ||
+			bulkKeys.collection != 'crypto')
+		throw "/storage/crypto/keys object has changed it's structure";
+	// should have no keys in it
+	for (collection in bulkKeys.collections)
+		throw "/storage/crypto/keys contains multiple keys";
+	this.defaultKey  = atob(bulkKeys.default[0]);
+	this.defaultHMAC = btoa(bulkKeys.default[1]);
+}
 
 FirefoxSyncLink.prototype.loadBookmarks = function (callback) {
 	// Do first error-checking
@@ -103,6 +124,66 @@ FirefoxSyncLink.prototype.loadBookmarks = function (callback) {
 		delete localStorage.ffs_state;
 		delete localStorage.ffs_state_version;
 	}
+
+	this.sendRequest('/storage/bookmarks?full=1', function (encryptedBookmarks) {
+			callback(this.parseBookmarks(encryptedBookmarks));
+			}.bind(this));
+}
+FirefoxSyncLink.prototype.parseBookmarks = function (encryptedBookmarks) {
+	// First, index all bookmarks by ID
+	var idIndexAll = {};
+	var encryptedBookmark;
+	for (var i=0; encryptedBookmark=encryptedBookmarks[i]; i++) {
+		var payload = JSON.parse(encryptedBookmark.payload);
+		var ffsBookmark = JSON.parse(Weave.Crypto.AES.decrypt(this.defaultKey,
+				atob(payload.IV), atob(payload.ciphertext)));
+		if (ffsBookmark.deleted) continue; // ignore them for now
+		if (ffsBookmark.hasDupe) continue; // ignore them for now
+		if (ffsBookmark.type == 'bookmark') {
+			var bookmark = {title: ffsBookmark.title, id: encryptedBookmark.id,
+					url: ffsBookmark.bmkUri, parentId: ffsBookmark.parentid};
+			if (!bookmark.url) continue;
+			idIndexAll[bookmark.id] = bookmark;
+		} else if (ffsBookmark.type == 'folder') {
+			var folder = {title: ffsBookmark.title, id: encryptedBookmark.id,
+					parentId: ffsBookmark.parentid, bm: {}, f: {}};
+			if (!folder.title && folder.id != 'places') continue;
+			idIndexAll[folder.id] = folder;
+		}
+	}
+
+	// Now, convert that list to a tree
+	var bookmarks = {bm: {}, f: {}, id: 'menu'};
+	for (var id in idIndexAll) {
+		var node = idIndexAll[id];
+		if (!idIndexAll[node.parentId]) continue;
+		if (node.parentId == 'menu') {
+			node.parentNode = bookmarks;
+		} else {
+			node.parentNode = idIndexAll[node.parentId];
+		}
+		if (node.url) {
+			this.importBookmark(idIndexAll, node);
+		} else {
+			this.importFolder(idIndexAll, node);
+		}
+	}
+
+	// save values
+	this.idIndexAll = idIndexAll;
+	this.bookmarks  = bookmarks;
+
+	return bookmarks;
+};
+
+FirefoxSyncLink.prototype.f_del  =
+FirefoxSyncLink.prototype.bm_del = function () {
+	// TODO
+}
+
+FirefoxSyncLink.prototype.f_mv  =
+FirefoxSyncLink.prototype.bm_mv = function () {
+	// TODO
 }
 
 /*FirefoxSyncLink.prototype.getCollections = function () {
@@ -146,10 +227,12 @@ FirefoxSyncLink.prototype.test = function () {
 
 if (debug) {
 	var ffs = new FirefoxSyncLink();
+	console.log('Connecting with Firefox Sync...');
 	ffs.connect(function () {
-			console.log('Connected with Firefox Sync');
+			console.log('Loading bookmarks...');
 			ffs.loadBookmarks(function (bookmarks) {
-					console.log('Bookmarks loaded');
+					console.log('Bookmarks loaded:');
+					console.log(bookmarks);
 				});
 		});
 }
