@@ -37,8 +37,6 @@ function Link (id) {
 	this.started = false;
 	this.status = statuses.READY; // only to initialize
 	this.loaded = true;
-
-	import_link(this, id);
 }
 
 Link.prototype.load = function () {
@@ -97,297 +95,281 @@ Link.prototype.start = function (restart) {
 };
 
 
-function import_link (link, id) {
+Link.prototype._startSync = function () {
+	// first, initialize the link
 
-	link._startSync = function () {
-		// first, initialize the link
+	this.bookmarks = {bm: {}, f: {}};
 
-		link.bookmarks = {bm: {}, f: {}};
-
-		if (link.flag_treeStructure) {
-			// local IDs mapped to own bookmark objects, should be deleted after merging
-			link.ids = {};
-			link.ids[link.bookmarks.id] = link.bookmarks;
-		}
-
-		if (link.flag_tagStructure) {
-			link.rootNodeLabel = localStorage[link.id+'_rootNodeLabel'] || 'Bookmarks Bar';
-			link.folderSep     = localStorage[link.id+'_folderSep']     || '/';
-			link.changed = {}; // marked to be uploaded
-			link.tags    = {};
-		}
-
-		// only for webLinks:
-		if (link != browser) {
-			link.actions = [];
-		}
-
-		// now start the link
-		link.startSync();
+	// only for webLinks:
+	if (this != browser) {
+		this.actions = [];
 	}
 
-	link.msg_restart = function () {
-		link.start(true);
-	}
+	// now start the link
+	this.startSync();
+}
+
+Link.prototype.msg_restart = function () {
+	this.start(true);
+}
 
 	// TODO better name
-	link.startingFinished = function () {
-		if (localStorage[link.id+'_state']) {
-			// load saved status
-			var state = JSON.parse(localStorage[link.id+'_state']);
+Link.prototype.startingFinished = function () {
+	if (localStorage[this.id+'_state']) {
+		// load saved status
+		var state = JSON.parse(localStorage[this.id+'_state']);
 
-			// for tree-based bookmark systems
-			if (link.flag_treeStructure) {
-				// map link-specific IDs to local browser IDs.
-				// WARNING: when the link_id is not known, this will give strange
-				// behaviour (when a moved bookmark or folder moves to the
-				// bookmarks root)
-				link.ownId_to_lId = {undefined: sync2all.bookmarks.id};
-				link.mapLinkIdsToLocalIds(state);
-			}
-
-			// now calculate the actions once all data has been loaded.
-			link.calculate_actions(state, link.bookmarks);
-
-			// display message when there are actions
-			if (link.actions.length) {
-				console.log(link.id+'.actions:');
-				console.log(link.actions);
-			}
+		// for tree-based bookmark systems
+		if (this.flag_treeStructure) {
+			// map link-specific IDs to local browser IDs.
+			// WARNING: when the link_id is not known, this will give strange
+			// behaviour (when a moved bookmark or folder moves to the
+			// bookmarks root)
+			this.ownId_to_lId = {undefined: sync2all.bookmarks.id};
+			this.mapLinkIdsToLocalIds(state);
 		}
 
-		if (sync2all.messageListeners.indexOf(link) < 0) {
-			sync2all.messageListeners.push(link);
-		}
+		// now calculate the actions once all data has been loaded.
+		this.calculate_actions(state, this.bookmarks);
 
-		// start merging
-		sync2all.onLinkFinished(link);
+		// display message when there are actions
+		if (this.actions.length) {
+			console.log(this.id+'.actions:');
+			console.log(this.actions);
+		}
 	}
 
-	// Stop link. remove memory-eating status if the keepStatus flag is not set.
-	link.stop = link.msg_stop = function (keepStatus) {
-		localStorage[link.id+'_synced'] = JSON.stringify(false);
-		link.enabled = false;
-		if (link != browser) {
-			Array_remove(sync2all.syncedWebLinks, link);
-		}
-		// check whether this link has finished after starting. It is possible
-		// that there's an error while it starts, and that it disables itself.
-		if (sync2all.messageListeners.indexOf(link) >= 0) {
-			Array_remove(sync2all.messageListeners, link);
-		}
-
-		// whether this link needs extra url/tag indices
-		if (link.flag_tagStructure && !link.flag_treeStructure) {
-			tagtree.removeLink(link);
-		}
-
-		if (!keepStatus) {
-			delete localStorage[link.id+'_state'];
-		}
-
-		link.updateStatus(statuses.READY);
-	};
-
-	link.commit = function () {
-		if (debug) {
-			console.warn(link.id+' commit -- backtrace:');
-			console.trace();
-		}
-		link.queue_start(); // start running
+	if (sync2all.messageListeners.indexOf(this) < 0) {
+		sync2all.messageListeners.push(this);
 	}
 
-	link.may_save_state = function () {
-		if (browser.queue.running ||
-			link.has_saved_state ||
-			link.status ||
-			link == browser) {
-			return;
-		}
+	// start merging
+	sync2all.onLinkFinished(this);
+}
 
-		if ((link.queue || link.r_queue).running) {
-			console.warn(link.id+': Queue is running but status is zero!');
-			console.log(link);
-			return; // will be started when the queue is empty
-		}
+// Stop link. remove memory-eating status if the keepStatus flag is not set.
+Link.prototype.stop = Link.prototype.msg_stop = function (keepStatus) {
+	localStorage[this.id+'_synced'] = JSON.stringify(false);
+	this.enabled = false;
+	if (this != browser) {
+		Array_remove(sync2all.syncedWebLinks, this);
+	}
+	// check whether this link has finished after starting. It is possible
+	// that there's an error while it starts, and that it disables itself.
+	if (sync2all.messageListeners.indexOf(this) >= 0) {
+		Array_remove(sync2all.messageListeners, this);
+	}
 
-		link.has_saved_state = true;
+	// whether this link needs extra url/tag indices
+	if (this.flag_tagStructure && !this.flag_treeStructure) {
+		tagtree.removeLink(this);
+	}
 
-		console.log(link.id+': saving state:');
+	if (!keepStatus) {
+		delete localStorage[this.id+'_state'];
+	}
+
+	this.updateStatus(statuses.READY);
+};
+
+Link.prototype.commit = function () {
+	if (debug) {
+		console.warn(this.id+' commit -- backtrace:');
 		console.trace();
-		link.save_state();
-	};
+	}
+	this.queue_start(); // start running
+}
 
-	link.save_state = function () {
-		if (link.flag_treeStructure) {
-			var state = [];
+Link.prototype.may_save_state = function () {
+	if (browser.queue.running ||
+		this.has_saved_state ||
+		this.status ||
+		this == browser) {
+		return;
+	}
+
+	if ((this.queue || this.r_queue).running) {
+		console.warn(this.id+': Queue is running but status is zero!');
+		console.log(this);
+		return; // will be started when the queue is empty
+	}
+
+	this.has_saved_state = true;
+
+	console.log(this.id+': saving state:');
+	console.trace();
+	this.save_state();
+};
+
+Link.prototype.save_state = function () {
+	if (this.flag_treeStructure) {
+		var state = [];
+	} else {
+		var state = {bm: [], f: {}};
+	}
+	this.get_state(state, sync2all.bookmarks);
+	localStorage[this.id+'_state'] = JSON.stringify(state);
+}
+
+Link.prototype.updateStatus = function (status) {
+	// ??? to use my object (this), I have to use 'link' instead of 'this'.
+	if (status !== undefined) {
+		this.status = status;
+	}
+	if (this == browser) return; // not in popup
+
+	if (this.onUpdateStatus) {
+		this.onUpdateStatus(status !== undefined);
+	}
+
+	if (!sync2all.browser.isPopupOpen) return;
+
+	// make make human-readable message
+	var msgtext = 'Not synchronized';
+	if (this.enabled) {
+		if (this.status == statuses.READY) {
+			msgtext = 'Synchronized';
+		} else if (this.status == statuses.AUTHORIZING) {
+			msgtext = 'Authorizing...';
+		} else if (this.status == statuses.DOWNLOADING) {
+			msgtext = 'Downloading...';
+		} else if (this.status == statuses.PARSING) {
+			msgtext = 'Parsing bookmarks data...';
+		} else if (this.status == statuses.MERGING) {
+			msgtext = 'Syncing...';
+		} else if (this.status == statuses.UPLOADING) {
+			msgtext = 'Uploading ('+((this.queue||this.r_queue).length+1)+' left)...';
 		} else {
-			var state = {bm: [], f: {}};
-		}
-		link.get_state(state, sync2all.bookmarks);
-		localStorage[link.id+'_state'] = JSON.stringify(state);
-	}
-
-	link.updateStatus = function (status) {
-		// ??? to use my object (this), I have to use 'link' instead of 'this'.
-		if (status !== undefined) {
-			link.status = status;
-		}
-		if (link == browser) return; // not in popup
-
-		if (link.onUpdateStatus) {
-			link.onUpdateStatus(status !== undefined);
-		}
-
-		if (!sync2all.browser.isPopupOpen) return;
-
-		// make make human-readable message
-		var msgtext = 'Not synchronized';
-		if (link.enabled) {
-			if (link.status == statuses.READY) {
-				msgtext = 'Synchronized';
-			} else if (link.status == statuses.AUTHORIZING) {
-				msgtext = 'Authorizing...';
-			} else if (link.status == statuses.DOWNLOADING) {
-				msgtext = 'Downloading...';
-			} else if (link.status == statuses.PARSING) {
-				msgtext = 'Parsing bookmarks data...';
-			} else if (link.status == statuses.MERGING) {
-				msgtext = 'Syncing...';
-			} else if (link.status == statuses.UPLOADING) {
-				msgtext = 'Uploading ('+((link.queue||link.r_queue).length+1)+' left)...';
-			} else {
-				msgtext = 'Enabled, but unknown status (BUG! status='+link.status+')';
-			}
-		}
-		var btn_start = !link.enabled || !link.status && link.enabled;
-		var btn_stop  = link.enabled && !link.status;
-
-		var message = {action: 'updateUi', id: link.id, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
-
-		// send message to specific browsers
-		if (browser.name == 'chrome') {
-			chrome.extension.sendRequest(message, function () {});
-		} else if (browser.name == 'firefox') {
-			browser.popupDOM.getElementById('sync2all-'+link.id+'-status').value = msgtext;
-			browser.popupDOM.getElementById('sync2all-'+link.id+'-button-start').disabled = !btn_start;
-			browser.popupDOM.getElementById('sync2all-'+link.id+'-button-stop').disabled  = !btn_stop;
-		} else if (browser.name == 'opera') {
-			opera.extension.broadcastMessage(message);
+			msgtext = 'Enabled, but unknown status (BUG! status='+this.status+')';
 		}
 	}
+	var btn_start = !this.enabled || !this.status && this.enabled;
+	var btn_stop  = this.enabled && !this.status;
 
-	link.mark_state_deleted = function (state) {
+	var message = {action: 'updateUi', id: this.id, message: msgtext, btn_start: btn_start, btn_stop: btn_stop};
 
-		// remove the subfolders first
-		var title;
-		for (title in state.f) {
-			var substate = state.f[title];
-			this.mark_state_deleted(substate);
-		}
+	// send message to specific browsers
+	if (browser.name == 'chrome') {
+		chrome.extension.sendRequest(message, function () {});
+	} else if (browser.name == 'firefox') {
+		browser.popupDOM.getElementById('sync2all-'+this.id+'-status').value = msgtext;
+		browser.popupDOM.getElementById('sync2all-'+this.id+'-button-start').disabled = !btn_start;
+		browser.popupDOM.getElementById('sync2all-'+this.id+'-button-stop').disabled  = !btn_stop;
+	} else if (browser.name == 'opera') {
+		opera.extension.broadcastMessage(message);
+	}
+}
 
-		// then remove the bookmarks
-		// Otherwise, non-empty folders will be removed
-		for (var i=0; data=state.bm[i]; i++) {
+Link.prototype.mark_state_deleted = function (state) {
 
-			var id, url;
-			data = data.split('\n');
-			id = data[0]; url = data[1];
-
-			// this bookmark has been removed
-			console.log('Bookmark deleted: '+url);
-			this.actions.push(['bm_del', id]);
-		}
-
-		// remove the parent folder when the contents has been deletet
-		this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
+	// remove the subfolders first
+	var title;
+	for (title in state.f) {
+		var substate = state.f[title];
+		this.mark_state_deleted(substate);
 	}
 
-	/* Errors */
+	// then remove the bookmarks
+	// Otherwise, non-empty folders will be removed
+	for (var i=0; data=state.bm[i]; i++) {
 
-	link.errorStarting = function (msg) {
-		console.log(msg);
-		console.log(link.name+' will now be disabled');
-		link.stop();
+		var id, url;
+		data = data.split('\n');
+		id = data[0]; url = data[1];
+
+		// this bookmark has been removed
+		console.log('Bookmark deleted: '+url);
+		this.actions.push(['bm_del', id]);
 	}
 
-	/* Self-check */
+	// remove the parent folder when the contents has been deletet
+	this.actions.push(['f_del_ifempty', state.id]); // clean up empty folders
+}
 
-	link.testfail = function (error, element) {
-		console.log(element);
-		throw (link.fullName || link.name)+' Failed test: '+error;
+/* Errors */
+
+Link.prototype.errorStarting = function (msg) {
+	console.log(msg);
+	console.log(this.name+' will now be disabled');
+	this.stop();
+}
+
+/* Self-check */
+
+Link.prototype.testfail = function (error, element) {
+	console.log(element);
+	throw (this.fullName || this.name)+' Failed test: '+error;
+}
+
+Link.prototype.selftest = function () {
+	if (this == browser) {
+		this.subselftest(sync2all.bookmarks);
+	} else {
+		this.subselftest(this.bookmarks);
 	}
+	console.log(this.fullName+' has passed the intergity test');
+}
 
-	link.selftest = function () {
-		if (link == browser) {
-			link.subselftest(sync2all.bookmarks);
-		} else {
-			link.subselftest(link.bookmarks);
+Link.prototype.subselftest = function (folder) {
+	var url;
+	for (url in folder.bm) {
+		var bm = folder.bm[url];
+		if (!bm.url == url)
+			this.testfail('bm.url != folder.bm[url]', [folder, bm]);
+		if (bm.parentNode != folder) {
+			this.testfail('bm.parentNode != folder', [folder, bm]);
 		}
-		console.log(link.fullName+' has passed the intergity test');
+		this.testId(bm);
 	}
-
-	link.subselftest = function (folder) {
-		var url;
-		for (url in folder.bm) {
-			var bm = folder.bm[url];
-			if (!bm.url == url)
-				link.testfail('bm.url != folder.bm[url]', [folder, bm]);
-			if (bm.parentNode != folder) {
-				link.testfail('bm.parentNode != folder', [folder, bm]);
-			}
-			link.testId(bm);
-		}
-		var title;
-		for (title in folder.f) {
-			var subfolder = folder.f[title];
-			if (!subfolder.title == title)
-				link.testfail('subfolder.title != title', subfolder);
-			if (!subfolder.bm)
-				link.testfail('!subfolder.bm');
-			if (!subfolder.f)
-				link.testfail('!subfolder.f');
-			link.testId(subfolder);
-			link.subselftest(subfolder);
-		}
+	var title;
+	for (title in folder.f) {
+		var subfolder = folder.f[title];
+		if (!subfolder.title == title)
+			this.testfail('subfolder.title != title', subfolder);
+		if (!subfolder.bm)
+			this.testfail('!subfolder.bm');
+		if (!subfolder.f)
+			this.testfail('!subfolder.f');
+		this.testId(subfolder);
+		this.subselftest(subfolder);
 	}
+}
 
-	link.testId = function (node) {
-		if (link == browser) {
-			if (!node.id)
-				link.testfail('!node.id', node);
-			var webLink;
-			for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
-				if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
-					if (!webLink.flag_tagStructure) {
-						if (!node[webLink.id+'_id'])
-							link.testfail('!node.*_id', [node, webLink.id]);
-					} else {
-						if (node[webLink.id+'_id'])
-							link.testfail('node.*_id', [node, webLink.id]);
-					}
+Link.prototype.testId = function (node) {
+	if (this == browser) {
+		if (!node.id)
+			this.testfail('!node.id', node);
+		var webLink;
+		for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
+			if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
+				if (!webLink.flag_tagStructure) {
+					if (!node[webLink.id+'_id'])
+						this.testfail('!node.*_id', [node, webLink.id]);
+				} else {
+					if (node[webLink.id+'_id'])
+						this.testfail('node.*_id', [node, webLink.id]);
 				}
 			}
-		} else {
-			if (!link.flag_tagStructure) {
-				if (!node[link.id+'_id'])
-					link.testfail('!node.*_id', node);
-			}
+		}
+	} else {
+		if (!this.flag_tagStructure) {
+			if (!node[this.id+'_id'])
+				this.testfail('!node.*_id', node);
 		}
 	}
+}
 
-	link.copyBookmark = function (bm) {
-		var newbm = {url: bm.url, title: bm.title, parentNode: bm.parentNode, mtime: bm.mtime};
-		if (link == browser) {
-			newbm.id = bm.id;
-		} else {
-			if (!link.flag_tagStructure) {
-				newbm[link.id+'_id'] = bm[link.id+'_id'];
-			}
+Link.prototype.copyBookmark = function (bm) {
+	var newbm = {url: bm.url, title: bm.title, parentNode: bm.parentNode, mtime: bm.mtime};
+	if (this == browser) {
+		newbm.id = bm.id;
+	} else {
+		if (!this.flag_tagStructure) {
+			newbm[this.id+'_id'] = bm[this.id+'_id'];
 		}
-		return newbm;
 	}
-};
+	return newbm;
+}
 
 /* variables */
 Link.prototype.queue = [];

@@ -9,6 +9,14 @@ function TagBasedLink (id) {
 
 TagBasedLink.prototype.__proto__ = Link.prototype;
 
+TagBasedLink.prototype._startSync = function () {
+	Link.prototype._startSync.call(this);
+	this.rootNodeLabel = localStorage[this.id+'_rootNodeLabel'] || 'Bookmarks Bar';
+	this.folderSep     = localStorage[this.id+'_folderSep']     || '/';
+	this.changed = {}; // marked to be uploaded
+	this.tags    = {};
+}
+
 TagBasedLink.prototype.importBookmark = function (uBm) {
 	if (!tagtree.urls[uBm.url]) {
 		// new bookmark (only sometimes the case)
