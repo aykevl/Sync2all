@@ -11,7 +11,10 @@ var statuses = {
 
 var browser;
 
-var debug = true;
+var debug = false;
+if (localStorage.debug) {
+	debug = JSON.parse(localStorage.debug);
+}
 
 var webLinks = [];
 
