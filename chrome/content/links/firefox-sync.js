@@ -186,45 +186,6 @@ FirefoxSyncLink.prototype.bm_mv = function () {
 	// TODO
 }
 
-/*FirefoxSyncLink.prototype.getCollections = function () {
-	this.sendRequest ('/info/collections',
-			function (success, xhr) {
-				if (!success) {
-					console.error('Failed to load collection timestamps:');
-					console.log(xhr);
-					return;
-				}
-				this.collection_mtimes = JSON.parse(xhr.responseText);
-				this.getKeys();
-			}.bind(this));
-};
-
-FirefoxSyncLink.prototype.getKeys = function () {
-	this.sendRequest('/storage/key?full=1', this.getKeys_callback.bind(this));
-};
-
-FirefoxSyncLink.prototype.getKeys_callback = function (success, xhr) {
-	if (!success) {
-		console.error('Failed to get keys:');
-		console.log(xhr);
-		return;
-	}
-	var keys = JSON.parse(xhr.responseText);
-	console.log(keys);
-
-	// I hope this is a bit future-proof, but I doubt it...
-	this.privkey_data = JSON.parse(keys[0].payload);
-	this.pubkey_data = JSON.parse(keys[1].payload);
-};*/
-
-// test whether the engine works
-FirefoxSyncLink.prototype.test = function () {
-	this.sendRequest('/storage/bookmarks/-UOuT3k7plln', 
-		function (success, xhr) {
-			console.log(xhr.responseText);
-		}.bind(this));
-};
-
 if (debug) {
 	var ffs = new FirefoxSyncLink();
 	console.log('ffs: connecting...');
