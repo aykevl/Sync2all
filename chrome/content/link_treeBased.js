@@ -25,11 +25,12 @@ TreeBasedLink.prototype.importBookmark = function (idIndex, bookmark) {
 
 	// check for duplicate
 	if (parentNode.bm[bookmark.url]) {
-		console.log('DUPLICATE: '+bookmark.url);
-		console.log(bookmark);
-
 		// this bookmark does already exist, take the latest.
 		var otherBookmark = parentNode.bm[bookmark.url];
+
+		console.log('DUPLICATE: '+bookmark.url);
+		console.log(bookmark);
+		console.log(otherBookmark);
 
 		if (otherBookmark.mtime > bookmark.mtime) {
 			// otherBookmark is the latest added, so remove this bookmark
@@ -74,6 +75,7 @@ TreeBasedLink.prototype.importFolder = function (idIndex, folder) {
 		var otherFolder = parentNode.f[folder.title];
 		// move the contents of this folder to the other folder
 		// FIXME check for duplicates (by using importFolder and importBookmark)
+		// FIXME move to the newest folder and remove the oldest
 		var title; // first the subfolders
 		for (title in folder.f) {
 			var subFolder = folder.f[title];

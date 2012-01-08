@@ -137,44 +137,64 @@ FirefoxSyncLink.prototype.parseBookmarks = function (encryptedBookmarks) {
 		var payload = JSON.parse(encryptedBookmark.payload);
 		var ffsBookmark = JSON.parse(Weave.Crypto.AES.decrypt(this.defaultKey,
 				atob(payload.IV), atob(payload.ciphertext)));
+		ffsBookmark.mtime     = encryptedBookmark.modified;
+		ffsBookmark.sortindex = encryptedBookmark.sortindex;
 		if (ffsBookmark.deleted) continue; // ignore them for now
-		if (ffsBookmark.hasDupe) continue; // ignore them for now
 		if (ffsBookmark.type == 'bookmark') {
-			var bookmark = {title: ffsBookmark.title, id: encryptedBookmark.id,
-					url: ffsBookmark.bmkUri, parentId: ffsBookmark.parentid};
-			if (!bookmark.url) continue;
-			idIndexAll[bookmark.id] = bookmark;
+			if (!ffsBookmark.bmkUri) continue;
 		} else if (ffsBookmark.type == 'folder') {
-			var folder = {title: ffsBookmark.title, id: encryptedBookmark.id,
-					parentId: ffsBookmark.parentid, bm: {}, f: {}};
-			if (!folder.title && folder.id != 'places') continue;
-			idIndexAll[folder.id] = folder;
+			if (!ffsBookmark.title) continue;
+		} else {
+			continue;
+		}
+		idIndexAll[ffsBookmark.id] = ffsBookmark;
+	}
+
+	// fix nodes without a parent (Yes, this is the awesome Firefox Sync)
+	for (var id in idIndexAll) {
+		var node = idIndexAll[id];
+		if (!idIndexAll[node.parentid]) continue; // doesn't matter the other way round
+		if (idIndexAll[node.parentid].children.indexOf(id) < 0) {
+			idIndexAll[node.parentid].children.push(id);
 		}
 	}
 
-	// Now, convert that list to a tree
-	var bookmarks = {bm: {}, f: {}, id: 'menu'};
-	for (var id in idIndexAll) {
-		var node = idIndexAll[id];
-		if (!idIndexAll[node.parentId]) continue;
-		if (node.parentId == 'menu') {
-			node.parentNode = bookmarks;
-		} else {
-			node.parentNode = idIndexAll[node.parentId];
-		}
-		if (node.url) {
-			this.importBookmark(idIndexAll, node);
-		} else {
-			this.importFolder(idIndexAll, node);
-		}
-	}
+	this.idIndex   = {};
+	this.bookmarks = this.parseBookmarksFolder(idIndexAll['menu'], idIndexAll, this.idIndex);
 
 	// save values
 	this.idIndexAll = idIndexAll;
-	this.bookmarks  = bookmarks;
-
-	return bookmarks;
+	return this.bookmarks;
 };
+
+FirefoxSyncLink.prototype.parseBookmarksFolder = function (treeNode, idIndexAll, idIndex) {
+	var folder = {bm: {}, f: {}, ffs_id: treeNode.id,
+		title: treeNode.title, mtime: treeNode.mtime};
+	var childId;
+	for (var i=0; childId=treeNode.children[i]; i++) {
+		if (!idIndexAll[childId]) continue; // strange... but happens sometimes.
+		var child = idIndexAll[childId];
+
+		if (child.type == 'bookmark') {
+			var bookmark = {ffs_id: child.id, title: child.title, mtime: child.mtime,
+				url: child.bmkUri, parentNode: folder};
+			this.importBookmark(idIndex, bookmark);
+		} else {
+			var subfolder = this.parseBookmarksFolder(child, idIndexAll, idIndex);
+			subfolder.parentNode = folder;
+			this.importFolder(idIndex, subfolder);
+		}
+	}
+	return folder;
+}
+
+FirefoxSyncLink.prototype.f_add  = function () {
+	// TODO
+}
+
+FirefoxSyncLink.prototype.bm_add = function () {
+	// TODO
+}
 
 FirefoxSyncLink.prototype.f_del  =
 FirefoxSyncLink.prototype.bm_del = function () {
@@ -194,6 +214,7 @@ if (debug) {
 			ffs.loadBookmarks(function (bookmarks) {
 					console.log('ffs: bookmarks loaded:');
 					console.log(bookmarks);
+					ffs.selftest();
 				});
 		});
 }
