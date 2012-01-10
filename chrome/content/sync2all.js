@@ -656,9 +656,5 @@ function delLBookmark(target, bm) {
 	return 0;
 }
 
-function onLoad () {
-	this.sync2all = new Sync2all();
-	this.sync2all.run();
-}
-
+sync2all = new Sync2all();
 

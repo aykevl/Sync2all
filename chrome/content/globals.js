@@ -20,3 +20,5 @@ var webLinks = [];
 
 var tagStructuredWebLinks = [];
 
+var sync2all;
+
