@@ -2,7 +2,6 @@
 
 function BrowserBase() {
 	TreeBasedLink.call(this);
-	this.flag_treeStructure = true;
 }
 BrowserBase.prototype.__proto__ = TreeBasedLink.prototype;
 

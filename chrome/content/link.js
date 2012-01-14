@@ -37,11 +37,9 @@ function Link (id) {
 	this.started = false;
 	this.status = statuses.READY; // only to initialize
 	this.loaded = true;
-}
 
-Link.prototype.load = function () {
 	this.enabled = false;
-	if (this != browser) {
+	if (!(this instanceof Browser)) {
 		// self-test
 		if (!this.id) throw 'no id: '+this.name;
 
@@ -50,7 +48,9 @@ Link.prototype.load = function () {
 			this.enabled = JSON.parse(localStorage[this.id+'_synced']);
 		}
 	}
+}
 
+Link.prototype.load = function () {
 	// start if enabled
 	if (this.enabled) {
 		// disable it first and then re-enable it in this.start
@@ -79,7 +79,7 @@ Link.prototype.start = function (restart) {
 			sync2all.syncedWebLinks.push(this);
 
 			// whether this link needs extra url/tag indices
-			if (this.flag_tagStructure && !this.flag_treeStructure) {
+			if (this instanceof TagBasedLink) {
 				tagtree.addLink(this);
 			}
 		}
@@ -120,7 +120,7 @@ Link.prototype.startingFinished = function () {
 		var state = JSON.parse(localStorage[this.id+'_state']);
 
 		// for tree-based bookmark systems
-		if (this.flag_treeStructure) {
+		if (this instanceof TreeBasedLink) {
 			// map link-specific IDs to local browser IDs.
 			// WARNING: when the link_id is not known, this will give strange
 			// behaviour (when a moved bookmark or folder moves to the
@@ -161,7 +161,7 @@ Link.prototype.stop = Link.prototype.msg_stop = function (keepStatus) {
 	}
 
 	// whether this link needs extra url/tag indices
-	if (this.flag_tagStructure && !this.flag_treeStructure) {
+	if (this instanceof TagBasedLink) {
 		tagtree.removeLink(this);
 	}
 
@@ -202,7 +202,7 @@ Link.prototype.may_save_state = function () {
 };
 
 Link.prototype.save_state = function () {
-	if (this.flag_treeStructure) {
+	if (this instanceof TreeBasedLink) {
 		var state = [];
 	} else {
 		var state = {bm: [], f: {}};
@@ -342,7 +342,7 @@ Link.prototype.testId = function (node) {
 		var webLink;
 		for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
 			if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
-				if (!webLink.flag_tagStructure) {
+				if (webLink instanceof TreeBasedLink) {
 					if (!node[webLink.id+'_id'])
 						this.testfail('!node.*_id', [node, webLink.id]);
 				} else {
@@ -352,9 +352,12 @@ Link.prototype.testId = function (node) {
 			}
 		}
 	} else {
-		if (!this.flag_tagStructure) {
+		if (this instanceof TreeBasedLink) {
 			if (!node[this.id+'_id'])
 				this.testfail('!node.*_id', node);
+		} else {
+			if (node[this.id+'_id'])
+				this.testfail('node.*_id', node);
 		}
 	}
 }
@@ -364,7 +367,7 @@ Link.prototype.copyBookmark = function (bm) {
 	if (this == browser) {
 		newbm.id = bm.id;
 	} else {
-		if (!this.flag_tagStructure) {
+		if (!(this instanceof TagBasedLink)) {
 			newbm[this.id+'_id'] = bm[this.id+'_id'];
 		}
 	}

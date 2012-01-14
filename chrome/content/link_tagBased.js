@@ -4,7 +4,6 @@
 // I'm not very happy with this name, but couldn't find a better one
 function TagBasedLink (id) {
 	Link.call(this, id);
-	this.flag_tagStructure = true;
 }
 
 TagBasedLink.prototype.__proto__ = Link.prototype;

@@ -2,7 +2,6 @@
 
 function TreeBasedLink (id) {
 	Link.call(this, id);
-	this.flag_treeStructure = true;
 }
 
 TreeBasedLink.prototype.__proto__ = Link.prototype;

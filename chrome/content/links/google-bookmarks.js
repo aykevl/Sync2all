@@ -22,7 +22,10 @@ webLinks.push(gbm);
 
 // (re) start
 GoogleBookmarksLink.prototype.startSync = function () {
+	this.loadBookmarks();
+}
 
+GoogleBookmarksLink.prototype.loadBookmarks = function () {
 	// will be set to false once the status has been saved
 	this.initial_commit = true;
 
