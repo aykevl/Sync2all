@@ -8,6 +8,17 @@ function Array_remove(array, element) {
 	return array.splice(index, 1);
 }
 
+function getSecureRandomString(length) {
+	var bytes = new Uint8Array(length);
+	// this gets cryptographically-strong random data
+	crypto.getRandomValues(bytes);
+	var string = '';
+	for (var i=0; i<length; i++) {
+		string += String.fromCharCode(bytes[i]);
+	}
+	return string;
+}
+
 // See http://www.eahanson.com/2008/12/04/relative-dates-in-javascript/
 /**
  * Simple relative date.
