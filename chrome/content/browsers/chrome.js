@@ -43,7 +43,7 @@ browser = new Browser();
 Browser.prototype.__proto__ = BrowserBase.prototype;
 
 Browser.prototype.loadBookmarks = function (callback) {
-	var bookmarks = {bm: [], f: [], title: 'Bookmarks Bar', id: '1'};
+	var bookmarks = {bm: {}, f: {}, title: 'Bookmarks Bar', id: '1'};
 	var idIndex   = {'1': bookmarks};
 	this.ids       = idIndex;
 	chrome.bookmarks.getSubTree(bookmarks.id,

@@ -311,6 +311,13 @@ Link.prototype.selftest = function () {
 }
 
 Link.prototype.subselftest = function (folder) {
+	// test this folder
+	if (folder.f instanceof Array)
+		this.testfail('folder.f instanceof Array');
+	if (folder.bm instanceof Array)
+		this.testfail('folder.bm instanceof Array');
+
+	// test bookmarks in this folder
 	var url;
 	for (url in folder.bm) {
 		var bm = folder.bm[url];
@@ -319,8 +326,10 @@ Link.prototype.subselftest = function (folder) {
 		if (bm.parentNode != folder) {
 			this.testfail('bm.parentNode != folder', [folder, bm]);
 		}
-		this.testId(bm);
+		this.testNode(bm);
 	}
+
+	// test subfolders
 	var title;
 	for (title in folder.f) {
 		var subfolder = folder.f[title];
@@ -330,13 +339,14 @@ Link.prototype.subselftest = function (folder) {
 			this.testfail('!subfolder.bm');
 		if (!subfolder.f)
 			this.testfail('!subfolder.f');
-		this.testId(subfolder);
+		this.testNode(subfolder);
 		this.subselftest(subfolder);
 	}
 }
 
-Link.prototype.testId = function (node) {
-	if (this == browser) {
+// general tests
+Link.prototype.testNode = function (node) {
+	if (this instanceof Browser) {
 		if (!node.id)
 			this.testfail('!node.id', node);
 		var webLink;
