@@ -48,7 +48,7 @@ TreeBasedLink.prototype.importBookmark = function (idIndex, bookmark) {
 	}
 
 	// add bookmark ID
-	if (this == browser) {
+	if (this instanceof Browser) {
 		idIndex[bookmark.id] = bookmark;
 	} else {
 		idIndex[bookmark[this.id+'_id']] = bookmark;
@@ -103,7 +103,7 @@ TreeBasedLink.prototype.importFolder = function (idIndex, folder) {
 	parentNode.f[folder.title] = folder;
 
 	// add folder ID
-	if (this == browser) {
+	if (this instanceof Browser) {
 		idIndex[folder.id] = folder;
 	} else {
 		idIndex[folder[this.id+'_id']] = folder;

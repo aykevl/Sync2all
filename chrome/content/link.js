@@ -63,12 +63,12 @@ Link.prototype.load = function () {
 // @var force Force this link to start, also when it is already started
 Link.prototype.start = function (restart) {
 	// link should first be loaded
-	if (!this.loaded && this != browser) { // browser doesn't need loading
+	if (!this.loaded && !(this instanceof Browser)) { // browser doesn't need loading
 		console.error('link '+this.id+' started when it was not initialized');
 		return;
 	}
 
-	if (this != browser) {
+	if (!(this instanceof Browser)) {
 		if (this.enabled) {
 			if (!restart) return;
 		} else {
@@ -101,7 +101,7 @@ Link.prototype._startSync = function () {
 	this.bookmarks = {bm: {}, f: {}};
 
 	// only for webLinks:
-	if (this != browser) {
+	if (!(this instanceof Browser)) {
 		this.actions = [];
 	}
 
@@ -151,7 +151,7 @@ Link.prototype.startingFinished = function () {
 Link.prototype.stop = Link.prototype.msg_stop = function (keepStatus) {
 	localStorage[this.id+'_synced'] = JSON.stringify(false);
 	this.enabled = false;
-	if (this != browser) {
+	if (!(this instanceof Browser)) {
 		Array_remove(sync2all.syncedWebLinks, this);
 	}
 	// check whether this link has finished after starting. It is possible
@@ -184,7 +184,7 @@ Link.prototype.may_save_state = function () {
 	if (browser.queue.running ||
 		this.has_saved_state ||
 		this.status ||
-		this == browser) {
+		this instanceof Browser) {
 		return;
 	}
 
@@ -216,7 +216,7 @@ Link.prototype.updateStatus = function (status) {
 	if (status !== undefined) {
 		this.status = status;
 	}
-	if (this == browser) return; // not in popup
+	if (this instanceof Browser) return; // not in popup
 
 	if (this.onUpdateStatus) {
 		this.onUpdateStatus(status !== undefined);
@@ -302,7 +302,7 @@ Link.prototype.testfail = function (error, element) {
 }
 
 Link.prototype.selftest = function () {
-	if (this == browser) {
+	if (this instanceof Browser) {
 		this.subselftest(sync2all.bookmarks);
 	} else {
 		this.subselftest(this.bookmarks);
@@ -374,7 +374,7 @@ Link.prototype.testNode = function (node) {
 
 Link.prototype.copyBookmark = function (bm) {
 	var newbm = {url: bm.url, title: bm.title, parentNode: bm.parentNode, mtime: bm.mtime};
-	if (this == browser) {
+	if (this instanceof Browser) {
 		newbm.id = bm.id;
 	} else {
 		if (!(this instanceof TagBasedLink)) {
