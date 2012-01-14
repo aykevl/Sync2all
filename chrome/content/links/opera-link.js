@@ -264,6 +264,24 @@ OperaLink.prototype.msg_verifier = function (request) {
 			this.verifier, this.accessTokenCallback.bind(this), this.accessTokenError.bind(this));
 };
 
+OperaLink.prototype.accessTokenCallback = function (e) {
+	// save the token to localStorage
+	opera.link.saveToken();
+
+	// mark this link as being authorized
+	this.authorized = true;
+
+	// start loading the bookmarks
+	this.loadBookmarks();
+};
+
+OperaLink.prototype.accessTokenError = function (e) {
+	// report the error
+	console.log('error getting access token:');
+	console.log(e);
+	alert('There was an error while connecting to Opera Link. See the log for details.');
+};
+
 OperaLink.prototype.onUpdateStatus = function (statusChanged) {
 	if (browser.name == 'firefox') {
 		if (sync2all.browser.isPopupOpen) {
@@ -315,36 +333,6 @@ OperaLink.prototype.requestTokenError = function (e) {
 	this.updateStatus(statuses.READY);
 	this.stop();
 };
-
-OperaLink.prototype.accessTokenCallback = function (e) {
-	// save the token to localStorage
-	opera.link.saveToken();
-
-	// mark this link as being authorized
-	this.authorized = true;
-
-	// start loading the bookmarks
-	this.loadBookmarks();
-};
-
-OperaLink.prototype.accessTokenError = function (e) {
-	// report the error
-	console.log('error getting access token:');
-	console.log(e);
-	alert('There was an error while connecting to Opera Link. See the log for details.');
-};
-
-// callback after it has been tested whether the user is logged in.
-// #authorized Whether or not the user is authorized
-/*opl.authorizationTested = function (authorized) {
-	if (authorized) {
-		opl.authorized = true;
-		opl.loadBookmarks();
-	} else {
-		// authorize now
-		opera.link.requestToken(opl.requestTokenCallback, opl.requestTokenError);
-	}
-};*/
 
 OperaLink.prototype.loadBookmarks = function () {
 	this.updateStatus(statuses.DOWNLOADING);
@@ -398,13 +386,13 @@ OperaLink.prototype.bookmarksLoaded = function (result) {
 	this.updateStatus(statuses.PARSING);
 
 	// parse the bookmarks
-	this.parse_bookmarks(result.response, this.bookmarks);
+	this.parseBookmarks(result.response, this.bookmarks);
 
 	// send signal to sync engine to start merging
 	this.startingFinished();
 };
 
-OperaLink.prototype.parse_bookmarks = function (array, folder) {
+OperaLink.prototype.parseBookmarks = function (array, folder) {
 	var item;
 	for (var i=0; item=array[i]; i++) {
 		if (item.item_type == 'bookmark_folder') {
@@ -418,7 +406,7 @@ OperaLink.prototype.parse_bookmarks = function (array, folder) {
 					parentNode: folder, bm: {}, f: {}, opl_id: item.id};
 
 			if (item.children) {
-				this.parse_bookmarks(item.children, subfolder);
+				this.parseBookmarks(item.children, subfolder);
 			}
 
 			// add this subfolder to the bookmarks tree
