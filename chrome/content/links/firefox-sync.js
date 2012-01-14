@@ -47,7 +47,8 @@ FirefoxSyncLink.prototype.getEncryptionKey = function () {
 	if (!this.encryptionKey) {
 		this.encryptionKey = Crypto.HMAC(Crypto.SHA256,
 				this.HMAC_INPUT + this.getUsername() + "\x01",
-				Crypto.charenc.Binary.stringToBytes(this.getSyncKey()), {asString: true});
+				Crypto.charenc.Binary.stringToBytes(this.getSyncKey()),
+				{asString: true});
 	}
 	return this.encryptionKey;
 }
@@ -55,8 +56,8 @@ FirefoxSyncLink.prototype.getEncryptionKey = function () {
 FirefoxSyncLink.prototype.getHmacKey = function () {
 	if (!this.hmacKey) {
 		this.hmacKey = Crypto.HMAC(Crypto.SHA256,
+				Crypto.charenc.Binary.stringToBytes(this.getEncryptionKey() + this.HMAC_INPUT + this.getUsername() + "\x02") ,
 				Crypto.charenc.Binary.stringToBytes(this.getSyncKey()),
-				Crypto.charenc.Binary.stringToBytes(this.getEncryptionKey()) + this.HMAC_INPUT + this.getUsername() + "\x02",
 				{asString: true});
 	}
 	return this.hmacKey;
@@ -286,8 +287,8 @@ FirefoxSyncLink.prototype.commit = function () {
 }
 
 
-/*if (debug) {
-	var ffs = new FirefoxSyncLink();
+var ffs = new FirefoxSyncLink();
+FirefoxSyncLink.prototype.test = function() {
 	console.log('ffs: connecting...');
 	ffs.connect(function () {
 			console.log('ffs: loading bookmarks...');
@@ -297,4 +298,7 @@ FirefoxSyncLink.prototype.commit = function () {
 					ffs.selftest();
 				});
 		});
-}*/
+}
+if (debug) {
+	//ffs.test();
+}
