@@ -376,7 +376,6 @@ Link.prototype.copyBookmark = function (bm) {
 
 /* variables */
 Link.prototype.queue = [];
-Link.prototype.queue.id = Math.random(); // DEBUG FIXME
 
 // add a function to the queue
 Link.prototype.queue_add = function (callback, data) {
@@ -386,7 +385,7 @@ Link.prototype.queue_add = function (callback, data) {
 // start walking through the queue if it isn't already started
 Link.prototype.queue_start = function () {
 	if (this.queue.running) {
-		console.error('Queue is already running! '+this.queue.id+this.queue.running);
+		// just ignore
 		return;
 	}
 	this.updateStatus(statuses.UPLOADING);
@@ -417,7 +416,7 @@ Link.prototype.queue_stop = function () {
 	this.queue.length = 0; // for when the queue has been forced to stop, clear the queue
 
 	this.updateStatus(statuses.READY);
-	console.log(this.name+' has finished the queue!!! '+this.queue.id+this.queue.running);
+	console.log(this.name+' has finished the queue!!!');
 
 	if (debug) {
 		var finished_uploading = true;
