@@ -43,7 +43,7 @@ browser = new Browser();
 Browser.prototype.__proto__ = BrowserBase.prototype;
 
 Browser.prototype.loadBookmarks = function (callback) {
-	var bookmarks = {bm: {}, f: {}, title: 'Bookmarks Bar', id: '1'};
+	var bookmarks = new BookmarkFolder(this, {title: 'Bookmarks Bar', id: '1'});
 	var idIndex   = {'1': bookmarks};
 	this.ids       = idIndex;
 	chrome.bookmarks.getSubTree(bookmarks.id,
@@ -74,16 +74,18 @@ Browser.prototype.gotTree_handleNode = function (idIndex, node, folder) {
 	if (node.url) {
 		// bookmark
 
-		var bookmark = {title: node.title, url: node.url, parentNode: folder, mtime: node.dateAdded/1000, id: node.id};
-		this.importBookmark(idIndex, bookmark);
+		var bookmark = new Bookmark(this, {title: node.title, url: node.url, mtime: node.dateAdded/1000, id: node.id});
+		folder.add(this, bookmark);
+		//this.importBookmark(idIndex, bookmark);
 	} else {
 		// folder
 
 		// create the local node
-		var subfolder = {title: node.title, parentNode: folder, bm: {}, f: {}, id: node.id};
+		var subfolder = new BookmarkFolder(this, {title: node.title, id: node.id});
+		folder.add(this, subfolder);
 		this.gotTree(idIndex, node, subfolder); // recurse into subfolders
 
-		this.importFolder(idIndex, subfolder);
+		//this.importFolder(idIndex, subfolder);
 
 	}
 };
