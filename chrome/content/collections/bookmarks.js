@@ -11,6 +11,14 @@ function DataTypeBase (link, data) {
 	}
 }
 
+DataTypeBase.prototype.__defineGetter__('link', function () {
+	return this.parentNode.link;
+});
+
+DataTypeBase.prototype.__defineGetter__('rootNode', function () {
+	return this.parentNode.rootNode;
+});
+
 function Bookmark (link, data) {
 	DataTypeBase.call(this, link, data);
 	if (!data.url) {
@@ -24,16 +32,40 @@ function Bookmark (link, data) {
 }
 Bookmark.prototype.__proto__ = DataTypeBase.prototype;
 
-function BookmarkFolderBase (link, data) {
+function BookmarkFolder (link, data) {
 	DataTypeBase.call(this, link, data);
+
+	if (!data.title) {
+		if (!(this instanceof BookmarkRootFolder)) {
+			console.error(data);
+			throw 'No title in bookmark folder';
+		}
+	} else {
+		this.title = data.title;
+	}
 
 	this.bm = {};
 	this.f  = {};
 }
-BookmarkFolderBase.prototype.__proto__ = DataTypeBase.prototype;
+BookmarkFolder.prototype.__proto__ = DataTypeBase.prototype;
 
-BookmarkFolderBase.prototype.add = function (link, node) {
+BookmarkFolder.prototype.newBookmark = function (data) {
+	var bookmark = new Bookmark(this.link, data);
+	this.add(bookmark);
+	return bookmark;
+}
+
+BookmarkFolder.prototype.newFolder = function (data) {
+	var folder = new BookmarkFolder(this.link, data);
+	this.add(folder);
+	return folder;
+}
+
+BookmarkFolder.prototype.add = function (node) {
 	node.parentNode = this;
+	if (this.link instanceof TreeBasedLink) {
+		this.rootNode.ids[node.id] = node;
+	}
 	if (node instanceof BookmarkFolder) { // NOT bookmarksFolderBase, root folders may not be added
 		if (this.f[node.title])
 			throw 'TODO merge duplicates';
@@ -48,12 +80,12 @@ BookmarkFolderBase.prototype.add = function (link, node) {
 
 			if (otherNode.mtime > node.mtime) {
 				// otherBookmark is the latest added, so remove this bookmark
-				link.bm_del(link, node);
+				this.link.bm_del(this.link, node);
 				// other bookmark is already added to the tree
 				return true; // invalid bookmark
 			} else {
 				// this bookmark is the newest, remove the other
-				link.bm_del(link, otherNode);
+				this.link.bm_del(this.link, otherNode);
 				this.bm[node.url] = node; // replace the other bookmark
 			}
 		} else {
@@ -66,23 +98,26 @@ BookmarkFolderBase.prototype.add = function (link, node) {
 	}
 }
 
-function BookmarkFolder (link, data) {
-	BookmarkFolderBase.call(this, link, data);
-
-	if (!data.title) {
-		console.error(data);
-		throw 'No title in bookmark folder';
-	}
-	this.title = data.title;
-}
-BookmarkFolder.prototype.__proto__ = BookmarkFolderBase.prototype;
-
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
 function BookmarkRootFolder (link, data) {
-	BookmarkFolderBase.call(this, link, data);
+	BookmarkFolder.call(this, link, data);
 
-	this.link = link;
+	this.ids = {};
+	if (this.id) {
+		this.ids[this.id] = this;
+	}
+
+	this._link = link;
 }
-BookmarkRootFolder.prototype.__proto__ = BookmarkFolderBase.prototype;
+BookmarkRootFolder.prototype.__proto__ = BookmarkFolder.prototype;
+
+BookmarkRootFolder.prototype.__defineGetter__('link', function () {
+	return this._link;
+});
+
+BookmarkRootFolder.prototype.__defineGetter__('rootNode', function () {
+	return this;
+});
+
