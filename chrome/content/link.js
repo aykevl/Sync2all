@@ -196,8 +196,7 @@ Link.prototype.may_save_state = function () {
 
 	this.has_saved_state = true;
 
-	console.log(this.id+': saving state:');
-	console.trace();
+	console.log(this.id+' saving state...');
 	this.save_state();
 };
 

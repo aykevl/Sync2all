@@ -8,7 +8,7 @@ BrowserBase.prototype.__proto__ = TreeBasedLink.prototype;
 // To call when a bookmark node has been added. The node may be a modified
 // object got with the event.
 BrowserBase.prototype.onCreated = function (node) {
-	console.log('evt_onCreated');
+	console.log('evt_onCreated', node);
 	if (node.parentId == this.creating_parentId &&
 			(node.url == this.creating_url || node.title == this.creating_title)) {
 		delete this.creating_parentId;
@@ -22,15 +22,11 @@ BrowserBase.prototype.onCreated = function (node) {
 	if (node.url) {
 		// bookmark
 		console.log('Created new bookmark: '+node.url);
-		var bookmark = {title: node.title, url: node.url, parentNode: parentNode, mtime: node.mtime, id: node.id};
-		this.ids[node.id] = bookmark;
-		if (addBookmark(this, bookmark)) return; // error
+		var bookmark = parentNode.addBookmark(this, {title: node.title, url: node.url, mtime: node.mtime, id: node.id});
 	} else {
 		// folder
 		console.log('Created new empty folder: '+node.title);
-		var folder = {title: node.title, mtime: node.mtime, parentNode: parentNode, bm: {}, f: {}, id: node.id};
-		this.ids[node.id] = folder;
-		addFolder(this, folder);
+		var folder = parentNode.addFolder(this, {title: node.title, mtime: node.mtime, id: node.id});
 	}
 	sync2all.commit();
 };
@@ -138,3 +134,62 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 	}
 	sync2all.commit();
 }
+
+BrowserBase.prototype.onChanged = function (node, changeInfo) {
+	console.log('onChanged');
+	if (node.url) {
+		// bookmark
+		
+		// has anything changed?
+		if (changeInfo.url == node.url && changeInfo.title == node.title) return; // changed by me?
+		if (changeInfo.url != node.url) {
+			console.log('Url of '+node.title+' changed from '+node.url+' to '+changeInfo.url);
+
+			var oldurl = node.url;
+
+			// delete old reference
+			delete node.parentNode.bm[node.url];
+			// change url
+			node.url = changeInfo.url;
+
+			// does that url already exist?
+			if (node.parentNode.bm[node.url]) {
+				console.log('"Duplicate URL '+node.url+', merging by removing other...');
+				rmBookmark(node.parentNode.bm[node.url]);
+			}
+
+			// add new reference
+			node.parentNode.bm[node.url] = node;
+
+			broadcastMessage('bm_mod_url', this, [node, oldurl]);
+		}
+
+		if (changeInfo.title != node.title) {
+			console.log('Title of url '+node.url+' changed from '+node.title+' to '+changeInfo.title);
+			var oldtitle = node.title;
+			node.title = changeInfo.title;
+			broadcastMessage('bm_mod_title', this, [node, oldtitle]);
+		}
+
+	} else {
+		// folder
+		// only title changes are possible
+
+		if (node.title == changeInfo.title) {
+			console.log('nothing changed.')
+			return; // nothing changed (or changed by me?)
+		}
+
+		var oldtitle = node.title;
+		var newtitle = changeInfo.title;
+		node.title = newtitle;
+
+		var parentNode = node.parentNode;
+		delete parentNode.f[oldtitle];
+		parentNode.f[newtitle] = node;
+
+		broadcastMessage('f_mod_title', this, [node , oldtitle]);
+	}
+	sync2all.commit();
+}
+

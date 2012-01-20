@@ -1,5 +1,5 @@
 
-function DataTypeBase (link, data) {
+function NodeBase (link, data) {
 	if (!(link instanceof Link)) throw 'not a real link';
 
 	if (link instanceof TreeBasedLink) {
@@ -11,30 +11,16 @@ function DataTypeBase (link, data) {
 	}
 }
 
-DataTypeBase.prototype.__defineGetter__('link', function () {
+NodeBase.prototype.__defineGetter__('link', function () {
 	return this.parentNode.link;
 });
 
-DataTypeBase.prototype.__defineGetter__('rootNode', function () {
+NodeBase.prototype.__defineGetter__('rootNode', function () {
 	return this.parentNode.rootNode;
 });
 
-function Bookmark (link, data) {
-	DataTypeBase.call(this, link, data);
-	if (!data.url) {
-		console.error(data);
-		throw 'Not a bookmark';
-	}
-	this.url = data.url;
-	// title is not required
-	if (data.title) this.title = data.title;
-	if (data.mtime) this.mtime = data.mtime;
-}
-Bookmark.prototype.__proto__ = DataTypeBase.prototype;
-
-function BookmarkFolder (link, data) {
-	DataTypeBase.call(this, link, data);
-
+function Folder(link, data) {
+	NodeBase.call(this, link, data);
 	if (!data.title) {
 		if (!(this instanceof BookmarkRootFolder)) {
 			console.error(data);
@@ -43,25 +29,43 @@ function BookmarkFolder (link, data) {
 	} else {
 		this.title = data.title;
 	}
+}
+Folder.prototype.__proto__ = NodeBase.prototype;
+
+function Bookmark (link, data) {
+	NodeBase.call(this, link, data);
+	if (!data.url) {
+		console.error(data);
+		throw 'Not a valid bookmark';
+	}
+	this.url = data.url;
+	// title is not required
+	if (data.title) this.title = data.title;
+	if (data.mtime) this.mtime = data.mtime;
+}
+Bookmark.prototype.__proto__ = NodeBase.prototype;
+
+function BookmarkFolder (link, data) {
+	Folder.call(this, link, data);
 
 	this.bm = {};
 	this.f  = {};
 }
-BookmarkFolder.prototype.__proto__ = DataTypeBase.prototype;
+BookmarkFolder.prototype.__proto__ = Folder.prototype;
 
 BookmarkFolder.prototype.newBookmark = function (data) {
 	var bookmark = new Bookmark(this.link, data);
-	this.add(bookmark);
+	this.import(bookmark);
 	return bookmark;
 }
 
 BookmarkFolder.prototype.newFolder = function (data) {
 	var folder = new BookmarkFolder(this.link, data);
-	this.add(folder);
+	this.import(folder);
 	return folder;
 }
 
-BookmarkFolder.prototype.add = function (node) {
+BookmarkFolder.prototype.import = function (node) {
 	node.parentNode = this;
 	if (this.link instanceof TreeBasedLink) {
 		this.rootNode.ids[node.id] = node;
@@ -98,10 +102,52 @@ BookmarkFolder.prototype.add = function (node) {
 	}
 }
 
+BookmarkFolder.prototype.addBookmark = function (link, data) {
+	var bookmark = new Bookmark(this.link, data);
+	this.add(link, bookmark);
+	return bookmark;
+}
+
+BookmarkFolder.prototype.addFolder = function (link, data) {
+	var folder = new BookmarkFolder(this.link, data);
+	this.add(link, folder);
+	return folder;
+}
+
+BookmarkFolder.prototype.add = function (link, node) {
+	this.import(node);
+	if (node instanceof Bookmark) {
+		broadcastMessage('bm_add', link, [node]);
+	} else if (node instanceof BookmarkFolder) {
+		broadcastMessage('f_add', link, [node]);
+	}
+}
+
+BookmarkFolder.prototype.remove = function (link, node) {
+	delete node.parentNode;
+	if (this.link instanceof TreeBasedLink) {
+		delete this.rootNode.ids[node.id];
+	}
+	if (node instanceof BookmarkFolder) {
+		if (this.f[node.title] != node)
+			throw 'Removing a folder that wasn\'t added';
+		delete this.f[node.title];
+		broadcastMessage('f_del', link, [node]);
+	} else if (node instanceof Bookmark) {
+		if (this.bm[node.url] != node)
+			throw 'Removing a bookmark that wasn\'t added';
+		delete this.bm[node.url];
+		broadcastMessage('bm_del', link, [node]);
+	} else {
+		console.error(node, this);
+		throw 'unknown type';
+	}
+}
+
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
-function BookmarkRootFolder (link, data) {
+function BookmarkCollection (link, data) {
 	BookmarkFolder.call(this, link, data);
 
 	this.ids = {};
@@ -111,13 +157,13 @@ function BookmarkRootFolder (link, data) {
 
 	this._link = link;
 }
-BookmarkRootFolder.prototype.__proto__ = BookmarkFolder.prototype;
+BookmarkCollection.prototype.__proto__ = BookmarkFolder.prototype;
 
-BookmarkRootFolder.prototype.__defineGetter__('link', function () {
+BookmarkCollection.prototype.__defineGetter__('link', function () {
 	return this._link;
 });
 
-BookmarkRootFolder.prototype.__defineGetter__('rootNode', function () {
+BookmarkCollection.prototype.__defineGetter__('rootNode', function () {
 	return this;
 });
 

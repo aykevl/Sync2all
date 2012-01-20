@@ -43,13 +43,12 @@ browser = new Browser();
 Browser.prototype.__proto__ = BrowserBase.prototype;
 
 Browser.prototype.loadBookmarks = function (callback) {
-	var bookmarks = new BookmarkRootFolder(this, {title: 'Bookmarks Bar', id: '1'});
-	var idIndex   = {'1': bookmarks};
-	this.ids       = idIndex;
+	var bookmarks = new BookmarkCollection(this, {title: 'Bookmarks Bar', id: '1'});
+	this.ids = bookmarks.ids;
 	chrome.bookmarks.getSubTree(bookmarks.id,
 			(function (tree) {
-				this.gotTree(idIndex, tree[0], bookmarks);
-				callback(bookmarks, idIndex);
+				this.gotTree(tree[0], bookmarks);
+				callback(bookmarks, bookmarks.ids);
 			}).bind(this));
 };
 
@@ -62,15 +61,15 @@ Browser.prototype.startObserver = function () {
 	return;
 };
 
-Browser.prototype.gotTree = function (idIndex, browserParentNode, folder) {
+Browser.prototype.gotTree = function (browserParentNode, folder) {
 	var browserNode;
 	for (var i=0; browserNode=browserParentNode.children[i]; i++) {
-		this.gotTree_handleNode(idIndex, browserNode, folder);
+		this.gotTree_handleNode(browserNode, folder);
 	}
 };
 
 // handle chrome bookmark tree nodes, helper function for Browser.prototype.gotTree
-Browser.prototype.gotTree_handleNode = function (idIndex, node, folder) {
+Browser.prototype.gotTree_handleNode = function (node, folder) {
 	if (node.url) {
 		// bookmark
 		folder.newBookmark({title: node.title, url: node.url, mtime: node.dateAdded/1000, id: node.id});
@@ -79,7 +78,7 @@ Browser.prototype.gotTree_handleNode = function (idIndex, node, folder) {
 
 		// create the local node
 		var subfolder = folder.newFolder({title: node.title, id: node.id});
-		this.gotTree(idIndex, node, subfolder); // recurse into subfolders
+		this.gotTree(node, subfolder); // recurse into subfolders
 	}
 };
 
@@ -87,21 +86,17 @@ Browser.prototype.gotTree_handleNode = function (idIndex, node, folder) {
 Browser.prototype.import_bms = function (results) {
 	var result;
 	for (var i=0; result=results[i]; i++) {
-		var folder = this.ids[result.parentId];
+		var folder = this.bookmarks.ids[result.parentId];
 		if (result.url) {
 			// bookmark
-			var bm = {title: result.title, url: result.url, mtime: result.dateAdded, parentNode: folder, id: result.id};
-			if (addBookmark(this, bm)) continue; // error
+			folder.newBookmark({title: result.title, url: result.url, mtime: result.dateAdded/1000, id: result.id});
 		} else {
 			// folder
-			var subfolder = {bm: {}, f: {}, title: result.title, parentNode: folder, id: result.id};
-			addFolder(this, subfolder);
+			var subfolder = folder.newFolder({title: result.title, id: result.id});
 			chrome.bookmarks.getChildren(subfolder.id, this.import_bms);
 		}
 	}
-	sync2all.commit(); // not the most ideal place
 };
-
 
 
 
@@ -110,28 +105,18 @@ Browser.prototype.import_bms = function (results) {
 Browser.prototype.f_add  = function (source, folder) {
 	this.queue_add(
 			function (folder) {
-				if (!folder.parentNode.id) {
-					console.log('ERROR; No parentId for folder:');
-					console.log(folder);
-					this.queue_next();
-					return;
-				}
 				this.creating_parentId = folder.parentNode.id;
 				this.creating_title    = folder.title;
 				chrome.bookmarks.create({parentId: folder.parentNode.id, title: folder.title}, 
 						function (result) {
 							folder.id = result.id;
-							this.ids[folder.id] = folder;
+							this.bookmarks.ids[folder.id] = folder;
 							this.queue_next();
 						}.bind(this));
 			}.bind(this), folder);
 };
 
 Browser.prototype.f_del = function (source, folder) {
-	// remove own references
-	delete this.ids[folder.id];
-	// remove global references
-	_rmFolder(folder);
 	// keep in the queue to prevent possible errors
 	this.queue_add(
 			function (folder) {
@@ -139,27 +124,21 @@ Browser.prototype.f_del = function (source, folder) {
 			}.bind(this), folder);
 };
 
-Browser.prototype.bm_add = function (source, bm, lfolder) {
-	if (!lfolder) lfolder = bm.parentNode;
+Browser.prototype.bm_add = function (source, bm) {
 	this.queue_add(
-			function (data) {
-				this.creating_parentId = data.lfolder.id;
-				this.creating_url      = data.bm.url;
-				chrome.bookmarks.create({parentId: data.lfolder.id, title: data.bm.title, url: data.bm.url},
+			function (bm) {
+				this.creating_parentId = bm.parentNode.id;
+				this.creating_url      = bm.url;
+				chrome.bookmarks.create({parentId: bm.parentNode.id, title: bm.title, url: bm.url},
 						function (result) {
-							data.bm.id = result.id;
-							this.ids[data.bm.id] = data.bm;
+							bm.id = result.id;
+							this.bookmarks.ids[bm.id] = bm;
 							this.queue_next();
 						}.bind(this));
-			}.bind(this), {bm: bm, lfolder: lfolder});
+			}.bind(this), bm);
 };
 
 Browser.prototype.bm_del = function (source, bm) {
-	// remove this from our data
-	// this keeps evt_onRemoved from calling broadcastMessage('bm_del', ...)
-	delete this.ids[bm.id];
-	// delete global reference
-	_rmBookmark(bm); // _ before it so it won't call bm_del on all links
 	// just to keep it safe, in the queue
 	this.queue_add(
 			function (bm) {
@@ -202,26 +181,23 @@ Browser.prototype.evt_onCreated = function (id, node) {
 
 Browser.prototype.evt_onRemoved = function (id, removeInfo) {
 	console.log('evt_onRemoved');
-	if (!(id in sync2all.bookmarkIds)) {console.log('not here');return;} // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
-	var node = sync2all.bookmarkIds[id];
+	if (!(id in sync2all.bookmarks.ids)) return; // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+	var node = sync2all.bookmarks.ids[id];
 	if (node.url) {
 		// bookmark
-		var bookmark = node;
-		rmBookmark(this, bookmark);
+		node.parentNode.remove(this, node);
 	} else {
 		// folder
-		console.log('Removed folder: '+node.title);
-		rmFolder(this, node);
+		node.parentNode.remove(this, node);
 	}
 	sync2all.commit();
 }
 
 Browser.prototype.evt_onChanged = function (id, changeInfo) {
 	console.log('evt_onChanged');
-	var node = sync2all.bookmarkIds[id];
+	var node = sync2all.bookmarks.ids[id];
 	if (!node) return; // somewhere outside the synced folder (or bug)
-	onChanged(this, node, changeInfo);
-	sync2all.commit();
+	this.onChanged(node, changeInfo);
 }
 
 Browser.prototype.evt_onMoved = function (id, moveInfo) {
@@ -237,6 +213,7 @@ Browser.prototype.import_node = function (id) {
 				chrome.bookmarks.get(id,
 						function (results) {
 							this.import_bms(results);
+							sync2all.commit();
 							this.queue_next();
 						}.bind(this));
 			}.bind(this), id);
