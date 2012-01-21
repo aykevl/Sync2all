@@ -12,6 +12,8 @@ function NodeBase (link, data) {
 		this.id = data.id;
 	} else if (link instanceof TreeBasedLink) {
 		this[link.id+'_id'] = data.id;
+	} else if (link instanceof TagBasedLink) {
+		// do nothing for now
 	} else {
 		throw 'unknown link type';
 	}

@@ -367,18 +367,6 @@ Link.prototype.testNode = function (node) {
 	}
 }
 
-Link.prototype.copyBookmark = function (bm) {
-	var newbm = {url: bm.url, title: bm.title, parentNode: bm.parentNode, mtime: bm.mtime};
-	if (this instanceof Browser) {
-		newbm.id = bm.id;
-	} else {
-		if (!(this instanceof TagBasedLink)) {
-			newbm[this.id+'_id'] = bm[this.id+'_id'];
-		}
-	}
-	return newbm;
-}
-
 /* variables */
 Link.prototype.queue = [];
 

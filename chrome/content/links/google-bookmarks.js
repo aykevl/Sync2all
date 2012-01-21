@@ -22,7 +22,7 @@ webLinks.push(gbm);
 
 // (re) start
 GoogleBookmarksLink.prototype.startSync = function () {
-	this.bookmarks = {bm: {}, f: {}};
+	this.bookmarks = new BookmarkCollection(this, {});
 	this.loadBookmarks();
 }
 
@@ -55,7 +55,7 @@ GoogleBookmarksLink.prototype.get_state = function (state, folder) {
 };
 
 GoogleBookmarksLink.prototype.calculate_actions = function (state, folder) {
-	// only look for removed bookmarks, not for added bookmarks (and moved bookmarks are 'removed' and 'added', TODO fix in a future version).
+	// only look for removed bookmarks, not for added bookmarks (moved bookmarks are 'removed' and 'added').
 	var data = undefined;
 	var id, url;
 	for (var i=0; data=state.bm[i]; i++) {

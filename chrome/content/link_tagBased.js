@@ -38,8 +38,7 @@ TagBasedLink.prototype.importBookmark = function (uBm) {
 					// is this a new directory?
 					if (parentNode.f[folderName] == undefined) {
 						// yes, create it first
-						parentNode.f[folderName] = {bm: {}, f: {}, title: folderName,
-							parentNode: parentNode};
+						parentNode.importFolder({title: folderName,});
 					}
 					// parentNode does exist
 					parentNode = parentNode.f[folderName];
@@ -49,15 +48,11 @@ TagBasedLink.prototype.importBookmark = function (uBm) {
 				parentNode = this.tags[tag];
 			}
 		}
-		var bookmark = this.copyBookmark(uBm);
-		bookmark.parentNode = parentNode;
-		parentNode.bm[bookmark.url] = bookmark;
+		parentNode.importBookmark(uBm);
 	}
 	if (!uBm.tags.length) {
 		// this bookmark has no labels, add it to root
-		var bookmark = this.copyBookmark(uBm);
-		bookmark.parentNode = this.bookmarks;
-		this.bookmarks.bm[bookmark.url] = bookmark;
+		this.bookmarks.importBookmark(uBm);
 	}
 }
 
