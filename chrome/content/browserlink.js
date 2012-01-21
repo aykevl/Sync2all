@@ -22,11 +22,11 @@ BrowserBase.prototype.onCreated = function (node) {
 	if (node.url) {
 		// bookmark
 		console.log('Created new bookmark: '+node.url);
-		var bookmark = parentNode.addBookmark(this, {title: node.title, url: node.url, mtime: node.mtime, id: node.id});
+		var bookmark = parentNode.newBookmark(this, {title: node.title, url: node.url, mtime: node.mtime, id: node.id});
 	} else {
 		// folder
 		console.log('Created new empty folder: '+node.title);
-		var folder = parentNode.addFolder(this, {title: node.title, mtime: node.mtime, id: node.id});
+		var folder = parentNode.newFolder(this, {title: node.title, mtime: node.mtime, id: node.id});
 	}
 	sync2all.commit();
 };

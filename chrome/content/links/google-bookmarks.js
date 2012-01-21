@@ -22,6 +22,7 @@ webLinks.push(gbm);
 
 // (re) start
 GoogleBookmarksLink.prototype.startSync = function () {
+	this.bookmarks = {bm: {}, f: {}};
 	this.loadBookmarks();
 }
 

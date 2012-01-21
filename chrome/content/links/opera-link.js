@@ -1,6 +1,6 @@
 'use strict';
 
-// prefix: opl (OPera Link
+// prefix: opl (OPera Link)
 
 function OperaLink () {
 	TreeBasedLink.call(this, 'opl');
@@ -44,6 +44,7 @@ if (browser.name == 'chrome') {
 
 // (re)start
 OperaLink.prototype.startSync = function () {
+	this.bookmarks = new BookmarkCollection(this, {});
 
 	// initialize variables
 	this.has_saved_state = false;
@@ -129,8 +130,8 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 	for (var i=0; item=parentState[i]; i++) {
 		if (!item.opl_id || !item.id) {
 			console.error('saved item has no id or opl_id (bug somewhere else!); item, parentNode:');
-			console.log(item);
-			console.log(parentNode);
+			console.error(item);
+			console.error(parentNode);
 			continue;
 		}
 
@@ -146,15 +147,15 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 			// moved outside this folder. Not really needed, but it is better
 			// to move folders and bookmarks than to re-create them. (Preserves
 			// more data, for example descriptions and favicons).
-			if (this.ids[item.opl_id]) {
+			if (this.bookmarks.ids[item.opl_id]) {
 				// this node does still exist but in another place, mark it as moved.
 
-				var node = this.ids[item.opl_id];
+				var node = this.bookmarks.ids[item.opl_id];
 
 				// get the destination (local) folder, the parent of otherNode
 				var localParentNodeId= this.ownId_to_lId[node.parentNode.opl_id];
-				if (sync2all.bookmarkIds[localParentNodeId]) {
-					var localParentNode = sync2all.bookmarkIds[localParentNodeId];
+				if (sync2all.bookmarks.ids[localParentNodeId]) {
+					var localParentNode = sync2all.bookmarks.ids[localParentNodeId];
 				} else {
 					var localParentNode = null;
 				}
@@ -175,21 +176,21 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 				// node doesn't exist, remove it.
 				if (isfolder) {
 					this.calculate_actions(item.children, undefined);
-					if (item.id && sync2all.bookmarkIds[item.id]) {
-						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
+					if (item.id && sync2all.bookmarks.ids[item.id]) {
+						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
 						this.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists
-					if (sync2all.bookmarkIds[item.id]) {
-						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
+					if (sync2all.bookmarks.ids[item.id]) {
+						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
 						this.actions.push(['bm_del', item.id]);
 					}
 				}
 			}
 		} else {
 			// this folder does exist (is most often the case).
-			if (!this.ids[item.opl_id]){
+			if (!this.bookmarks.ids[item.opl_id]){
 				if (isfolder) {
 
 					// first check for folders and bookmarks moved out of this
@@ -198,22 +199,22 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 
 					// then remove this folder
 					// but check first whether the folder actually exists
-					if (item.id && sync2all.bookmarkIds[item.id]) {
-						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
-						console.log('opl: old f: '+sync2all.bookmarkIds[item.id].title);
+					if (item.id && sync2all.bookmarks.ids[item.id]) {
+						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
+						console.log('opl: old f: '+sync2all.bookmarks.ids[item.id].title);
 						this.actions.push(['f_del_ifempty',  item.id]);
 					}
 				} else {
 					// check whether the bookmark still exists.
-					if (sync2all.bookmarkIds[item.id]) {
+					if (sync2all.bookmarks.ids[item.id]) {
 						console.log('opl: old bm: '+item.opl_id);
-						sync2all.bookmarkIds[item.id].opl_id = item.opl_id;
+						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
 						this.actions.push(['bm_del', item.id]);
 					}
 				}
 
-			} else if (this.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
-				var movedTo = this.ids[item.opl_id].parentNode;
+			} else if (this.bookmarks.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
+				var movedTo = this.bookmarks.ids[item.opl_id].parentNode;
 
 				// useful information for debugging
 				console.log('opl: moved: '+item.opl_id);
@@ -227,7 +228,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 				if (isfolder) {
 					this.actions.push(['f_mv',  item.id, stableToId]);
 					// search for changes within this folder
-					this.calculate_actions(item.children, this.ids[item.opl_id]);
+					this.calculate_actions(item.children, this.bookmarks.ids[item.opl_id]);
 				} else {
 					this.actions.push(['bm_mv', item.id, stableToId]);
 				}
@@ -235,7 +236,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 			} else {
 				// nothing has happened, search recursively for changes.
 				if (isfolder) {
-					this.calculate_actions(item.children, this.ids[item.opl_id]);
+					this.calculate_actions(item.children, this.bookmarks.ids[item.opl_id]);
 				}
 			}
 		}
@@ -402,19 +403,15 @@ OperaLink.prototype.parseBookmarks = function (array, folder) {
 				continue; // don't sync trashed bookmarks
 			}
 
-			var subfolder = {title: item.properties.title,
-					parentNode: folder, bm: {}, f: {}, opl_id: item.id};
+			var subfolder = folder.importFolder({title: item.properties.title,
+					id: item.id});
 
 			if (item.children) {
 				this.parseBookmarks(item.children, subfolder);
 			}
-
-			// add this subfolder to the bookmarks tree
-			if (this.importFolder(this.ids, subfolder)) continue; // error
 		} else if (item.item_type == 'bookmark') {
-			var bookmark = {parentNode: folder, url: item.properties.uri,
-					title: item.properties.title, opl_id: item.id};
-			if (this.importBookmark(this.ids, bookmark)) continue;
+			folder.importBookmark({url: item.properties.uri,
+					title: item.properties.title, id: item.id});
 		}
 	}
 };

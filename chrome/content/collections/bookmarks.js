@@ -2,13 +2,21 @@
 function NodeBase (link, data) {
 	if (!(link instanceof Link)) throw 'not a real link';
 
-	if (link instanceof TreeBasedLink) {
+	if (link instanceof TreeBasedLink && !this.ids) {
 		if (!data.id) {
 			console.error(data);
-			throw 'No id in bookmark folder';
+			throw 'No id in bookmark/folder';
 		}
-		this.id = data.id;
 	}
+	if (link instanceof Browser) {
+		this.id = data.id;
+	} else if (link instanceof TreeBasedLink) {
+		this[link.id+'_id'] = data.id;
+	} else {
+		throw 'unknown link type';
+	}
+	if (data.title) this.title = data.title;
+	if (data.mtime) this.mtime = data.mtime;
 }
 
 NodeBase.prototype.__defineGetter__('link', function () {
@@ -19,16 +27,13 @@ NodeBase.prototype.__defineGetter__('rootNode', function () {
 	return this.parentNode.rootNode;
 });
 
+NodeBase.prototype._moveTo = function (parent) {
+	this._remove();
+	parent._import(this);
+}
+
 function Folder(link, data) {
 	NodeBase.call(this, link, data);
-	if (!data.title) {
-		if (!(this instanceof BookmarkRootFolder)) {
-			console.error(data);
-			throw 'No title in bookmark folder';
-		}
-	} else {
-		this.title = data.title;
-	}
 }
 Folder.prototype.__proto__ = NodeBase.prototype;
 
@@ -39,11 +44,22 @@ function Bookmark (link, data) {
 		throw 'Not a valid bookmark';
 	}
 	this.url = data.url;
-	// title is not required
-	if (data.title) this.title = data.title;
-	if (data.mtime) this.mtime = data.mtime;
 }
 Bookmark.prototype.__proto__ = NodeBase.prototype;
+
+Bookmark.prototype._remove = function () {
+	if (this.rootNode.ids) {
+		delete this.rootNode.ids[this.id];
+	}
+	if (this.parentNode.bm[this.url] != this)
+		throw 'Removing a bookmark that wasn\'t added';
+	delete this.parentNode.bm[this.url];
+	delete this.parentNode; // also cuts of connection with link
+}
+Bookmark.prototype.remove = function (link) {
+	this._remove();
+	broadcastMessage('bm_del', link, [this]);
+}
 
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
@@ -53,27 +69,66 @@ function BookmarkFolder (link, data) {
 }
 BookmarkFolder.prototype.__proto__ = Folder.prototype;
 
-BookmarkFolder.prototype.newBookmark = function (data) {
+BookmarkFolder.prototype.importBookmark = function (data) {
 	var bookmark = new Bookmark(this.link, data);
-	this.import(bookmark);
+	this._import(bookmark);
 	return bookmark;
 }
 
-BookmarkFolder.prototype.newFolder = function (data) {
+BookmarkFolder.prototype.importFolder = function (data) {
 	var folder = new BookmarkFolder(this.link, data);
-	this.import(folder);
+	this._import(folder);
 	return folder;
 }
 
-BookmarkFolder.prototype.import = function (node) {
-	node.parentNode = this;
-	if (this.link instanceof TreeBasedLink) {
-		this.rootNode.ids[node.id] = node;
+BookmarkFolder.prototype._import = function (node) {
+	if (node.parentNode) {
+		console.error(node, this);
+		throw 'Node has already a parent';
 	}
-	if (node instanceof BookmarkFolder) { // NOT bookmarksFolderBase, root folders may not be added
-		if (this.f[node.title])
-			throw 'TODO merge duplicates';
-		this.f[node.title] = node;
+	node.parentNode = this;
+	if (this.rootNode.ids) {
+		if (this.link instanceof Browser) {
+			this.rootNode.ids[node.id] = node;
+		} else {
+			this.rootNode.ids[node[this.link.id+'_id']] = node;
+		}
+	}
+	if (node instanceof BookmarkFolder) {
+		if (!node.title) {
+			console.error(node, this);
+			throw '!node.title';
+		}
+		// check for duplicates
+		if (this.f[node.title]) {
+			// duplicate folder, merge contents
+
+			// get the folder of which this is a duplicate
+			var otherNode = this.f[node.title];
+
+			console.log('DUPLICATE FOLDER: '+otherNode.title, otherNode);
+
+			// move the contents of the other folder (otherNode) to this folder (node)
+			// TODO make it possible to first import items inside a folder and then
+			// import it into the parent, so the contents of the folders can also be
+			// moved the other way round.
+			var title; // first the subfolders
+			for (title in otherNode.f) {
+				otherNode.f[title]._moveTo(node);
+			}
+			var url; // now move the bookmarks
+			for (url in otherNode.bm) {
+				otherNode.bm[url]._moveTo(node);
+			}
+
+			// now delete this folder. This removes it's contents too!
+			// But that should not be a problem, as the contents has already
+			// been moved.
+			this.link.f_del(this.link, otherNode);
+		} else {
+			// no duplicate
+			this.f[node.title] = node;
+		}
 	} else if (node instanceof Bookmark) {
 		// check for duplicate
 		if (this.bm[node.url]) {
@@ -97,63 +152,57 @@ BookmarkFolder.prototype.import = function (node) {
 			this.bm[node.url] = node;
 		}
 	} else {
+		console.error(node, this);
+		throw 'unknown type';
+	}
+}
+
+BookmarkFolder.prototype.add = function (link, node) {
+	this._import(node);
+	if (node instanceof Bookmark) {
+		broadcastMessage('bm_add', link, [node]);
+	} else if (node instanceof BookmarkFolder) {
+		broadcastMessage('f_add', link, [node]);
+	} else {
 		console.error(node);
 		throw 'unknown type';
 	}
 }
 
-BookmarkFolder.prototype.addBookmark = function (link, data) {
+BookmarkFolder.prototype.newBookmark = function (link, data) {
 	var bookmark = new Bookmark(this.link, data);
 	this.add(link, bookmark);
 	return bookmark;
 }
 
-BookmarkFolder.prototype.addFolder = function (link, data) {
+BookmarkFolder.prototype.newFolder = function (link, data) {
 	var folder = new BookmarkFolder(this.link, data);
 	this.add(link, folder);
 	return folder;
 }
 
-BookmarkFolder.prototype.add = function (link, node) {
-	this.import(node);
-	if (node instanceof Bookmark) {
-		broadcastMessage('bm_add', link, [node]);
-	} else if (node instanceof BookmarkFolder) {
-		broadcastMessage('f_add', link, [node]);
+BookmarkFolder.prototype._remove = function () {
+	if (this.rootNode.ids) {
+		delete this.rootNode.ids[this.id];
 	}
+	if (this.parentNode.f[this.title] != this)
+		throw 'Removing a folder that wasn\'t added';
+	delete this.parentNode.f[this.title];
+	delete this.parentNode; // also cuts of connection with link
 }
-
-BookmarkFolder.prototype.remove = function (link, node) {
-	delete node.parentNode;
-	if (this.link instanceof TreeBasedLink) {
-		delete this.rootNode.ids[node.id];
-	}
-	if (node instanceof BookmarkFolder) {
-		if (this.f[node.title] != node)
-			throw 'Removing a folder that wasn\'t added';
-		delete this.f[node.title];
-		broadcastMessage('f_del', link, [node]);
-	} else if (node instanceof Bookmark) {
-		if (this.bm[node.url] != node)
-			throw 'Removing a bookmark that wasn\'t added';
-		delete this.bm[node.url];
-		broadcastMessage('bm_del', link, [node]);
-	} else {
-		console.error(node, this);
-		throw 'unknown type';
-	}
+BookmarkFolder.prototype.remove = function (link) {
+	this._remove();
+	broadcastMessage('f_del', link, [this]);
 }
 
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
 function BookmarkCollection (link, data) {
+	this.ids = {};
 	BookmarkFolder.call(this, link, data);
 
-	this.ids = {};
-	if (this.id) {
-		this.ids[this.id] = this;
-	}
+	if (this.id) this.ids[this.id] = this;
 
 	this._link = link;
 }

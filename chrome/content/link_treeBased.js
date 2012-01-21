@@ -14,7 +14,7 @@ TreeBasedLink.prototype._startSync = function () {
 }
 
 // import bookmark into own tree, thereby cleaning up duplicates etc.
-TreeBasedLink.prototype.importBookmark = function (idIndex, bookmark) {
+/*TreeBasedLink.prototype.importBookmark = function (idIndex, bookmark) {
 	// this is the folder where the bookmark is in.
 	var parentNode = bookmark.parentNode;
 
@@ -108,4 +108,4 @@ TreeBasedLink.prototype.importFolder = function (idIndex, folder) {
 	} else {
 		idIndex[folder[this.id+'_id']] = folder;
 	}
-}
+}*/

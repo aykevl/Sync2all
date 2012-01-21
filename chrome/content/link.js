@@ -96,10 +96,6 @@ Link.prototype.start = function (restart) {
 
 
 Link.prototype._startSync = function () {
-	// first, initialize the link
-
-	this.bookmarks = {bm: {}, f: {}};
-
 	// only for webLinks:
 	if (!(this instanceof Browser)) {
 		this.actions = [];

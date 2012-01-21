@@ -13,6 +13,8 @@ var SYNC2ALL_SOURCES = [
 	// My own libraries
 	'chrome://sync2all/content/globals.js',
 	'chrome://sync2all/content/utils.js',
+	// collections (also my own)
+	'chrome://sync2all/content/collections/bookmarks.js',
 	// Other libraries
 	'chrome://sync2all/content/extern/oauth.js',
 	'chrome://sync2all/content/extern/sha1.js',

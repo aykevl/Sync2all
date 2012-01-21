@@ -72,12 +72,12 @@ Browser.prototype.gotTree = function (browserParentNode, folder) {
 Browser.prototype.gotTree_handleNode = function (node, folder) {
 	if (node.url) {
 		// bookmark
-		folder.newBookmark({title: node.title, url: node.url, mtime: node.dateAdded/1000, id: node.id});
+		folder.importBookmark({title: node.title, url: node.url, mtime: node.dateAdded/1000, id: node.id});
 	} else {
 		// folder
 
 		// create the local node
-		var subfolder = folder.newFolder({title: node.title, id: node.id});
+		var subfolder = folder.importFolder({title: node.title, id: node.id});
 		this.gotTree(node, subfolder); // recurse into subfolders
 	}
 };
@@ -86,7 +86,7 @@ Browser.prototype.gotTree_handleNode = function (node, folder) {
 Browser.prototype.import_bms = function (results) {
 	var result;
 	for (var i=0; result=results[i]; i++) {
-		var folder = this.bookmarks.ids[result.parentId];
+		var folder = sync2all.bookmarks.ids[result.parentId];
 		if (result.url) {
 			// bookmark
 			folder.newBookmark({title: result.title, url: result.url, mtime: result.dateAdded/1000, id: result.id});
@@ -110,7 +110,7 @@ Browser.prototype.f_add  = function (source, folder) {
 				chrome.bookmarks.create({parentId: folder.parentNode.id, title: folder.title}, 
 						function (result) {
 							folder.id = result.id;
-							this.bookmarks.ids[folder.id] = folder;
+							sync2all.bookmarks.ids[folder.id] = folder;
 							this.queue_next();
 						}.bind(this));
 			}.bind(this), folder);
@@ -132,7 +132,7 @@ Browser.prototype.bm_add = function (source, bm) {
 				chrome.bookmarks.create({parentId: bm.parentNode.id, title: bm.title, url: bm.url},
 						function (result) {
 							bm.id = result.id;
-							this.bookmarks.ids[bm.id] = bm;
+							sync2all.bookmarks.ids[bm.id] = bm;
 							this.queue_next();
 						}.bind(this));
 			}.bind(this), bm);
@@ -183,13 +183,7 @@ Browser.prototype.evt_onRemoved = function (id, removeInfo) {
 	console.log('evt_onRemoved');
 	if (!(id in sync2all.bookmarks.ids)) return; // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
 	var node = sync2all.bookmarks.ids[id];
-	if (node.url) {
-		// bookmark
-		node.parentNode.remove(this, node);
-	} else {
-		// folder
-		node.parentNode.remove(this, node);
-	}
+	node.remove(this);
 	sync2all.commit();
 }
 
