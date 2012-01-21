@@ -17,9 +17,8 @@ Browser.prototype = {
 		                      .getService(Components.interfaces.nsIIOService),
 
 	loadBookmarks: function (callback) {
-		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder, ids: {}};
+		fx.bookmarks = new BookmarkCollection(this, {id: fx.bmsvc.bookmarksMenuFolder, ids: {}});
 		fx.ids = fx.bookmarks.ids;
-		fx.ids[fx.bookmarks.id] = fx.bookmarks;
 		fx.getSubTree(fx.bookmarks);
 
 		callback(fx.bookmarks);
@@ -62,23 +61,13 @@ Browser.prototype = {
 						continue;
 					}
 				}
-				var subfolder = {title: node.title, id: node.itemId,
-					bm: {}, f: {}, parentNode: folder};
-				folder.f[subfolder.title] = subfolder;
-				fx.ids[subfolder.id] = subfolder;
+				var subfolder = folder.importFolder({title: node.title, id: node.itemId});
 				fx.getSubTree(subfolder);
 			} else if (node.type == node.RESULT_TYPE_URI) {
 				if (fx.is_fx_uri(node.uri)) {
 					continue; // don't sync firefox-specific chrome:// uri's.
 				}
-				var bm = {title: node.title, id: node.itemId, url: fx.restore_chrome_uri(node.uri), parentNode: folder};
-				if (folder.bm[bm.url]) {
-					// duplicate
-					fx.bmsvc.removeItem(bm.id);
-					continue;
-				}
-				folder.bm[bm.url] = bm;
-				fx.ids[bm.id] = bm;
+				var bm = folder.importBookmark({title: node.title, id: node.itemId, url: fx.restore_chrome_uri(node.uri)});
 			}
 		}
 
@@ -107,15 +96,10 @@ Browser.prototype = {
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
 			if (uri.resolve(null) == null)  return; // not a valid url
 			if (fx.is_fx_uri(uri.resolve(null))) return; // a firefox-only url
-			var bm = {url: fx.restore_chrome_uri(uri.resolve(null)),
-					title: title, id: id, parentNode: fx.ids[parentId]};
-			fx.ids[bm.id] = bm;
-			if (addBookmark(fx, bm)) return; // error
+			fx.ids[parentId].newBookmark(fx, {url: fx.restore_chrome_uri(uri.resolve(null)),
+					title: title, id: id});
 		} else if (type == fx.bmsvc.TYPE_FOLDER) {
-			var folder = {title: title, bm: {}, f: {},
-				parentNode: fx.ids[parentId], id: id};
-			fx.ids[folder.id] = folder;
-			addFolder(fx, folder);
+			fx.ids[parentId].newFolder(fx, {title: title, id: id});
 		}
 		sync2all.commit();
 	},
@@ -224,6 +208,11 @@ Browser.prototype = {
 		delete fx.ids[bm.id];
 		fx.bmsvc.removeItem(bm.id);
 	},
+	bm_mod_url: function (link, bm, oldurl) {
+		// there doesn't seem to be a way to change the bookmark URI.
+		this.bm_del(link, bm);
+		this.bm_add(link, bm);
+	},
 	commit: function () {
 		// TODO place more things in the queue to speed things up
 		fx.queue_start(); // FIXME do in batch, see below
@@ -255,20 +244,15 @@ Browser.prototype = {
 		// get the node type
 		var type = fx.bmsvc.getItemType(id);
 
+		// FIXME BUG: newParent? oldParent? where do they come from? And why are there two different? This can't work properly.
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
 			console.log('fx: bookmark moved into synchronized tree');
 			var url = fx.restore_chrome_uri(fx.bmsvc.getBookmarkURI(id).resolve(null));
-			var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
-				parentNode: fx.ids[newParent], id: id};
-			fx.ids[bm.id] = bm;
-			addBookmark(fx, bm);
+			fx.ids[newParent].newBookmark({title: fx.bmsvc.getItemTitle(id), url: url, id: id});
 		} else if (type == fx.bmsvc.TYPE_FOLDER) {
 			console.log('fx: folder moved into synchronized tree');
-			var folder = {title: fx.bmsvc.getItemTitle(id),
-				bm: {}, f: {}, parentNode: fx.ids[oldParent], id: id};
+			fx.ids[oldParent].newFolder({title: fx.bmsvc.getItemTitle(id), id: id});
 			// FIXME childs...
-			fx.ids[folder.id] = folder;
-			addFolder(fx, folder);
 		}
 	}
 }
