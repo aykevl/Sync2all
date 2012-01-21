@@ -48,7 +48,7 @@ Browser.prototype.loadBookmarks = function (callback) {
 	chrome.bookmarks.getSubTree(bookmarks.id,
 			(function (tree) {
 				this.gotTree(tree[0], bookmarks);
-				callback(bookmarks, bookmarks.ids);
+				callback(bookmarks);
 			}).bind(this));
 };
 

@@ -66,7 +66,7 @@ GoogleBookmarksLink.prototype.calculate_actions = function (state, folder) {
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
 			// Ignore already removed bookmarks.
-			if (sync2all.bookmarkIds[id]) {
+			if (sync2all.bookmarks.ids[id]) {
 				console.log('Bookmark deleted: '+url);
 				this.actions.push(['bm_del', id]);
 			}
@@ -78,17 +78,17 @@ GoogleBookmarksLink.prototype.calculate_actions = function (state, folder) {
 		if (!folder.f[title]) {
 			// if this is true, the folder has been moved or renamed and the
 			// browser link should take care of it.
-			if (sync2all.bookmarkIds[substate.id]) continue;
+			if (sync2all.bookmarks.ids[substate.id]) continue;
 
 			// if this folder exists in the browser...
-			if (sync2all.bookmarkIds[substate]) {
+			if (sync2all.bookmarks.ids[substate]) {
 				// mark all bookmarks inside it as deleted, and mark all folders as
 				// 'delete-if-empty'
 				this.mark_state_deleted(substate);
 			}
 
 			// don't recurse, because folder.f[title] doesn't exist
-			// (sync2all.bookmarkIds[substate.id] can't be used because
+			// (sync2all.bookmarks.ids[substate.id] can't be used because
 			// folder.f[title] is part of this.bookmarks
 			continue;
 		}

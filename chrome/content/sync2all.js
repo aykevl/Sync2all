@@ -39,9 +39,8 @@ Sync2all.prototype = {
 
 	run: function () {
 		this.browser = browser;
-		browser.loadBookmarks(function (bookmarks, ids) {
+		browser.loadBookmarks(function (bookmarks) {
 				this.bookmarks   = bookmarks;
-				this.bookmarkIds = ids;
 
 				// check for consistency
 				if (debug) browser.selftest();
@@ -313,7 +312,7 @@ function apply_action (link, action) {
 		if (typeof(arg) == 'object' && arg.length) {
 			arg = get_stable_lId(link, arg);
 		} else {
-			arg = sync2all.bookmarkIds[arg];
+			arg = sync2all.bookmarks.ids[arg];
 		}
 		if (!arg) {
 			console.warn('WARNING: action could not be applied (link: '+link.name+'):');
@@ -350,8 +349,8 @@ function apply_action (link, action) {
 
 function get_stable_lId(link, sid) {
 	// speed up. This will happen most of the time.
-	if (sync2all.bookmarkIds[sid[0][0]]) {
-		return sync2all.bookmarkIds[sid[0][0]];
+	if (sync2all.bookmarks.ids[sid[0][0]]) {
+		return sync2all.bookmarks.ids[sid[0][0]];
 	}
 
 	// determine the first known node
@@ -359,14 +358,14 @@ function get_stable_lId(link, sid) {
 	while (true) {
 		// the first sid[i][0] will be '1', so it isn't needed to check
 		// whether i goes too far.
-		if (sync2all.bookmarkIds[sid[i][0]]) {
+		if (sync2all.bookmarks.ids[sid[i][0]]) {
 			break;
 		}
 		i += 1;
 	}
 
 	// make all remaining folders
-	var node = sync2all.bookmarkIds[sid[i][0]];
+	var node = sync2all.bookmarks.ids[sid[i][0]];
 	while ( i>0 ) {
 		i -= 1;
 		// assume this is a directory

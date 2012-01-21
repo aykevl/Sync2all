@@ -17,12 +17,12 @@ Browser.prototype = {
 		                      .getService(Components.interfaces.nsIIOService),
 
 	loadBookmarks: function (callback) {
-		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder};
-		fx.ids = {};
+		fx.bookmarks = {bm: {}, f: {}, id: fx.bmsvc.bookmarksMenuFolder, ids: {}};
+		fx.ids = fx.bookmarks.ids;
 		fx.ids[fx.bookmarks.id] = fx.bookmarks;
 		fx.getSubTree(fx.bookmarks);
 
-		callback(fx.bookmarks, fx.ids);
+		callback(fx.bookmarks);
 	},
 
 	startObserver: function () {
