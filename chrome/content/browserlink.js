@@ -136,10 +136,7 @@ BrowserBase.prototype.onChanged = function (node, changeInfo) {
 		}
 
 		if (changeInfo.title != node.title) {
-			console.log('Title of url '+node.url+' changed from '+node.title+' to '+changeInfo.title);
-			var oldtitle = node.title;
-			node.title = changeInfo.title;
-			broadcastMessage('bm_mod_title', this, [node, oldtitle]);
+			node.setTitle(this, changeInfo.title);
 		}
 
 	} else {
@@ -151,15 +148,7 @@ BrowserBase.prototype.onChanged = function (node, changeInfo) {
 			return; // nothing changed (or changed by me?)
 		}
 
-		var oldtitle = node.title;
-		var newtitle = changeInfo.title;
-		node.title = newtitle;
-
-		var parentNode = node.parentNode;
-		delete parentNode.f[oldtitle];
-		parentNode.f[newtitle] = node;
-
-		broadcastMessage('f_mod_title', this, [node , oldtitle]);
+		node.setTitle(this, changeInfo.title);
 	}
 	sync2all.commit();
 }

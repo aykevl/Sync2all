@@ -67,6 +67,16 @@ Bookmark.prototype.moveTo = function (link, newParent) {
 	broadcastMessage('bm_mv', link, [this, newParent]);
 }
 
+Bookmark.prototype._setTitle = function (newTitle) {
+	this.title = newTitle;
+}
+Bookmark.prototype.setTitle = function (link, newTitle) {
+	var oldTitle = this.title;
+	this._setTitle(newTitle);
+	console.log('Title of url '+this.url+' changed from '+oldTitle+' to '+newTitle);
+	broadcastMessage('bm_mod_title', link, [this, oldTitle]);
+}
+
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
 
@@ -205,6 +215,23 @@ BookmarkFolder.prototype.moveTo = function (link, newParent) {
 	this._moveTo(newParent);
 	broadcastMessage('f_mv', link, [this, newParent]);
 }
+
+BookmarkFolder.prototype._setTitle = function (newTitle) {
+	var oldTitle = this.title;
+	this.title = newTitle;
+	delete this.parentNode.f[oldTitle];
+	this.parentNode.f[newTitle] = this;
+}
+BookmarkFolder.prototype.setTitle = function (link, newTitle) {
+	if (typeof newTitle != 'string' && !newTitle) {
+		console.error(this, newTitle);
+		throw 'invalid title';
+	}
+	var oldTitle = this.title;
+	this._setTitle(newTitle);
+	broadcastMessage('f_mod_title', link, [this, oldTitle]);
+}
+
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
