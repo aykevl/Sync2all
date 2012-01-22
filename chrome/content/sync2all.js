@@ -213,14 +213,6 @@ function addFolder(link, folder) {
 	broadcastMessage('f_add', link, [folder]);
 }
 
-function rmNode(link, node) {
-	if (node.url) {
-		rmBookmark(link, node);
-	} else {
-		rmFolder(link, node);
-	}
-}
-
 function rmBookmark(link, bookmark) { // public function
 	_rmBookmark(bookmark);
 	console.log('Removed bookmark: '+bookmark.url);
@@ -337,7 +329,8 @@ function apply_action (link, action) {
 		// do the action here
 		mvNode(link, args[0], args[1]);
 	} else if (command == 'bm_del') {
-		rmBookmark(link, args[0]);
+		args[0].remove();
+		//rmBookmark(link, args[0]);
 	} else if (command == 'f_del') {
 		rmFolder(link, args[0]);
 	} else {

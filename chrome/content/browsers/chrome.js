@@ -89,10 +89,10 @@ Browser.prototype.import_bms = function (results) {
 		var folder = sync2all.bookmarks.ids[result.parentId];
 		if (result.url) {
 			// bookmark
-			folder.newBookmark({title: result.title, url: result.url, mtime: result.dateAdded/1000, id: result.id});
+			folder.newBookmark(this, {title: result.title, url: result.url, mtime: result.dateAdded/1000, id: result.id});
 		} else {
 			// folder
-			var subfolder = folder.newFolder({title: result.title, id: result.id});
+			var subfolder = folder.newFolder(this, {title: result.title, id: result.id});
 			chrome.bookmarks.getChildren(subfolder.id, this.import_bms);
 		}
 	}
@@ -105,8 +105,6 @@ Browser.prototype.import_bms = function (results) {
 Browser.prototype.f_add  = function (source, folder) {
 	this.queue_add(
 			function (folder) {
-				this.creating_parentId = folder.parentNode.id;
-				this.creating_title    = folder.title;
 				chrome.bookmarks.create({parentId: folder.parentNode.id, title: folder.title}, 
 						function (result) {
 							folder.id = result.id;
@@ -127,8 +125,6 @@ Browser.prototype.f_del = function (source, folder) {
 Browser.prototype.bm_add = function (source, bm) {
 	this.queue_add(
 			function (bm) {
-				this.creating_parentId = bm.parentNode.id;
-				this.creating_url      = bm.url;
 				chrome.bookmarks.create({parentId: bm.parentNode.id, title: bm.title, url: bm.url},
 						function (result) {
 							bm.id = result.id;
@@ -173,6 +169,7 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
  ************************************/
 
 Browser.prototype.evt_onCreated = function (id, node) {
+	console.log('evt_onCreated', node);
 	// make this object ready
 	node.mtime = node.dateAdded/1000;
 	// let the browser library handle the rest

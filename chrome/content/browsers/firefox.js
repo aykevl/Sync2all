@@ -80,8 +80,7 @@ Browser.prototype = {
 	onItemRemoved: function (id) {
 		if (!fx.ids[id]) return;
 		var node = fx.ids[id];
-		delete fx.ids[id];
-		rmNode(fx, node);
+		fx.ids.remove();
 		sync2all.commit();
 	},
 	onBeginUpdateBatch: function () {
@@ -248,10 +247,10 @@ Browser.prototype = {
 		if (type == fx.bmsvc.TYPE_BOOKMARK) {
 			console.log('fx: bookmark moved into synchronized tree');
 			var url = fx.restore_chrome_uri(fx.bmsvc.getBookmarkURI(id).resolve(null));
-			fx.ids[newParent].newBookmark({title: fx.bmsvc.getItemTitle(id), url: url, id: id});
+			fx.ids[newParent].newBookmark(this, {title: fx.bmsvc.getItemTitle(id), url: url, id: id});
 		} else if (type == fx.bmsvc.TYPE_FOLDER) {
 			console.log('fx: folder moved into synchronized tree');
-			fx.ids[oldParent].newFolder({title: fx.bmsvc.getItemTitle(id), id: id});
+			fx.ids[oldParent].newFolder(this, {title: fx.bmsvc.getItemTitle(id), id: id});
 			// FIXME childs...
 		}
 	}

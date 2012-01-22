@@ -29,9 +29,9 @@ NodeBase.prototype.__defineGetter__('rootNode', function () {
 	return this.parentNode.rootNode;
 });
 
-NodeBase.prototype._moveTo = function (parent) {
+NodeBase.prototype._moveTo = function (newParent) {
 	this._remove();
-	parent._import(this);
+	newParent._import(this);
 }
 
 function Folder(link, data) {
@@ -61,6 +61,10 @@ Bookmark.prototype._remove = function () {
 Bookmark.prototype.remove = function (link) {
 	this._remove();
 	broadcastMessage('bm_del', link, [this]);
+}
+Bookmark.prototype.moveTo = function (link, newParent) {
+	this._moveTo(newParent);
+	broadcastMessage('bm_mv', link, [this, newParent]);
 }
 
 function BookmarkFolder (link, data) {
@@ -197,6 +201,10 @@ BookmarkFolder.prototype.remove = function (link) {
 	broadcastMessage('f_del', link, [this]);
 }
 
+BookmarkFolder.prototype.moveTo = function (link, newParent) {
+	this._moveTo(newParent);
+	broadcastMessage('f_mv', link, [this, newParent]);
+}
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
