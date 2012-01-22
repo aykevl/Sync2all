@@ -382,10 +382,12 @@ Link.prototype.queue_start = function () {
 Link.prototype.queue_next = function (result) {
 	if (result != undefined) {
 		// check for valid result
-		if (result instanceof XMLHttpRequest) {
-			if (result.status/100 != 2) {
+		if (result instanceof XMLHttpRequest || result.status) {
+			if (Math.floor(result.status/100) != 2) {
 				console.error('Upload failed:', result);
 			}
+		} else {
+			console.error('Upload failed:', result);
 		}
 	}
 	var queue_item = this.queue.shift();
