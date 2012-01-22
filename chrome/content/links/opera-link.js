@@ -465,26 +465,31 @@ OperaLink.prototype.fixBookmark = function (bm) {
 	}
 }
 
-OperaLink.prototype.bm_add = function (target, bm, folder) {
-	if (!folder) var folder = bm.parentNode;
-	if (bm.opl_id) return; // already uploaded
+OperaLink.prototype.removeItem = function (id, callback) {
+	opera.link.bookmarks.deleteItem(id, callback);
+}
+
+OperaLink.prototype.bm_add = function (target, bm) {
+	if (bm.opl_id) {
+		console.error(bm);
+		throw 'already uploaded';
+	}
 	this.queue_add(
 			function (bm) {
-				if (!folder.opl_id && folder != sync2all.bookmarks) {
-					console.warn('No parent ID! Bookmark:');
-					console.warn(bm);
-					this.queue_next();
-					return;
-				}
 				this.current_item = bm;
 				// TODO: last visited timestamp, comments (from Google Bookmarks)
 				console.log('bm_add');
 
 				this.fixBookmark(bm);
-				if (folder.opl_id) {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, folder.opl_id, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
-				} else {
+				if (bm.parentNode == sync2all.bookmarks) {
 					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
+				} else {
+					if (!bm.parentNode.opl_id) {
+						console.error('opl: no parent ID while uploading bookmark!', bm);
+						this.queue_next();
+						return;
+					}
+					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, bm.parentNode.opl_id, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
 				}
 			}.bind(this), bm);
 }
@@ -507,18 +512,6 @@ OperaLink.prototype.f_add = function (target, folder) {
 					opera.link.bookmarks.createFolder({title: folder.title}, this.itemCreated.bind(this));
 				}
 			}.bind(this), folder);
-}
-
-OperaLink.prototype.bm_del = OperaLink.prototype.f_del = function (target, node) {
-	this.queue_add(
-			function (node) {
-				if (!node.opl_id) {
-					console.error('No opl_id in bookmark node (bug somewhere else!):');
-					console.log(node);
-					this.queue_next(); // WARNING this just skips this error
-				}
-				opera.link.bookmarks.deleteItem(node.opl_id, this.itemDeleted.bind(this));
-			}.bind(this), node);
 }
 
 OperaLink.prototype.bm_mv = OperaLink.prototype.f_mv = function (target, node, oldParent) {

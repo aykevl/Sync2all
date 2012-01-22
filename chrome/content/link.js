@@ -168,14 +168,6 @@ Link.prototype.stop = Link.prototype.msg_stop = function (keepStatus) {
 	this.updateStatus(statuses.READY);
 };
 
-Link.prototype.commit = function () {
-	if (debug) {
-		console.warn(this.id+' commit -- backtrace:');
-		console.trace();
-	}
-	this.queue_start(); // start running
-}
-
 Link.prototype.may_save_state = function () {
 	if (browser.queue.running ||
 		this.has_saved_state ||
@@ -387,7 +379,8 @@ Link.prototype.queue_start = function () {
 };
 
 // execute the next function in the queue
-Link.prototype.queue_next = function () {
+Link.prototype.queue_next = function (result) {
+	// TODO check for successful response
 	var queue_item = this.queue.shift();
 	if (!queue_item) {
 
@@ -399,7 +392,7 @@ Link.prototype.queue_next = function () {
 
 		var callback = queue_item[0];
 		var data     = queue_item[1];
-		callback(data);
+		callback(data, this.queue_next.bind(this));
 	}
 };
 

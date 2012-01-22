@@ -111,7 +111,7 @@ Browser.prototype = {
 			if (newValue == node.title) return; // nothing has changed
 
 			var changeInfo = {title: newValue};
-			onChanged(fx, node, changeInfo);
+			this.onChanged(id, changeInfo);
 
 			sync2all.commit();
 		} else if (property == 'favicon') {
@@ -123,42 +123,6 @@ Browser.prototype = {
 		console.log('onItemMoved');
 
 		move_event(fx, id, oldParentId, newParentId);
-
-		/*// get objects
-		var node = fx.ids[id];
-		var oldParent = fx.ids[oldParentId];
-		var newParent = fx.ids[newParentId];
-
-		if (!fx.ids[newParent]) {
-			// new parent is not known, should possibly be removed. TODO
-
-		} else {
-			if (!fx.ids[id]) {
-				// moved to a synchronized folder
-				if (type == fx.bmsvc.TYPE_BOOKMARK) {
-					console.log('fx: bookmark moved into synchronized tree');
-					var url = fx.fix_fx_url(fx.bmsvc.getBookmarkURI(id).resolve(null));
-					var bm = {title: fx.bmsvc.getItemTitle(id), url: url, 
-						parentNode: fx.ids[newParent], id: id};
-					fx.ids[bm.id] = bm;
-					addBookmark(fx, bm);
-				} else if (type == fx.bmsvc.TYPE_FOLDER) {
-					console.log('fx: folder moved into synchronized tree');
-					var folder = {title: fx.bmsvc.getItemTitle(id),
-						bm: {}, f: {}, parentNode: fx.ids[oldParent], id: id};
-					// FIXME childs...
-					fx.ids[folder.id] = folder;
-					addFolder(fx, folder);
-				}
-			} else {
-				// the item is moved inside the synchronized tree
-				if (!fx.ids[oldParent]) {
-					// shouldn't happen. This means that the item but not the parent is synchronized.
-					console.error('Error: ...');
-				}
-			}
-		}
-		sync2all.commit();*/
 	},
 	onItemReplaced: function () {
 		// TODO

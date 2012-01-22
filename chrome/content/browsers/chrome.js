@@ -186,9 +186,7 @@ Browser.prototype.evt_onRemoved = function (id, removeInfo) {
 
 Browser.prototype.evt_onChanged = function (id, changeInfo) {
 	console.log('evt_onChanged');
-	var node = sync2all.bookmarks.ids[id];
-	if (!node) return; // somewhere outside the synced folder (or bug)
-	this.onChanged(node, changeInfo);
+	this.onChanged(id, changeInfo);
 }
 
 Browser.prototype.evt_onMoved = function (id, moveInfo) {

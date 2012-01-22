@@ -106,33 +106,17 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 	}
 }
 
-BrowserBase.prototype.onChanged = function (node, changeInfo) {
+BrowserBase.prototype.onChanged = function (id, changeInfo) {
 	console.log('onChanged');
+
+	var node = sync2all.bookmarks.ids[id];
+	if (!node) return; // somewhere outside the synced folder (or bug)
+
 	if (node.url) {
 		// bookmark
 		
-		// has anything changed?
-		if (changeInfo.url == node.url && changeInfo.title == node.title) return; // changed by me?
 		if (changeInfo.url != node.url) {
-			console.log('Url of '+node.title+' changed from '+node.url+' to '+changeInfo.url);
-
-			var oldurl = node.url;
-
-			// delete old reference
-			delete node.parentNode.bm[node.url];
-			// change url
-			node.url = changeInfo.url;
-
-			// does that url already exist?
-			if (node.parentNode.bm[node.url]) {
-				console.log('"Duplicate URL '+node.url+', merging by removing other...');
-				node.parentNode.bm[node.url].remove();
-			}
-
-			// add new reference
-			node.parentNode.bm[node.url] = node;
-
-			broadcastMessage('bm_mod_url', this, [node, oldurl]);
+			node.setUrl(this, changeInfo.url);
 		}
 
 		if (changeInfo.title != node.title) {

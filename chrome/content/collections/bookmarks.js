@@ -77,6 +77,30 @@ Bookmark.prototype.setTitle = function (link, newTitle) {
 	broadcastMessage('bm_mod_title', link, [this, oldTitle]);
 }
 
+Bookmark.prototype._setUrl = function (newUrl) {
+	var oldUrl = this.url;
+
+	// delete old reference
+	delete this.parentNode.bm[this.url];
+	// change url
+	this.url = newUrl;
+
+	// does that url already exist?
+	if (this.parentNode.bm[newUrl]) {
+		console.log('"Duplicate URL '+newUrl+', merging by removing other.');
+		this.parentNode.bm[newUrl].remove();
+	}
+
+	// add new reference
+	this.parentNode.bm[newUrl] = this;
+}
+Bookmark.prototype.setUrl = function (link, newUrl) {
+	var oldUrl = this.url;
+	this._setUrl(newUrl);
+	console.log('Url of '+this.title+' changed from '+this.url+' to '+newUrl);
+	broadcastMessage('bm_mod_url', link, [this, oldUrl]);
+}
+
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
 
