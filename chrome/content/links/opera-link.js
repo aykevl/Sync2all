@@ -469,6 +469,18 @@ OperaLink.prototype.removeItem = function (id, callback) {
 	opera.link.bookmarks.deleteItem(id, callback);
 }
 
+OperaLink.prototype.changeItem = function (node, callback) {
+	if (node instanceof BookmarkFolder) {
+		var changes = {title: node.title};
+	} else if (node instanceof Bookmark) {
+		var changes = {title: node.title, uri: node.url};
+	} else {
+		console.error(node);
+	}
+	opera.link.bookmarks.update(node.opl_id, changes, callback);
+}
+
+
 OperaLink.prototype.bm_add = function (target, bm) {
 	if (bm.opl_id) {
 		console.error(bm);
@@ -524,19 +536,4 @@ OperaLink.prototype.bm_mv = OperaLink.prototype.f_mv = function (target, node, o
 			}.bind(this), node);
 };
 
-OperaLink.prototype.f_mod_title = OperaLink.prototype.bm_mod_title = function (target, node, oldtitle) {
-	this.sendChanges(node, {title: node.title});
-}
-
-OperaLink.prototype.bm_mod_url = function (target, node, oldurl) {
-	this.sendChanges(node, {uri: node.url});
-}
-
-
-OperaLink.prototype.sendChanges = function (node, changes) {
-	this.queue_add(
-			function (node) {
-				opera.link.bookmarks.update(node.opl_id, changes, this.itemUpdated.bind(this));
-			}.bind(this), node);
-}
 
