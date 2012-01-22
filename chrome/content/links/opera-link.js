@@ -441,9 +441,7 @@ OperaLink.prototype.itemMoved = function (result) {
 OperaLink.prototype.fixBookmark = function (bm) {
 	if (!bm.title) {
 		// fix title. Opera Link needs a title
-		var oldtitle = bm.title;
-		bm.title = bm.url;
-		broadcastMessage('bm_mod_title', this, [bm, oldtitle]);
+		bm.setTitle(bm.url);
 	}
 }
 
@@ -452,6 +450,7 @@ OperaLink.prototype.removeItem = function (id, callback) {
 }
 
 OperaLink.prototype.changeItem = function (node, callback) {
+	// TODO calculate changes somewhere else
 	if (node instanceof BookmarkFolder) {
 		var changes = {title: node.title};
 	} else if (node instanceof Bookmark) {

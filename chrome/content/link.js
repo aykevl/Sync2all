@@ -380,7 +380,14 @@ Link.prototype.queue_start = function () {
 
 // execute the next function in the queue
 Link.prototype.queue_next = function (result) {
-	// TODO check for successful response
+	if (result != undefined) {
+		// check for valid result
+		if (result instanceof XMLHttpRequest) {
+			if (result.status/100 != 2) {
+				console.error('Upload failed:', result);
+			}
+		}
+	}
 	var queue_item = this.queue.shift();
 	if (!queue_item) {
 
