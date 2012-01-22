@@ -428,27 +428,9 @@ OperaLink.prototype.itemCreated = function (result) {
 	this.current_item.opl_id = result.response.id;
 	this.queue_next();
 };
-OperaLink.prototype.itemDeleted = function (result) {
-	if (!result.status == 204) {
-		console.error('ERROR deleting:');
-		console.log(result);
-		this.queue_error();
-		return;
-	}
-	this.queue_next();
-};
 OperaLink.prototype.itemMoved = function (result) {
 	if (!result.status == 200) {
 		console.error('ERROR moving:');
-		console.log(result);
-		this.queue_error();
-		return;
-	}
-	this.queue_next();
-};
-OperaLink.prototype.itemUpdated = function (result) {
-	if (!result.status == 200) {
-		console.error('ERROR updating:');
 		console.log(result);
 		this.queue_error();
 		return;
