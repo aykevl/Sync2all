@@ -213,74 +213,6 @@ function addFolder(link, folder) {
 	broadcastMessage('f_add', link, [folder]);
 }
 
-function rmBookmark(link, bookmark) { // public function
-	_rmBookmark(bookmark);
-	console.log('Removed bookmark: '+bookmark.url);
-	broadcastMessage('bm_del', link, [bookmark]);
-}
-function _rmBookmark(bookmark) { // internal use only
-	if (!bookmark.parentNode) {
-		console.log(bookmark);
-		throw 'Undefined parentNode';
-	}
-	delete bookmark.parentNode.bm[bookmark.url];
-}
-
-function rmFolder(link, folder) {
-	_rmFolder(folder);
-	broadcastMessage('f_del', link, [folder]);
-}
-function _rmFolder(folder) {
-	delete folder.parentNode.f[folder.title];
-}
-
-function mvBookmark (link, bm, target) {
-	_mvBookmark(bm, target);
-	broadcastMessage('bm_mv', link, [bm, target]);
-}
-
-function mvNode(link, node, target) {
-	_mvNode(node, target);
-	if (node.url) {
-		broadcastMessage('bm_mv', link, [node, target]);
-	} else {
-		broadcastMessage('f_mv', link, [node, target]);
-	}
-}
-
-function _mvNode(node, target) {
-	if (node.parentNode == target) {
-		console.warn('WARNING: node moved to it\'s parent folder! node:');
-		console.log(node);
-		console.trace();
-		return; // nothing to do here
-	}
-	if (!target) {
-		throw 'undefined target';
-	}
-	if (node.url) {
-		_mvBookmark(node, target);
-	} else {
-		_mvFolder(node, target);
-	}
-}
-function _mvBookmark(bm, target) {
-	delete bm.parentNode.bm[bm.url];
-	bm.parentNode = target;
-	// FIXME check for duplicate
-	target.bm[bm.url] = bm;
-}
-function _mvFolder(folder, target) {
-	if (!folder.parentNode) {
-		console.log(folder);
-		throw 'Undefined parentNode';
-	}
-	delete folder.parentNode.f[folder.title];
-	folder.parentNode = target;
-	// FIXME check for duplicate
-	target.f[folder.title] = folder;
-}
-
 // whether this folder-node has contents (bookmarks or folders)
 function folderHasContents(folder) {
 	var url;
@@ -327,12 +259,9 @@ function apply_action (link, action) {
 	// apply actions partially
 	if (command == 'bm_mv' || command == 'f_mv') {
 		// do the action here
-		mvNode(link, args[0], args[1]);
-	} else if (command == 'bm_del') {
-		args[0].remove();
-		//rmBookmark(link, args[0]);
-	} else if (command == 'f_del') {
-		rmFolder(link, args[0]);
+		args[0].moveTo(link, args[1]);
+	} else if (command == 'bm_del' || command == 'f_del') {
+		args[0].remove(link);
 	} else {
 		console.log('ERROR: unknown action: ');
 		console.log(action);
@@ -562,13 +491,13 @@ function syncRBookmark(target, bookmark, lfolder) {
 	return pushRBookmark(target, bookmark, lfolder);
 }
 function delRBookmark(target, bookmark, lfolder) {
-	console.log('Old remote bookmark :'+bookmark.url);
+	console.log('Old remote bookmark :'+bookmark.url, bookmark);
 	broadcastMessage('bm_del', target, [bookmark]);
 	// bookmark doesn't exist locally, so no removing required
 	return 0;
 }
 function pushRBookmark(link, bookmark, lfolder) {
-	console.log('New remote bookmark: '+bookmark.url);
+	console.log('New remote bookmark: '+bookmark.url, bookmark);
 	bookmark.parentNode = lfolder;
 	addBookmark(link, bookmark); // TODO check for errors
 	return 1;
@@ -579,13 +508,13 @@ function syncLBookmark(target, bookmark) {
 	return pushLBookmark(target, bookmark);
 }
 function pushLBookmark(target, bm) {
-	console.log('New local bookmark: '+bm.url);
+	console.log('New local bookmark: '+bm.url, bm);
 	target.bm_add(undefined, bm);
 	return 1;
 }
 function delLBookmark(target, bm) {
 	// remove bookmark
-	console.log('Old local bookmark: '+bm.url);
+	console.log('Old local bookmark: '+bm.url, bm);
 	// TODO
 	//broadcastMessage('bm_del', target, [bm]);
 	return 0;

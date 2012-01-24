@@ -30,6 +30,9 @@ NodeBase.prototype.__defineGetter__('rootNode', function () {
 });
 
 NodeBase.prototype._moveTo = function (newParent) {
+	if (this.parentNode == newParent) {
+		console.warn('WARNING: node moved to it\'s parent folder!', this, newParent);
+	}
 	this._remove();
 	newParent._import(this);
 }
