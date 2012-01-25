@@ -213,19 +213,6 @@ function addFolder(link, folder) {
 	broadcastMessage('f_add', link, [folder]);
 }
 
-// whether this folder-node has contents (bookmarks or folders)
-function folderHasContents(folder) {
-	var url;
-	for (url in folder.bm) {
-		return true;
-	}
-	var title;
-	for (title in folder.f) {
-		return true;
-	}
-	return false;
-}
-
 // apply action, parts are the same as broadcastMessage.
 function apply_action (link, action) {
 	// first get the arguments
@@ -252,7 +239,7 @@ function apply_action (link, action) {
 	// and check whether it is allowed
 	if (command == 'f_del_ifempty') {
 		// directory shouldn't be removed if it has entries in it
-		if (folderHasContents(args[0])) return;
+		if (args[0].hasContents()) return;
 		command = 'f_del';
 	}
 

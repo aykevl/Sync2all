@@ -53,7 +53,7 @@ Browser.prototype = {
 				if (folder.f[node.title]) {
 					// duplicate
 					var subfolder = folder.f[node.title];
-					if (!folderHasContents(subfolder)) {
+					if (!subfolder.hasContents()) {
 						console.log('fx: has no contents: '+subfolder.title);
 						fx.f_del(fx, subfolder);
 					} else if (false) {

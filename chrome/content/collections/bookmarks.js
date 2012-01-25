@@ -259,6 +259,19 @@ BookmarkFolder.prototype.setTitle = function (link, newTitle) {
 	broadcastMessage('f_mod_title', link, [this, oldTitle]);
 }
 
+// whether this folder-node has contents (bookmarks or folders)
+BookmarkFolder.prototype.hasContents = function () {
+	var url;
+	for (url in this.bm) {
+		return true;
+	}
+	var title;
+	for (title in this.f) {
+		return true;
+	}
+	return false;
+}
+
 /* Special folder that only contains other data but doesn't have properties
  * itself
  */
