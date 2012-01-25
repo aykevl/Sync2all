@@ -491,15 +491,15 @@ function syncRBookmark(target, bookmark, lfolder) {
 	return pushRBookmark(target, bookmark, lfolder);
 }
 function delRBookmark(target, bookmark, lfolder) {
-	console.log('Old remote bookmark :'+bookmark.url, bookmark);
+	console.log('Old remote bookmark :'+bookmark.url);
 	broadcastMessage('bm_del', target, [bookmark]);
 	// bookmark doesn't exist locally, so no removing required
 	return 0;
 }
 function pushRBookmark(link, bookmark, lfolder) {
 	console.log('New remote bookmark: '+bookmark.url, bookmark);
-	bookmark.parentNode = lfolder;
-	addBookmark(link, bookmark); // TODO check for errors
+	bookmark._remove();
+	lfolder.add(link, bookmark);
 	return 1;
 }
 
@@ -508,13 +508,13 @@ function syncLBookmark(target, bookmark) {
 	return pushLBookmark(target, bookmark);
 }
 function pushLBookmark(target, bm) {
-	console.log('New local bookmark: '+bm.url, bm);
+	console.log('New local bookmark: '+bm.url);
 	target.bm_add(undefined, bm);
 	return 1;
 }
 function delLBookmark(target, bm) {
 	// remove bookmark
-	console.log('Old local bookmark: '+bm.url, bm);
+	console.log('Old local bookmark: '+bm.url);
 	// TODO
 	//broadcastMessage('bm_del', target, [bm]);
 	return 0;
