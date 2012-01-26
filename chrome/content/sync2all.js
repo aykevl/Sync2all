@@ -198,15 +198,8 @@ function addBookmark(link, bm) {
 		console.log(bm);
 		throw 'Undefined parentNode';
 	}
-	if (fixBookmark(bm)) return true; // error
 	bm.parentNode.bm[bm.url] = bm;
 	broadcastMessage('bm_add', link, [bm]);
-}
-function fixBookmark(bm, url) { // url is the ID
-	// try to fix the url
-	if (!bm.url && url) bm.url = url;
-	// if it can't be fixed, remove
-	if (!bm.url) return true;
 }
 function addFolder(link, folder) {
 	folder.parentNode.f[folder.title] = folder;

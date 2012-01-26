@@ -95,6 +95,11 @@ Bookmark.prototype.setTitle = function (link, newTitle) {
 Bookmark.prototype._setUrl = function (newUrl) {
 	var oldUrl = this.url;
 
+	if (!newUrl) {
+		console.error(this);
+		throw 'invalid url:'+newUrl;
+	}
+
 	// delete old reference
 	delete this.parentNode.bm[this.url];
 	// change url
@@ -314,12 +319,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		var this_bookmark  = this.bm[url];
 		var other_bookmark = other.bm[url];
 
-		// repair and remove broken bookmarks
-		if (fixBookmark(this_bookmark)) {
-			this_bookmark._remove();
-			continue;
-		}
-
 		if (!other_bookmark) {
 			// unique local bookmark
 			console.log('New local bookmark: '+this_bookmark.url, this_bookmark);
@@ -357,9 +356,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	for (var url in other.bm) {
 		var other_bookmark = other.bm[url];
 		var this_bookmark  = this .bm[url]; // may not exist
-		
-		// fix and ignore bad bookmarks
-		if (fixBookmark(other_bookmark, url)) continue;
 
 		if (!this_bookmark) {
 			// unique remote bookmark
