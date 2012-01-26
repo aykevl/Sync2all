@@ -37,6 +37,18 @@ NodeBase.prototype._moveTo = function (newParent) {
 	newParent._import(this);
 }
 
+NodeBase.prototype.copyPropertiesFrom = function (other) {
+	var key;
+	for (key in other) {
+		if (key == 'bm' || key == 'f' || key == 'parentNode') continue;
+		if (this[key] === undefined) {
+			this[key] = other[key];
+		}
+	}
+};
+
+
+
 function Folder(link, data) {
 	NodeBase.call(this, link, data);
 }
@@ -103,6 +115,16 @@ Bookmark.prototype.setUrl = function (link, newUrl) {
 	console.log('Url of '+this.title+' changed from '+this.url+' to '+newUrl);
 	broadcastMessage('bm_mod_url', link, [this, oldUrl]);
 }
+
+
+Bookmark.prototype.importInLink = function (link) {
+	link.bm_add(undefined, this);
+}
+
+Bookmark.prototype.broadcastAdded = function (link) {
+	broadcastMessage('bm_add', link, [this]);
+}
+
 
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
@@ -202,14 +224,7 @@ BookmarkFolder.prototype._import = function (node) {
 
 BookmarkFolder.prototype.add = function (link, node) {
 	this._import(node);
-	if (node instanceof Bookmark) {
-		broadcastMessage('bm_add', link, [node]);
-	} else if (node instanceof BookmarkFolder) {
-		broadcastMessage('f_add', link, [node]);
-	} else {
-		console.error(node);
-		throw 'unknown type';
-	}
+	node.broadcastAdded(link);
 }
 
 BookmarkFolder.prototype.newBookmark = function (link, data) {
@@ -272,8 +287,129 @@ BookmarkFolder.prototype.hasContents = function () {
 	return false;
 }
 
-/* Special folder that only contains other data but doesn't have properties
- * itself
+// 'local' represents 'remote'.
+BookmarkFolder.prototype.mergeWith = function (link, other) {
+
+	// merge properties
+	this.copyPropertiesFrom(other);
+
+	// unique local folders
+	for (var title in this.f) {
+		var this_subfolder  = this.f [title];
+		var other_subfolder = other.f[title]; // may not exist
+
+		if (!other_subfolder) {
+			// unique folder/label
+			console.log('Unique local folder: '+title, this_subfolder);
+			this_subfolder.importInLink(link);
+
+		} else {
+			// other folder does exist, merge it too
+			this_subfolder.mergeWith(link, other_subfolder);
+		}
+	}
+
+	// resolve unique local bookmarks
+	for (var url in this.bm) {
+		var this_bookmark  = this.bm[url];
+		var other_bookmark = other.bm[url];
+
+		// repair and remove broken bookmarks
+		if (fixBookmark(this_bookmark)) {
+			this_bookmark._remove();
+			continue;
+		}
+
+		if (!other_bookmark) {
+			// unique local bookmark
+			console.log('New local bookmark: '+this_bookmark.url, this_bookmark);
+			console.log(this_bookmark);
+			console.log(this);
+			this_bookmark.importInLink(link);
+
+		} else {
+			// TODO merge changes (changed title etc.)
+		}
+	}
+
+	// find unique remote folders
+	// After this action, other.f may be out of sync
+	for (var title in other.f) {
+		var other_subfolder = other.f[title];
+		var this_subfolder  = this .f[title]; // may not exist
+
+		// ignore bogus folders
+		if (!other_subfolder.title || !other_subfolder.bm || !other_subfolder.f)
+			continue;
+
+		if (!this_subfolder) {
+			// unique remote folder
+			console.log('Unique remote folder', other_subfolder.title, other_subfolder);
+			// this removes the node from link.bookmarks and imports it into this.f
+			other_subfolder._remove();
+			this.add(link, other_subfolder);
+			//syncRFolder(link, other_subfolder, this);
+		}
+	}
+
+	// find unique remote bookmarks
+	// After this action, other.bm may be out of sync
+	for (var url in other.bm) {
+		var other_bookmark = other.bm[url];
+		var this_bookmark  = this .bm[url]; // may not exist
+		
+		// fix and ignore bad bookmarks
+		if (fixBookmark(other_bookmark, url)) continue;
+
+		if (!this_bookmark) {
+			// unique remote bookmark
+
+			// log this
+			console.log('New remote bookmark: '+other_bookmark.url, other_bookmark);
+
+			// copy bookmark
+			other_bookmark._remove(); // don't broadcast this change
+			this.add(link, other_bookmark); // broadcast this change
+		} else {
+			this_bookmark.copyPropertiesFrom(other_bookmark);
+		}
+	}
+}
+
+// folder exists only locally
+BookmarkFolder.prototype.importInLink = function (link) {
+	// push this folder
+	if (link.f_add !== false) link.f_add(undefined, this);
+
+	// push subfolders
+	for (var title in this.f) {
+		this.f[title].importInLink(link);
+	}
+
+	// push bookmarks inside this folder
+	for (var url in this.bm) {
+		this.bm[url].importInLink(link);
+	}
+}
+
+// folder exists only locally
+BookmarkFolder.prototype.broadcastAdded = function (link) {
+	// push this folder
+	broadcastMessage('f_add', link, [this]);
+
+	// push subfolders
+	for (var title in this.f) {
+		this.f[title].broadcastAdded(link);
+	}
+
+	// push bookmarks inside this folder
+	for (var url in this.bm) {
+		this.bm[url].broadcastAdded(link);
+	}
+}
+
+
+/* Root bookmark folder
  */
 function BookmarkCollection (link, data) {
 	this.ids = {};

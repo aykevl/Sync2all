@@ -37,6 +37,12 @@ if (!console) {
 			Components.utils.reportError(s);
 			s = o2s(s);
 			dump('ERR:\t'+s+'\n');
+			// print stacktrace
+			try {
+				not_existing_function ();
+			} catch (e) {
+				dump(e.stack);
+			}
 		},
 		warn: function (s) {
 			s = o2s(s);
