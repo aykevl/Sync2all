@@ -145,6 +145,46 @@ BookmarkFolder.prototype.importBookmark = function (data) {
 	return bookmark;
 }
 
+BookmarkFolder.prototype.importTaggedBookmark = function (link, data) {
+	if (!tagtree.urls[data.url]) {
+		// new bookmark (only sometimes the case)
+		tagtree.urls[data.url] = {url: data.url, bm: []}
+	}
+	tagtree.urls[data.url][link.id+'_id'] = data[link.id+'_id'];
+
+	for (var tagIndex=0; tagIndex<data.tags.length; tagIndex++) {
+		var tag = data.tags[tagIndex];
+		var parentNode = undefined;
+		if (tag == link.rootNodeLabel) {
+			parentNode = this;
+		} else {
+			if (!link.tags[tag]) {
+				// Add the new folder to the list
+				var folderNameList = tag.split(link.folderSep);
+				parentNode = this;
+				var folderName;
+				for (var folderNameIndex=0; folderName=folderNameList[folderNameIndex]; folderNameIndex++) {
+					// is this a new directory?
+					if (parentNode.f[folderName] == undefined) {
+						// yes, create it first
+						parentNode.importFolder({title: folderName,});
+					}
+					// parentNode does exist
+					parentNode = parentNode.f[folderName];
+				}
+				link.tags[tag] = parentNode;
+			} else {
+				parentNode = link.tags[tag];
+			}
+		}
+		parentNode.importBookmark(data);
+	}
+	if (!data.tags.length) {
+		// this bookmark has no labels, add it to root
+		this.importBookmark(data);
+	}
+}
+
 BookmarkFolder.prototype.importFolder = function (data) {
 	var folder = new BookmarkFolder(this.link, data);
 	this._import(folder);
@@ -160,8 +200,10 @@ BookmarkFolder.prototype._import = function (node) {
 	if (this.rootNode.ids) {
 		if (this.link instanceof Browser) {
 			this.rootNode.ids[node.id] = node;
-		} else {
+		} else if (this.link instanceof TreeBasedLink) {
 			this.rootNode.ids[node[this.link.id+'_id']] = node;
+		} else {
+			// no IDs to import
 		}
 	}
 	if (node instanceof BookmarkFolder) {
@@ -227,8 +269,8 @@ BookmarkFolder.prototype._import = function (node) {
 	}
 }
 
-BookmarkFolder.prototype.add = function (link, node) {
-	this._import(node);
+BookmarkFolder.prototype.add = function (link, data) {
+	this._import(data);
 	node.broadcastAdded(link);
 }
 

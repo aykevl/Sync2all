@@ -16,46 +16,6 @@ TagBasedLink.prototype._startSync = function () {
 	this.tags    = {};
 }
 
-TagBasedLink.prototype.importBookmark = function (uBm) {
-	if (!tagtree.urls[uBm.url]) {
-		// new bookmark (only sometimes the case)
-		tagtree.urls[uBm.url] = {url: uBm.url, bm: []}
-	}
-	tagtree.urls[uBm.url][this.id+'_id'] = uBm[this.id+'_id'];
-
-	for (var tagIndex=0; tagIndex<uBm.tags.length; tagIndex++) {
-		var tag = uBm.tags[tagIndex];
-		var parentNode = undefined;
-		if (tag == this.rootNodeLabel) {
-			parentNode = this.bookmarks;
-		} else {
-			if (!this.tags[tag]) {
-				// Add the new folder to the list
-				var folderNameList = tag.split(this.folderSep);
-				parentNode = this.bookmarks;
-				var folderName;
-				for (var folderNameIndex=0; folderName=folderNameList[folderNameIndex]; folderNameIndex++) {
-					// is this a new directory?
-					if (parentNode.f[folderName] == undefined) {
-						// yes, create it first
-						parentNode.importFolder({title: folderName,});
-					}
-					// parentNode does exist
-					parentNode = parentNode.f[folderName];
-				}
-				this.tags[tag] = parentNode;
-			} else {
-				parentNode = this.tags[tag];
-			}
-		}
-		parentNode.importBookmark(uBm);
-	}
-	if (!uBm.tags.length) {
-		// this bookmark has no labels, add it to root
-		this.bookmarks.importBookmark(uBm);
-	}
-}
-
 TagBasedLink.prototype.bm_add = function (callingLink, bm) {
 	this.changed[bm.url] = bm;
 	if (this.fixBookmark) {

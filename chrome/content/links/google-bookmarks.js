@@ -156,7 +156,7 @@ GoogleBookmarksLink.prototype.parseXmlBookmarks = function (xmlTree) {
 		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, gbm_id: id};
 
 		// import it into the tree
-		this.importBookmark(urlBookmark);
+		this.bookmarks.importTaggedBookmark(this, urlBookmark);
 	}
 }
 
