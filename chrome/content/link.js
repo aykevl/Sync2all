@@ -283,80 +283,13 @@ Link.prototype.errorStarting = function (msg) {
 
 /* Self-check */
 
-Link.prototype.testfail = function (error, element) {
-	console.log(element);
-	throw (this.fullName || this.name)+' Failed test: '+error;
-}
-
 Link.prototype.selftest = function () {
 	if (this instanceof Browser) {
-		this.subselftest(sync2all.bookmarks);
+		sync2all.bookmarks.selftest();
 	} else {
-		this.subselftest(this.bookmarks);
+		this.bookmarks.selftest();
 	}
 	console.log(this.fullName+' has passed the intergity test');
-}
-
-Link.prototype.subselftest = function (folder) {
-	// test this folder
-	if (folder.f instanceof Array)
-		this.testfail('folder.f instanceof Array');
-	if (folder.bm instanceof Array)
-		this.testfail('folder.bm instanceof Array');
-
-	// test bookmarks in this folder
-	var url;
-	for (url in folder.bm) {
-		var bm = folder.bm[url];
-		if (!bm.url == url)
-			this.testfail('bm.url != folder.bm[url]', [folder, bm]);
-		if (bm.parentNode != folder) {
-			this.testfail('bm.parentNode != folder', [folder, bm]);
-		}
-		this.testNode(bm);
-	}
-
-	// test subfolders
-	var title;
-	for (title in folder.f) {
-		var subfolder = folder.f[title];
-		if (!subfolder.title == title)
-			this.testfail('subfolder.title != title', subfolder);
-		if (!subfolder.bm)
-			this.testfail('!subfolder.bm');
-		if (!subfolder.f)
-			this.testfail('!subfolder.f');
-		this.testNode(subfolder);
-		this.subselftest(subfolder);
-	}
-}
-
-// general tests
-Link.prototype.testNode = function (node) {
-	if (this instanceof Browser) {
-		if (!node.id)
-			this.testfail('!node.id', node);
-		var webLink;
-		for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
-			if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
-				if (webLink instanceof TreeBasedLink) {
-					if (!node[webLink.id+'_id'])
-						this.testfail('!node.*_id', [node, webLink.id]);
-				} else {
-					if (node[webLink.id+'_id'])
-						this.testfail('node.*_id', [node, webLink.id]);
-				}
-			}
-		}
-	} else {
-		if (this instanceof TreeBasedLink) {
-			if (!node[this.id+'_id'])
-				this.testfail('!node.*_id', node);
-		} else {
-			if (node[this.id+'_id'])
-				this.testfail('node.*_id', node);
-		}
-	}
 }
 
 /* variables */

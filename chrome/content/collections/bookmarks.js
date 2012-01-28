@@ -47,6 +47,32 @@ NodeBase.prototype.copyPropertiesFrom = function (other) {
 	}
 };
 
+NodeBase.prototype.selftest = function () {
+	if (this.link instanceof Browser) {
+		if (!this.id)
+			this.link.testfail('!this.id', this);
+		var webLink;
+		for (var i=0; webLink=sync2all.syncedWebLinks[i]; i++) {
+			if (!webLink.queue.running && !webLink.queue.length && !webLink.status) {
+				if (webLink instanceof TreeBasedLink) {
+					if (!this[webLink.id+'_id'] && !this.ids)
+						this.testfail('!this.*_id', [this, webLink.id]);
+				} else {
+					if (this[webLink.id+'_id'])
+						this.testfail('this.*_id', [this, webLink.id]);
+				}
+			}
+		}
+	} else {
+		if (this.link instanceof TreeBasedLink) {
+			if (!this[this.link.id+'_id'] && !this.ids)
+				this.testfail('!this.*_id', this);
+		} else {
+			if (this[this.link.id+'_id'])
+				this.testfail('this.*_id', this);
+		}
+	}
+}
 
 
 function Folder(link, data) {
@@ -444,6 +470,43 @@ BookmarkFolder.prototype.broadcastAdded = function (link) {
 	for (var url in this.bm) {
 		this.bm[url].broadcastAdded(link);
 	}
+}
+
+BookmarkFolder.prototype.selftest = function () {
+	NodeBase.prototype.selftest.call(this); // call superclass
+	// test this folder
+	if (this.f instanceof Array)
+		this.testfail('this.f instanceof Array');
+	if (this.bm instanceof Array)
+		this.testfail('this.bm instanceof Array');
+
+	// test bookmarks in this folder
+	var url;
+	for (url in this.bm) {
+		var bm = this.bm[url];
+		if (!bm.url == url)
+			this.testfail('bm.url != folder.bm[url]', bm);
+		if (bm.parentNode != this) {
+			this.testfail('bm.parentNode != folder', bm);
+		}
+		bm.selftest();
+	}
+
+	// test subfolders
+	var title;
+	for (title in this.f) {
+		var subfolder = this.f[title];
+		if (subfolder.title != title)
+			this.testfail('subfolder.title != title', subfolder);
+		if (subfolder.parentNode != this)
+			this.testfail('subfolder.parentNode != this', subfolder);
+		subfolder.selftest();
+	}
+}
+
+BookmarkFolder.prototype.testfail = function (error, element) {
+	console.log(this, element);
+	throw (this.link.fullName || this.link.name)+' Failed test: '+error;
 }
 
 
