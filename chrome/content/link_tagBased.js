@@ -57,7 +57,7 @@ TagBasedLink.prototype.f_mv = function (callingLink, folder, oldParent) {
 TagBasedLink.prototype.bm_mod_url = function (callingLink, bm, oldurl) {
 	this.fixBookmark(bm);
 
-	gbm.changed[oldurl] = gbm.changed[oldurl] || tagtree.urls[oldurl].bm[0] || false; // choose one at random
+	this.changed[oldurl] = this.changed[oldurl] || tagtree.urls[oldurl].bm[0] || false; // choose one at random
 };
 
 TagBasedLink.prototype.bm_mod_title = function (callingLink, bm, oldtitle) {
@@ -80,3 +80,59 @@ TagBasedLink.prototype.markFolderChanged = function (folder) {
 		this.markFolderChanged(folder.f[title]);
 	}
 };
+
+TagBasedLink.prototype.get_state = function (state, folder) {
+	state.id = folder.id;
+	var url;
+	for (url in folder.bm) {
+		state.bm.push(folder.bm[url].id+'\n'+url);
+	}
+	var title;
+	for (title in folder.f) {
+		state.f[title] = {bm: [], f: {}};
+		this.get_state(state.f[title], folder.f[title]);
+	}
+};
+
+TagBasedLink.prototype.calculate_actions = function (state, folder) {
+	// only look for removed bookmarks, not for added bookmarks (moved bookmarks are 'removed' and 'added').
+	var data = undefined;
+	var id, url;
+	for (var i=0; data=state.bm[i]; i++) {
+
+		data = data.split('\n');
+		id = data[0]; url = data[1];
+
+		if (!folder.bm[url]) {
+			// this bookmark has been removed
+			// Ignore already removed bookmarks.
+			if (sync2all.bookmarks.ids[id]) {
+				console.log('Bookmark deleted: '+url);
+				this.actions.push(['bm_del', id]);
+			}
+		}
+	}
+	var title;
+	for (title in state.f) {
+		var substate = state.f[title];
+		if (!folder.f[title]) {
+			// if this is true, the folder has been moved or renamed and the
+			// browser link should take care of it.
+			if (sync2all.bookmarks.ids[substate.id]) continue;
+
+			// if this folder exists in the browser...
+			if (sync2all.bookmarks.ids[substate]) {
+				// mark all bookmarks inside it as deleted, and mark all folders as
+				// 'delete-if-empty'
+				this.mark_state_deleted(substate);
+			}
+
+			// don't recurse, because folder.f[title] doesn't exist
+			// (sync2all.bookmarks.ids[substate.id] can't be used because
+			// folder.f[title] is part of this.bookmarks
+			continue;
+		}
+		this.calculate_actions(substate, folder.f[title]);
+	}
+}
+
