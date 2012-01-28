@@ -80,14 +80,3 @@ TagBasedLink.prototype.markFolderChanged = function (folder) {
 		this.markFolderChanged(folder.f[title]);
 	}
 };
-
-TagBasedLink.prototype.folder_get_label = function (folder) {
-	if (!folder.parentNode) return this.rootNodeLabel;
-	var label = '';
-	while (true) {
-		label = folder.title+(label.length?this.folderSep:'')+label;
-		folder = folder.parentNode;
-		if (!folder || !folder.parentNode) break; // first check introduced for bug when a bookmark is added to the Bookmarks Bar.
-	}
-	return label;
-}

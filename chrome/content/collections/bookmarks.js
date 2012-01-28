@@ -156,6 +156,32 @@ Bookmark.prototype.broadcastAdded = function (link) {
 	broadcastMessage('bm_add', link, [this]);
 }
 
+Bookmark.prototype.getTreelessLabels = function (link) {
+	if (!tagtree.urls[this.url]) {
+		console.error(this);
+		throw 'unknown tagtree.urls[this.url]';
+	}
+	if (tagtree.urls[this.url].bm.length == 0) {
+		// no labels
+		return false;
+	}
+	var folder;
+	var uBm;
+	var tags = [];
+	for (var i=0; uBm=tagtree.urls[this.url].bm[i]; i++) {
+		var folder = uBm.parentNode;
+		if (!folder) {
+			console.error(uBm);
+			throw 'no parentNode';
+		}
+		var tag = folder.getTreelessLabel(link);;
+		tags.push(tag);
+	}
+	if (tags.length == 1 && tags[0] == link.rootNodeLabel) {
+		tags = [];
+	}
+	return tags;
+}
 
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
@@ -209,6 +235,19 @@ BookmarkFolder.prototype.importTaggedBookmark = function (link, data) {
 		// this bookmark has no labels, add it to root
 		this.importBookmark(data);
 	}
+}
+
+BookmarkFolder.prototype.getTreelessLabel = function (link) {
+	if (!this.parentNode || this == sync2all.bookmarks)
+		return link.rootNodeLabel;
+	var label = '';
+	var folder = this;
+	while (true) {
+		label = folder.title+(label.length?link.folderSep:'')+label;
+		folder = folder.parentNode;
+		if (!folder || !folder.parentNode) break; // first check introduced for bug when a bookmark is added to the Bookmarks Bar.
+	}
+	return label;
 }
 
 BookmarkFolder.prototype.importFolder = function (data) {

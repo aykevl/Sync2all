@@ -239,7 +239,7 @@ GoogleBookmarksLink.prototype.fixBookmark = function (bookmark) {
 // this needs a bookmark object because it uploads the latest title of the bookmark
 GoogleBookmarksLink.prototype.upload_bookmark = function (bookmark) {
 	console.log('gbm: upload_bookmark');
-	var labels = this.bookmark_get_labels(bookmark.url);
+	var labels = bookmark.getTreelessLabels(this).join(',');
 	this.add_to_queue({bkmk: bookmark.url, title: bookmark.title, labels: labels},
 			function (request) {
 				tagtree.urls[bookmark.url].gbm_id = request.responseText;
@@ -305,29 +305,3 @@ GoogleBookmarksLink.prototype.add_to_queue = function (params, callback) {
 			}.bind(this), params);
 }
 
-GoogleBookmarksLink.prototype.bookmark_get_labels = function (url) {
-	if (!tagtree.urls[url] || tagtree.urls[url].bm.length == 0) {
-		// no labels
-		return false;
-	}
-	var folder;
-	var labels = '';
-	var label;
-	var gbookmark;
-	for (var i=0; gbookmark=tagtree.urls[url].bm[i]; i++) {
-		var folder = gbookmark.parentNode;
-		if (!folder) {
-			throw 'undefined folder, bm url='+url;
-		}
-		if (folder == sync2all.bookmarks) {
-			label = this.rootNodeLabel;
-		} else {
-			label = this.folder_get_label(folder);
-		}
-		labels = labels+((labels=='')?'':',')+label;
-	}
-	if (labels == this.rootNodeLabel) {
-		labels = '';
-	}
-	return labels;
-};
