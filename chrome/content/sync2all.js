@@ -190,22 +190,6 @@ function broadcastMessage(methodName, sourceLink, params) {
 	}
 }
 
-// Bookmark-tree modifying:
-// The functions prefixed with _ don't report it to other links.
-
-function addBookmark(link, bm) {
-	if (!bm.parentNode) {
-		console.log(bm);
-		throw 'Undefined parentNode';
-	}
-	bm.parentNode.bm[bm.url] = bm;
-	broadcastMessage('bm_add', link, [bm]);
-}
-function addFolder(link, folder) {
-	folder.parentNode.f[folder.title] = folder;
-	broadcastMessage('f_add', link, [folder]);
-}
-
 // apply action, parts are the same as broadcastMessage.
 function apply_action (link, action) {
 	// first get the arguments
@@ -276,7 +260,6 @@ function get_stable_lId(link, sid) {
 			node = node.f[sid[i][1]];
 		} else {
 			var folder = node.newFolder(link, {bm: {}, f: {}, parentNode: node, title: sid[i][1]});
-			//addFolder(link, folder);
 			node = folder;
 		}
 	}
