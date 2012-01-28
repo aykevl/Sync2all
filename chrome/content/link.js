@@ -308,19 +308,23 @@ Link.prototype.queue_start = function () {
 	}
 	this.updateStatus(statuses.UPLOADING);
 	this.queue.running = true;
-	this.queue_next();
+	this.queue_next(true);
 };
 
 // execute the next function in the queue
 Link.prototype.queue_next = function (result) {
 	if (result != undefined) {
 		// check for valid result
-		if (result instanceof XMLHttpRequest || result.status) {
+		if (result == true) {
+			// normal
+		} else if (result instanceof XMLHttpRequest || result.status) {
 			if (Math.floor(result.status/100) != 2) {
 				console.error('Upload failed:', result);
 			}
+		} else if (result.__proto__ == Object.prototype) {
+			// Direct instance of Object, not something that has been derived off an Object
 		} else {
-			console.error('Upload failed:', result);
+			console.error('Unknown result:', result);
 		}
 	}
 	var queue_item = this.queue.shift();

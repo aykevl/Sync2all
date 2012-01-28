@@ -223,10 +223,7 @@ function apply_action (link, action) {
 	}
 
 	// apply actions partially
-	if (command == 'bm_mv' || command == 'f_mv') {
-		// do the action here
-		args[0].moveTo(link, args[1]);
-	} else if (command == 'f_del') {
+	if (command == 'f_del') {
 		args[0].remove(link);
 	} else {
 		console.log('ERROR: unknown action: ');

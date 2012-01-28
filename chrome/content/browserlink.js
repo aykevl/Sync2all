@@ -40,6 +40,7 @@ BrowserBase.prototype.onMoved = function (id, newParentId, oldParentId) {
 	var node      = this.ids[id];
 	var oldParent = this.ids[oldParentId];
 	var newParent = this.ids[newParentId];
+	console.log('onMoved:', node, oldParent, newParent);
 
 
 
@@ -87,8 +88,8 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 				if (node.parentNode == newParent) {
 					console.log('Move: the node has been moved by this extension, so doing nothing now.');
 				} else {
-					console.log('BUG: only the old parent is not known. The node \
-							and the new parent are.');
+					console.log('BUG: only the old parent is not known. The node '+
+							'and the new parent are.');
 				}
 			} else {
 				// the bookmark/folder has been moved within the synced folder tree.
@@ -97,9 +98,13 @@ bookmark comes from outside the synchronized tree. So doing a crete now');
 					// when the bookmark has been moved inside a folder
 					console.log('Move: newParent and oldParent are the same, so nothing moved.');
 				} else {
-					node.moveTo(this, newParent);
+					if (node.parentNode == newParent) {
+						console.log('Move: the node has been moved by this extension, so doing nothing now.');
+					} else {
+						node.moveTo(this, newParent);
 
-					sync2all.commit();
+						sync2all.commit();
+					}
 				}
 			}
 		}

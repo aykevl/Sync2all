@@ -167,12 +167,12 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					// check whether this bookmark has already been moved
 					// If not, add an action
 					if (localParentNode && !localParentNode.bm[node.url]) {
-						this.actions.push(['bm_mv', item.id, localParentNode]);
+						this.bookmarks.moved[item.id] = true;
 					}
 				} else {
 					// check whether this folder has already been moved local
 					if (localParentNode && !localParentNode.f[node.title]) {
-						this.actions.push(['f_mv',  item.id, localParentNode]);
+						this.bookmarks.moved[item.id] = true;
 					}
 				}
 			} else {
@@ -216,24 +216,22 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					}
 				}
 
-			} else if (this.bookmarks.ids[item.opl_id].parentNode.opl_id != parentNode.opl_id) {
+			} else if (this.bookmarks.ids[item.opl_id].parentNode != parentNode) {
 				var movedTo = this.bookmarks.ids[item.opl_id].parentNode;
 
 				// useful information for debugging
-				console.log('opl: moved: '+item.opl_id);
-				console.log(item);
-				console.log(movedTo);
+				console.log('opl: moved: ', item, movedTo);
 
 				// get stable ID
 				var stableToId = this.make_stable_lId(movedTo);
 
 				// add type-specifc information
 				if (isfolder) {
-					this.actions.push(['f_mv',  item.id, stableToId]);
+					this.bookmarks.moved[item.id] = true;
 					// search for changes within this folder
 					this.calculate_actions(item.children, this.bookmarks.ids[item.opl_id]);
 				} else {
-					this.actions.push(['bm_mv', item.id, stableToId]);
+					this.bookmarks.moved[item.id] = true;
 				}
 
 			} else {

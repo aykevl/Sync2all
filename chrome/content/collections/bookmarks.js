@@ -32,6 +32,7 @@ NodeBase.prototype.__defineGetter__('rootNode', function () {
 NodeBase.prototype._moveTo = function (newParent) {
 	if (this.parentNode == newParent) {
 		console.warn('WARNING: node moved to it\'s parent folder!', this, newParent);
+		console.trace();
 	}
 	this._remove();
 	newParent._import(this);
@@ -105,6 +106,7 @@ Bookmark.prototype.remove = function (link) {
 	broadcastMessage('bm_del', link, [this]);
 }
 Bookmark.prototype.moveTo = function (link, newParent) {
+	console.log('bookmark move:', this, link, newParent);
 	this._moveTo(newParent);
 	broadcastMessage('bm_mv', link, [this, newParent]);
 }
@@ -367,6 +369,7 @@ BookmarkFolder.prototype.remove = function (link) {
 }
 
 BookmarkFolder.prototype.moveTo = function (link, newParent) {
+	console.log('folder move:', this, link, newParent);
 	this._moveTo(newParent);
 	broadcastMessage('f_mv', link, [this, newParent]);
 }
@@ -409,16 +412,18 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	// unique local folders
 	for (var title in this.f) {
 		var this_subfolder  = this.f [title];
+
+		// apply actions
+		if (this_subfolder.id in other.rootNode.moved) {
+			continue;
+		}
+
 		var other_subfolder = other.f[title]; // may not exist
 
 		if (!other_subfolder) {
 			// unique folder/label
 			console.log('Unique local folder: '+title, this_subfolder);
 			this_subfolder.importInLink(link);
-
-		} else {
-			// other folder does exist, merge it too
-			this_subfolder.mergeWith(link, other_subfolder);
 		}
 	}
 
@@ -426,11 +431,13 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	// After this action, other.f may be out of sync
 	for (var title in other.f) {
 		var other_subfolder = other.f[title];
-		var this_subfolder  = this .f[title]; // may not exist
 
-		// ignore bogus folders
-		if (!other_subfolder.title || !other_subfolder.bm || !other_subfolder.f)
-			continue;
+		// apply actions
+		if (other_subfolder.id in other.rootNode.moved && this.rootNode.ids[other_subfolder.id].parentNode != this) {
+			this.rootNode.ids[other_subfolder.id].moveTo(other.link, this);
+		}
+
+		var this_subfolder  = this .f[title]; // may not exist
 
 		if (!this_subfolder) {
 			// unique remote folder
@@ -438,14 +445,18 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			// this removes the node from link.bookmarks and imports it into this.f
 			other_subfolder._remove();
 			this.add(link, other_subfolder);
-			//syncRFolder(link, other_subfolder, this);
+
+		} else {
+			// merge other properties of the folder here?
+
+			// other folder does exist, merge it too
+			this_subfolder.mergeWith(link, other_subfolder);
 		}
 	}
 
 	// resolve unique local bookmarks
 	for (var url in this.bm) {
 		var this_bookmark  = this.bm[url];
-		var other_bookmark = other.bm[url];
 
 		// apply actions
 		if (this_bookmark.id in other.rootNode.deleted) {
@@ -453,14 +464,16 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			this.rootNode.deleted[this_bookmark.id] = true;
 			continue;
 		}
+		if (this_bookmark.id in other.rootNode.moved) {
+			continue;
+		}
+
+		var other_bookmark = other.bm[url];
 
 		if (!other_bookmark) {
 			// unique local bookmark
 			console.log('New local bookmark: '+this_bookmark.url, this_bookmark);
 			this_bookmark.importInLink(link);
-
-		} else {
-			// TODO merge changes (changed title etc.)
 		}
 	}
 
@@ -468,7 +481,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	// After this action, other.bm may be out of sync
 	for (var url in other.bm) {
 		var other_bookmark = other.bm[url];
-		var this_bookmark  = this .bm[url]; // may not exist
 
 		// apply actions
 		if (other_bookmark.id in this.rootNode.deleted) {
@@ -476,6 +488,11 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			other.link.bm_del(this.link, other_bookmark);
 			continue;
 		}
+		if (other_bookmark.id in other.rootNode.moved && this.rootNode.ids[other_bookmark.id].parentNode != this) {
+			this.rootNode.ids[other_bookmark.id].moveTo(other.link, this);
+		}
+
+		var this_bookmark  = this.bm[url]; // may not exist
 
 		if (!this_bookmark) {
 			// unique remote bookmark
@@ -488,6 +505,7 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			this.add(link, other_bookmark); // broadcast this change
 		} else {
 			this_bookmark.copyPropertiesFrom(other_bookmark);
+			// TODO merge changes (changed title etc.)
 		}
 	}
 }
@@ -567,6 +585,7 @@ BookmarkFolder.prototype.testfail = function (error, element) {
 function BookmarkCollection (link, data) {
 	this.ids = {};
 	this.deleted = {};
+	this.moved   = {};
 	BookmarkFolder.call(this, link, data);
 
 	if (this.id) this.ids[this.id] = this;
