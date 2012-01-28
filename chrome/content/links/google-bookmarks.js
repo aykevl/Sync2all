@@ -130,6 +130,7 @@ GoogleBookmarksLink.prototype.parseXmlBookmarks = function (xmlTree) {
 	}
 
 	var xmlBookmarks = xmlTree.getElementsByTagName('bookmarks')[0].getElementsByTagName('bookmark');
+	console.log(xmlBookmarks[0]);
 	var xmlBookmark;
 	for (var i=0; xmlBookmark=xmlBookmarks[i]; i++) {
 		if (!xmlBookmark.getElementsByTagName('title').length) {
@@ -156,7 +157,7 @@ GoogleBookmarksLink.prototype.parseXmlBookmarks = function (xmlTree) {
 		var urlBookmark = {url: url, title: title, mtime: timestamp, tags: tags, gbm_id: id};
 
 		// import it into the tree
-		this.bookmarks.importTaggedBookmark(this, urlBookmark);
+		//this.bookmarks.importTaggedBookmark(this, urlBookmark);
 	}
 }
 
@@ -174,7 +175,7 @@ GoogleBookmarksLink.prototype.onRssRSC = function () {
 		this.errorStarting('Failed to retrieve bookmarks (RSS). Is there an internet connection?');
 	} else {
 		this.parseRssBookmarks(this.reqRss.responseXML);
-		this.startingFinished();
+		//this.startingFinished();
 	}
 }
 
@@ -189,22 +190,29 @@ GoogleBookmarksLink.prototype.parseRssBookmarks = function (xmlTree) {
 		this.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
 		return;
 	}
-	/*var element;
+	var element;
 	var elements = channel.getElementsByTagName('item');
+	console.log(elements[0]);
+	gbm.el = elements[0];
 	for (var i=0; element=elements[i]; i++) {
 		var isbkmk = element.getElementsByTagName('bkmk')[0];
 		if (!(isbkmk && isbkmk.firstChild.nodeValue == 'yes')) {
-			//console.log(isbkmk);
+			// isn't a bookmark
 			continue;
 		}
-		try {
-			var url = element.getElementsByTagName('link' )[0].firstChild.nodeValue;
-		} catch (err) {
-			//console.log('isbkmk:');
-			//console.log(isbkmk.firstChild.nodeValue);
-			//console.log(element.getElementsByTagName('link' )[0]);
-		}
-	}*/
+		var url       =           element.getElementsByTagName('link'   )[0].firstChild.nodeValue;
+		var title     =           element.getElementsByTagName('title'  )[0].firstChild.nodeValue;
+		var timestamp = (new Date(element.getElementsByTagName('pubDate')[0].firstChild.nodeValue)).getTime();
+		var tags = [];
+		var xmlTag, xmlTags = element.getElementsByTagName('bkmk_label') ||
+		                      element.getElementsByTagName('smh:bkmk_label');
+		/*for (var i=0; xmlTag=xmlTags[i]; i++) {
+			tags.push(xmlTag.firstChild.nodeValue);
+		}*/
+		//console.log(tags);
+
+		if (i >= 10) break;
+	}
 }
 
 // check for things that will be modified by Google. Change the url of the
