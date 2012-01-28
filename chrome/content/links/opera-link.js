@@ -135,6 +135,9 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 			continue;
 		}
 
+		if (this.bookmarks.ids[item.opl_id])
+			this.bookmarks.ids[item.opl_id].id = item.id;
+
 		var isfolder = false; // whether this item is a folder
 
 		// folders have always children (unlike Opera Link);
@@ -184,7 +187,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					// check whether the bookmark still exists
 					if (sync2all.bookmarks.ids[item.id]) {
 						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
-						this.actions.push(['bm_del', item.id]);
+						this.bookmarks.deleted[item.id] = true;
 					}
 				}
 			}
@@ -209,7 +212,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					if (sync2all.bookmarks.ids[item.id]) {
 						console.log('opl: old bm: '+item.opl_id);
 						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
-						this.actions.push(['bm_del', item.id]);
+						this.bookmarks.deleted[item.id] = true;
 					}
 				}
 

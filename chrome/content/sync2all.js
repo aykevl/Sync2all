@@ -122,9 +122,11 @@ Sync2all.prototype = {
 		// merge the bookmarks
 		console.log('Merging bookmarks with '+link.fullName+'...');
 		this.bookmarks.mergeWith(link, link.bookmarks);
-		// are not needed anymore, and should not be used
-		delete link.bookmarks;
-		delete link.ids;
+		// are not needed anymore, and should not be used. They use a lof memory too.
+		if (!debug) {
+			delete link.bookmarks;
+			delete link.ids;
+		}
 		console.log('Finished merging with '+link.fullName+'.');
 
 		// set status (again)
@@ -224,7 +226,7 @@ function apply_action (link, action) {
 	if (command == 'bm_mv' || command == 'f_mv') {
 		// do the action here
 		args[0].moveTo(link, args[1]);
-	} else if (command == 'bm_del' || command == 'f_del') {
+	} else if (command == 'f_del') {
 		args[0].remove(link);
 	} else {
 		console.log('ERROR: unknown action: ');

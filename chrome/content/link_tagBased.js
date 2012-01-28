@@ -97,23 +97,18 @@ TagBasedLink.prototype.get_state = function (state, folder) {
 TagBasedLink.prototype.calculate_actions = function (state, folder) {
 	// only look for removed bookmarks, not for added bookmarks (moved bookmarks are 'removed' and 'added').
 	var data = undefined;
-	var id, url;
 	for (var i=0; data=state.bm[i]; i++) {
 
 		data = data.split('\n');
-		id = data[0]; url = data[1];
+		var id = data[0], url = data[1];
 
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
-			// Ignore already removed bookmarks.
-			if (sync2all.bookmarks.ids[id]) {
-				console.log('Bookmark deleted: '+url);
-				this.actions.push(['bm_del', id]);
-			}
+			this.bookmarks.deleted[id] = true;
+			//this.actions.push(['bm_del', id]);
 		}
 	}
-	var title;
-	for (title in state.f) {
+	for (var title in state.f) {
 		var substate = state.f[title];
 		if (!folder.f[title]) {
 			// if this is true, the folder has been moved or renamed and the

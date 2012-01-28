@@ -100,6 +100,7 @@ Bookmark.prototype._remove = function () {
 	delete this.parentNode; // also cuts of connection with link
 }
 Bookmark.prototype.remove = function (link) {
+	console.log('Removed bookmark:', this, this.url);
 	this._remove();
 	broadcastMessage('bm_del', link, [this]);
 }
@@ -426,11 +427,16 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		var this_bookmark  = this.bm[url];
 		var other_bookmark = other.bm[url];
 
+		// apply actions
+		if (this_bookmark.id in other.rootNode.deleted) {
+			this_bookmark.remove(other.link);
+			this.rootNode.deleted[this_bookmark.id] = true;
+			continue;
+		}
+
 		if (!other_bookmark) {
 			// unique local bookmark
 			console.log('New local bookmark: '+this_bookmark.url, this_bookmark);
-			console.log(this_bookmark);
-			console.log(this);
 			this_bookmark.importInLink(link);
 
 		} else {
@@ -463,6 +469,13 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	for (var url in other.bm) {
 		var other_bookmark = other.bm[url];
 		var this_bookmark  = this .bm[url]; // may not exist
+
+		// apply actions
+		if (other_bookmark.id in this.rootNode.deleted) {
+			other_bookmark._remove();
+			other.link.bm_del(this.link, other_bookmark);
+			continue;
+		}
 
 		if (!this_bookmark) {
 			// unique remote bookmark
@@ -553,6 +566,7 @@ BookmarkFolder.prototype.testfail = function (error, element) {
  */
 function BookmarkCollection (link, data) {
 	this.ids = {};
+	this.deleted = {};
 	BookmarkFolder.call(this, link, data);
 
 	if (this.id) this.ids[this.id] = this;
