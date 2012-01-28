@@ -269,8 +269,8 @@ BookmarkFolder.prototype._import = function (node) {
 	}
 }
 
-BookmarkFolder.prototype.add = function (link, data) {
-	this._import(data);
+BookmarkFolder.prototype.add = function (link, node) {
+	this._import(node);
 	node.broadcastAdded(link);
 }
 
