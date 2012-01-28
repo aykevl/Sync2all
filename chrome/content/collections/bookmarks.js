@@ -422,6 +422,26 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}
 
+	// find unique remote folders
+	// After this action, other.f may be out of sync
+	for (var title in other.f) {
+		var other_subfolder = other.f[title];
+		var this_subfolder  = this .f[title]; // may not exist
+
+		// ignore bogus folders
+		if (!other_subfolder.title || !other_subfolder.bm || !other_subfolder.f)
+			continue;
+
+		if (!this_subfolder) {
+			// unique remote folder
+			console.log('Unique remote folder', other_subfolder.title, other_subfolder);
+			// this removes the node from link.bookmarks and imports it into this.f
+			other_subfolder._remove();
+			this.add(link, other_subfolder);
+			//syncRFolder(link, other_subfolder, this);
+		}
+	}
+
 	// resolve unique local bookmarks
 	for (var url in this.bm) {
 		var this_bookmark  = this.bm[url];
@@ -441,26 +461,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 
 		} else {
 			// TODO merge changes (changed title etc.)
-		}
-	}
-
-	// find unique remote folders
-	// After this action, other.f may be out of sync
-	for (var title in other.f) {
-		var other_subfolder = other.f[title];
-		var this_subfolder  = this .f[title]; // may not exist
-
-		// ignore bogus folders
-		if (!other_subfolder.title || !other_subfolder.bm || !other_subfolder.f)
-			continue;
-
-		if (!this_subfolder) {
-			// unique remote folder
-			console.log('Unique remote folder', other_subfolder.title, other_subfolder);
-			// this removes the node from link.bookmarks and imports it into this.f
-			other_subfolder._remove();
-			this.add(link, other_subfolder);
-			//syncRFolder(link, other_subfolder, this);
 		}
 	}
 
