@@ -105,7 +105,6 @@ TagBasedLink.prototype.calculate_actions = function (state, folder) {
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
 			this.bookmarks.deleted[id] = true;
-			//this.actions.push(['bm_del', id]);
 		}
 	}
 	for (var title in state.f) {

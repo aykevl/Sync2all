@@ -152,11 +152,13 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 			// more data, for example descriptions and favicons).
 			if (this.bookmarks.ids[item.opl_id]) {
 				// this node does still exist but in another place, mark it as moved.
+				if (sync2all.bookmarks.ids[item.id])
+					 this.bookmarks.moved[item.id] = true;
 
-				var node = this.bookmarks.ids[item.opl_id];
+				/*var node = this.bookmarks.ids[item.opl_id];
 
 				// get the destination (local) folder, the parent of otherNode
-				var localParentNodeId= this.ownId_to_lId[node.parentNode.opl_id];
+				var localParentNodeId = this.ownId_to_lId[node.parentNode.opl_id];
 				if (sync2all.bookmarks.ids[localParentNodeId]) {
 					var localParentNode = sync2all.bookmarks.ids[localParentNodeId];
 				} else {
@@ -174,7 +176,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					if (localParentNode && !localParentNode.f[node.title]) {
 						this.bookmarks.moved[item.id] = true;
 					}
-				}
+				}*/
 			} else {
 				// node doesn't exist, remove it.
 				if (isfolder) {

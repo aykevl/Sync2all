@@ -437,7 +437,7 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			this.rootNode.ids[other_subfolder.id].moveTo(other.link, this);
 		}
 
-		var this_subfolder  = this .f[title]; // may not exist
+		var this_subfolder  = this.f[title]; // may not exist
 
 		if (!this_subfolder) {
 			// unique remote folder
