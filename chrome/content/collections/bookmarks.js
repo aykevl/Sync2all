@@ -102,7 +102,8 @@ Bookmark.prototype._remove = function () {
 }
 Bookmark.prototype.remove = function (link) {
 	console.log('Removed bookmark:', this, this.url);
-	this._remove();
+	this.rootNode.deleted[this.id] = true;
+	this._remove(); // cuts the connection with the rest of the tree
 	broadcastMessage('bm_del', link, [this]);
 }
 Bookmark.prototype.moveTo = function (link, newParent) {
@@ -428,34 +429,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}
 
-	// resolve unique local bookmarks
-	for (var url in this.bm) {
-		var this_bookmark  = this.bm[url];
-
-		// apply actions
-		if (this_bookmark.id in other.rootNode.deleted) {
-			this_bookmark.remove(other.link);
-			this.rootNode.deleted[this_bookmark.id] = true;
-			continue;
-		}
-		if (this_bookmark.id in other.rootNode.moved) {
-			continue;
-		}
-
-		var other_bookmark = other.bm[url];
-
-		if (!other_bookmark) {
-			// unique local bookmark
-			console.log('New local bookmark: '+this_bookmark.url, this_bookmark);
-			this_bookmark.importInLink(link);
-		}
-	}
-
-	this.update(link, other);
-}
-
-// import all changes from other, don't push changes
-BookmarkFolder.prototype.update = function (link, other) {
 	// find unique remote folders
 	// After this action, other.f may be out of sync
 	for (var title in other.f) {
@@ -482,6 +455,12 @@ BookmarkFolder.prototype.update = function (link, other) {
 		}
 	}
 
+	other.update(link, this);
+	this.update(link, other);
+}
+
+// import all changes from other, don't push changes
+BookmarkFolder.prototype.update = function (link, other) {
 	// find unique remote bookmarks
 	// After this action, other.bm may be out of sync
 	for (var url in other.bm) {
@@ -489,22 +468,48 @@ BookmarkFolder.prototype.update = function (link, other) {
 
 		// apply actions
 		if (other_bookmark.id in this.rootNode.deleted) {
-			other_bookmark._remove();
-			other.link.bm_del(this.link, other_bookmark);
+			if (this.link instanceof Browser) {
+				// let it 'disappear'
+				other_bookmark._remove();
+				other.link.bm_del(this.link, other_bookmark);
+				continue;
+			} else {
+				// remove and notice everyone of it
+				other_bookmark.remove(this.link);
+				continue;
+			}
+		}
+		if (other_bookmark.id in other.rootNode.moved) {
+			// gets this_bookmark by node id
+			var this_bookmark = this.rootNode.ids[other_bookmark.id];
+			if (this_bookmark && this_bookmark.parentNode != this) {
+				// this pulls a move: the node moves to the current folder ('this')
+				var oldParent = this_bookmark.parentNode;
+				if (this.link instanceof Browser) {
+					this_bookmark.moveTo(other.link, this);
+				} else {
+					this_bookmark._moveTo(other.link, this);
+					this.link.bm_mv(other.link, this_bookmark, oldParent);
+				}
+			}
+		}
+		if (other_bookmark.id in this.rootNode.moved) {
+			// pull moves, don't push them as would be done here
 			continue;
 		}
-		if (other_bookmark.id in other.rootNode.moved && this.rootNode.ids[other_bookmark.id].parentNode != this) {
-			this.rootNode.ids[other_bookmark.id].moveTo(other.link, this);
-		}
 
-		var this_bookmark  = this.bm[url]; // may not exist
+		// gets this_bookmark by place in tree
+		var this_bookmark = this.bm[url];
 
 		if (!this_bookmark) {
-			// unique remote bookmark
-
-			// copy bookmark
-			other_bookmark._remove(); // don't broadcast this change
-			this.add(other.link, other_bookmark); // broadcast this change
+			// copy other_bookmark
+			if (this.link instanceof Browser) {
+				other_bookmark._remove(); // don't broadcast this change
+				this.add(other.link, other_bookmark); // broadcast this change
+			} else {
+				console.log('New bookmark: '+other_bookmark.url, other_bookmark);
+				other_bookmark.importInLink(this.link);
+			}
 		} else {
 			this_bookmark.copyPropertiesFrom(other_bookmark);
 			// TODO merge changes (changed title etc.)
