@@ -338,6 +338,7 @@ BookmarkFolder.prototype._import = function (node) {
 }
 
 BookmarkFolder.prototype.add = function (link, node) {
+	console.log('New node: ', node.url||node.title, node);
 	this._import(node);
 	node.broadcastAdded(link);
 }
@@ -427,33 +428,6 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}
 
-	// find unique remote folders
-	// After this action, other.f may be out of sync
-	for (var title in other.f) {
-		var other_subfolder = other.f[title];
-
-		// apply actions
-		if (other_subfolder.id in other.rootNode.moved && this.rootNode.ids[other_subfolder.id].parentNode != this) {
-			this.rootNode.ids[other_subfolder.id].moveTo(other.link, this);
-		}
-
-		var this_subfolder  = this.f[title]; // may not exist
-
-		if (!this_subfolder) {
-			// unique remote folder
-			console.log('Unique remote folder', other_subfolder.title, other_subfolder);
-			// this removes the node from link.bookmarks and imports it into this.f
-			other_subfolder._remove();
-			this.add(link, other_subfolder);
-
-		} else {
-			// merge other properties of the folder here?
-
-			// other folder does exist, merge it too
-			this_subfolder.mergeWith(link, other_subfolder);
-		}
-	}
-
 	// resolve unique local bookmarks
 	for (var url in this.bm) {
 		var this_bookmark  = this.bm[url];
@@ -477,6 +451,37 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}
 
+	this.update(link, other);
+}
+
+// import all changes from other, don't push changes
+BookmarkFolder.prototype.update = function (link, other) {
+	// find unique remote folders
+	// After this action, other.f may be out of sync
+	for (var title in other.f) {
+		var other_subfolder = other.f[title];
+
+		// apply actions
+		if (other_subfolder.id in other.rootNode.moved && this.rootNode.ids[other_subfolder.id].parentNode != this) {
+			this.rootNode.ids[other_subfolder.id].moveTo(other.link, this);
+		}
+
+		var this_subfolder  = this.f[title]; // may not exist
+
+		if (!this_subfolder) {
+			// unique remote folder
+			// this removes the node from link.bookmarks and imports it into this.f
+			other_subfolder._remove();
+			this.add(link, other_subfolder);
+
+		} else {
+			// merge other properties of the folder here?
+
+			// other folder does exist, merge it too
+			this_subfolder.mergeWith(link, other_subfolder);
+		}
+	}
+
 	// find unique remote bookmarks
 	// After this action, other.bm may be out of sync
 	for (var url in other.bm) {
@@ -497,12 +502,9 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		if (!this_bookmark) {
 			// unique remote bookmark
 
-			// log this
-			console.log('New remote bookmark: '+other_bookmark.url, other_bookmark);
-
 			// copy bookmark
 			other_bookmark._remove(); // don't broadcast this change
-			this.add(link, other_bookmark); // broadcast this change
+			this.add(other.link, other_bookmark); // broadcast this change
 		} else {
 			this_bookmark.copyPropertiesFrom(other_bookmark);
 			// TODO merge changes (changed title etc.)
