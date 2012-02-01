@@ -459,9 +459,6 @@ BookmarkFolder.prototype.hasContents = function () {
 // 'local' represents 'remote'.
 BookmarkFolder.prototype.mergeWith = function (link, other) {
 
-	// merge properties
-	this.copyPropertiesFrom(other);
-
 	// first, apply the actions (if available)
 	this.forEach(function (this_node, other) {
 		if (this_node.id in other.rootNode.deleted) {
@@ -479,6 +476,7 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			other_node.markMoved(this.link, oldParent);
 		}
 	}.bind(this), other);
+
 	other.forEach(function (other_node, other) {
 		if (other_node.id in this.rootNode.deleted) {
 			other_node._remove();
@@ -509,40 +507,13 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}.bind(this), other);
 
-	// find unique remote folders
-	// After this action, other.f may be out of sync
-	for (var title in other.f) {
-		var other_subfolder = other.f[title];
-
-		// apply actions
-		if (other_subfolder.id in other.rootNode.moved && this.rootNode.ids[other_subfolder.id].parentNode != this) {
-			this.rootNode.ids[other_subfolder.id].moveTo(other.link, this);
-		}
-
-		var this_subfolder  = this.f[title]; // may not exist
-
-		if (!this_subfolder) {
-			// unique remote folder
-			// this removes the node from link.bookmarks and imports it into this.f
-			other_subfolder._remove();
-			this.add(link, other_subfolder);
-
-		} else {
-			// merge other properties of the folder here?
-
-			// other folder does exist, merge it too
-			this_subfolder.mergeWith(link, other_subfolder);
-		}
-	}
-
 	// other may be out of sync after this action, but that doesn't matter as
 	// this is the last ting to do.
-	for (var url in other.bm) {
-		var other_node = other.bm[url];
+	other.forEach(function (other_node, other) {
 		var this_node  = other_node.getOther(this); // may not exist
 
 		if (other_node.isInMoveQueue(other))
-			continue;
+			return;
 
 		if (!this_node) {
 			// WARNING: this makes 'other' invalid (doesn't harm because it
@@ -552,8 +523,11 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		} else {
 			this_node.copyPropertiesFrom(other_node);
 			// TODO merge changes (changed title etc.)
+			if (this_node instanceof BookmarkFolder) {
+				this_node.mergeWith(link, other_node);
+			}
 		}
-	}
+	}.bind(this), other);
 }
 
 // folder exists only locally
