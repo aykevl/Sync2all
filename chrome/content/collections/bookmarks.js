@@ -80,6 +80,15 @@ NodeBase.prototype.testfail = function (error, element) {
 	throw (this.link.fullName || this.link.name)+' Failed test: '+error;
 }
 
+NodeBase.prototype.isInMoveQueue = function (other_parent) {
+	// don't touch nodes that will be moved
+	if (this.id in this        .rootNode.moved ||
+		this.id in other_parent.rootNode.moved) {
+		return true;
+	}
+	return false;
+}
+
 
 function Folder(link, data) {
 	NodeBase.call(this, link, data);
@@ -96,6 +105,14 @@ function Bookmark (link, data) {
 }
 Bookmark.prototype.__proto__ = NodeBase.prototype;
 
+Bookmark.prototype.toString = function () {
+	return this.url;
+}
+
+Bookmark.prototype.getOther = function (other_parent) {
+	return other_parent.bm[this.url];
+}
+
 Bookmark.prototype._remove = function () {
 	if (this.rootNode.ids) {
 		delete this.rootNode.ids[this.id];
@@ -103,7 +120,7 @@ Bookmark.prototype._remove = function () {
 	if (this.parentNode.bm[this.url] != this)
 		throw 'Removing a bookmark that wasn\'t added';
 	delete this.parentNode.bm[this.url];
-	delete this.parentNode; // also cuts of connection with link
+	//delete this.parentNode; // also cuts of connection with link
 }
 Bookmark.prototype.remove = function (link) {
 	console.log('Removed bookmark:', this, this.url);
@@ -165,6 +182,15 @@ Bookmark.prototype.importInLink = function (link) {
 Bookmark.prototype.broadcastAdded = function (link) {
 	broadcastMessage('bm_add', link, [this]);
 }
+Bookmark.prototype.markAdded = function (link) {
+	this.link.bm_add(link, this);
+}
+Bookmark.prototype.markMoved = function (link, oldParent) {
+	this.link.bm_mv(link, this, oldParent);
+}
+Bookmark.prototype.markDeleted = function (link) {
+	this.link.bm_del(link, this);
+}
 
 Bookmark.prototype.getTreelessLabels = function (link) {
 	if (!tagtree.urls[this.url]) {
@@ -193,15 +219,6 @@ Bookmark.prototype.getTreelessLabels = function (link) {
 	return tags;
 }
 
-Bookmark.prototype.isInMoveQueue = function (other_parent) {
-	// don't touch bookmarks that will be moved
-	if (this.id in this        .rootNode.moved ||
-		this.id in other_parent.rootNode.moved) {
-		return true;
-	}
-	return false;
-}
-
 function BookmarkFolder (link, data) {
 	Folder.call(this, link, data);
 
@@ -209,6 +226,14 @@ function BookmarkFolder (link, data) {
 	this.f  = {};
 }
 BookmarkFolder.prototype.__proto__ = Folder.prototype;
+
+BookmarkFolder.prototype.toString = function () {
+	return this.title;
+}
+
+BookmarkFolder.prototype.getOther = function (other_parent) {
+	return other_parent.f[this.title];
+}
 
 BookmarkFolder.prototype.importBookmark = function (data) {
 	var bookmark = new Bookmark(this.link, data);
@@ -276,10 +301,10 @@ BookmarkFolder.prototype.importFolder = function (data) {
 }
 
 BookmarkFolder.prototype._import = function (node) {
-	if (node.parentNode) {
+	/*if (node.parentNode) {
 		console.error(node, this);
 		throw 'Node has already a parent';
-	}
+	}*/ // TODO
 	node.parentNode = this;
 	if (this.rootNode.ids) {
 		if (this.link instanceof Browser) {
@@ -378,7 +403,7 @@ BookmarkFolder.prototype._remove = function () {
 	if (this.parentNode.f[this.title] != this)
 		throw 'Removing a folder that wasn\'t added';
 	delete this.parentNode.f[this.title];
-	delete this.parentNode; // also cuts of connection with link
+	//delete this.parentNode; // also cuts of connection with link
 }
 BookmarkFolder.prototype.remove = function (link) {
 	this._remove();
@@ -407,6 +432,17 @@ BookmarkFolder.prototype.setTitle = function (link, newTitle) {
 	broadcastMessage('f_mod_title', link, [this, oldTitle]);
 }
 
+BookmarkFolder.prototype.forEach = function (callback, param) {
+	for (var title in this.f) {
+		var node = this.f[title];
+		callback(node, param);
+	}
+	for (var url in this.bm) {
+		var node = this.bm[url];
+		callback(node, param);
+	}
+}
+
 // whether this folder-node has contents (bookmarks or folders)
 BookmarkFolder.prototype.hasContents = function () {
 	var url;
@@ -426,23 +462,52 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 	// merge properties
 	this.copyPropertiesFrom(other);
 
-	// unique local folders
-	for (var title in this.f) {
-		var this_subfolder  = this.f [title];
-
-		// apply actions
-		if (this_subfolder.id in other.rootNode.moved) {
-			continue;
+	// first, apply the actions (if available)
+	this.forEach(function (this_node, other) {
+		if (this_node.id in other.rootNode.deleted) {
+			this_node.remove(other.link);
+		} else if (this_node.id in this.rootNode.moved) {
+			var other_node = other.rootNode.ids[this_node.id];
+			this_node.copyPropertiesFrom(other_node);
+			if (other_node.parentNode == this) {
+				// node hasn't been moved
+				// TODO this check shouldn't be here, but in the links
+				return;
+			}
+			var oldParent = other_node.parentNode;
+			other_node._moveTo(other);
+			other_node.markMoved(this.link, oldParent);
 		}
-
-		var other_subfolder = other.f[title]; // may not exist
-
-		if (!other_subfolder) {
-			// unique folder/label
-			console.log('Unique local folder: '+title, this_subfolder);
-			this_subfolder.importInLink(link);
+	}.bind(this), other);
+	other.forEach(function (other_node, other) {
+		if (other_node.id in this.rootNode.deleted) {
+			other_node._remove();
+			other_node.markDeleted(this.link);
+		} else if (other_node.id in other.rootNode.moved) {
+			var this_node = this.rootNode.ids[other_node.id];
+			this_node.copyPropertiesFrom(other_node);
+			if (this_node.parentNode == this) {
+				// TODO this check shouldn't be here, but in the links
+				return;
+			}
+			this_node.moveTo(other.link, this);
 		}
-	}
+	}.bind(this), other);
+
+	// then, copy the new nodes (once the old ones have been removed) and
+	// merge the changed nodes
+	this.forEach(function (this_node, other) {
+		var other_node = this_node.getOther(other); // may not exist
+
+		// don't touch nodes that will be moved
+		if (this_node.isInMoveQueue(other))
+			return;
+
+		if (!other_node) {
+			console.log('New node: '+this_node.toString(), this_node);
+			this_node.importInLink(other.link);
+		}
+	}.bind(this), other);
 
 	// find unique remote folders
 	// After this action, other.f may be out of sync
@@ -470,67 +535,22 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 		}
 	}
 
-	// first, apply the actions (if available)
-	for (var url in this.bm) {
-		var this_bookmark = this.bm[url];
-		if (this_bookmark.id in other.rootNode.deleted) {
-			this_bookmark.remove(other.link);
-		} else if (this_bookmark.id in this.rootNode.moved) {
-			var other_bookmark = other.rootNode.ids[this_bookmark.id];
-			this_bookmark.copyPropertiesFrom(other_bookmark);
-			if (other_bookmark.parentNode == this) {
-				// bookmark hasn't been moved
-				// TODO this check shouldn't be here, but in the links
-				continue;
-			}
-			var oldParent = other_bookmark.parentNode;
-			other_bookmark._moveTo(other);
-			other.link.bm_mv(this.link, other_bookmark, oldParent);
-		}
-	}
+	// other may be out of sync after this action, but that doesn't matter as
+	// this is the last ting to do.
 	for (var url in other.bm) {
-		var other_bookmark = other.bm[url];
-		if (other_bookmark.id in this.rootNode.deleted) {
-			other_bookmark._remove();
-			other.link.bm_del(this.link, other_bookmark);
-		} else if (other_bookmark.id in other.rootNode.moved) {
-			var this_bookmark = this.rootNode.ids[other_bookmark.id];
-			this_bookmark.copyPropertiesFrom(other_bookmark);
-			if (this_bookmark.parentNode == this) {
-				// TODO this check shouldn't be here, but in the links
-				continue;
-			}
-			this_bookmark.moveTo(other.link, this);
-		}
-	}
+		var other_node = other.bm[url];
+		var this_node  = other_node.getOther(this); // may not exist
 
-	// then, copy the new bookmarks (once the old ones have been removed) and
-	// merge the changed bookmarks
-	for (var url in this.bm) {
-		var this_bookmark  = this .bm[url];
-		var other_bookmark = other.bm[url]; // may not exist
-
-		// don't touch bookmarks that will be moved
-		if (this_bookmark.isInMoveQueue(other))
+		if (other_node.isInMoveQueue(other))
 			continue;
 
-		if (!other_bookmark) {
-			console.log('New bookmark: '+this_bookmark.url, this_bookmark);
-			this_bookmark.importInLink(other.link);
-		}
-	}
-	for (var url in other.bm) {
-		var other_bookmark = other.bm[url];
-		var this_bookmark  = this .bm[url]; // may not exist
-
-		if (other_bookmark.isInMoveQueue(other))
-			continue;
-
-		if (!this_bookmark) {
-			other_bookmark._remove(); // don't broadcast this change
-			this.add(other.link, other_bookmark); // broadcast this change
+		if (!this_node) {
+			// WARNING: this makes 'other' invalid (doesn't harm because it
+			// will be discarded anyway
+			other_node._remove(); // don't broadcast this change
+			this.add(other.link, other_node); // broadcast this change
 		} else {
-			this_bookmark.copyPropertiesFrom(other_bookmark);
+			this_node.copyPropertiesFrom(other_node);
 			// TODO merge changes (changed title etc.)
 		}
 	}

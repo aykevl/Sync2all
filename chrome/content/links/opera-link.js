@@ -183,7 +183,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					this.calculate_actions(item.children, undefined);
 					if (item.id && sync2all.bookmarks.ids[item.id]) {
 						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
-						this.actions.push(['f_del_ifempty',  item.id]);
+						this.bookmarks.deleted[item.id] = true;
 					}
 				} else {
 					// check whether the bookmark still exists
@@ -207,7 +207,7 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					if (item.id && sync2all.bookmarks.ids[item.id]) {
 						sync2all.bookmarks.ids[item.id].opl_id = item.opl_id;
 						console.log('opl: old f: '+sync2all.bookmarks.ids[item.id].title);
-						this.actions.push(['f_del_ifempty',  item.id]);
+						this.bookmarks.deleted[item.id] = true;
 					}
 				} else {
 					// check whether the bookmark still exists.
