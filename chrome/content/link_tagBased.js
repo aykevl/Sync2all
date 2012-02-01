@@ -100,11 +100,15 @@ TagBasedLink.prototype.calculate_actions = function (state, folder) {
 	for (var i=0; data=state.bm[i]; i++) {
 
 		data = data.split('\n');
-		var id = data[0], url = data[1];
+		var id = data[0];
+		var url = data[1];
 
 		if (!folder.bm[url]) {
 			// this bookmark has been removed
 			this.bookmarks.deleted[id] = true;
+		} else {
+			folder.bm[url].id = id;
+			folder.rootNode.ids[id] = folder.bm[url];
 		}
 	}
 	for (var title in state.f) {
@@ -120,13 +124,32 @@ TagBasedLink.prototype.calculate_actions = function (state, folder) {
 				// 'delete-if-empty'
 				this.mark_state_deleted(substate);
 			}
-
-			// don't recurse, because folder.f[title] doesn't exist
-			// (sync2all.bookmarks.ids[substate.id] can't be used because
-			// folder.f[title] is part of this.bookmarks
-			continue;
+		} else {
+			this.calculate_actions(substate, folder.f[title]);
 		}
-		this.calculate_actions(substate, folder.f[title]);
 	}
 }
+
+TagBasedLink.prototype.commit = function () {
+	var has_changes = false;
+	var url;
+	for (url in this.changed) {
+		has_changes = true;
+
+		var uBm= tagtree.urls[url];
+		if (!uBm.bm.length) {
+			// no labels, delete this bookmark
+			this.delete_bookmark(uBm[this.id+'_id']);
+		} else {
+			// has still at least one label, upload  (changing the
+			// bookmark).
+			this.upload_bookmark(this.changed[url]);
+		}
+	}
+	if (!has_changes && this.initial_commit) {
+		this.may_save_state();
+	}
+	this.changed = {};
+	this.queue_start();
+};
 

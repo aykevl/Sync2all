@@ -196,29 +196,6 @@ GoogleBookmarksLink.prototype.delete_bookmark = function (id) {
 	this.add_to_queue({dlq: id});
 };
 
-GoogleBookmarksLink.prototype.commit = function () {
-	var has_changes = false;
-	var url;
-	for (url in this.changed) {
-		has_changes = true;
-
-		var gbookmark = tagtree.urls[url];
-		if (!gbookmark.bm.length) {
-			// no labels, delete this bookmark
-			this.delete_bookmark(gbookmark.gbm_id);
-		} else {
-			// has still at least one label, upload  (changing the
-			// bookmark).
-			this.upload_bookmark(this.changed[url]);
-		}
-	}
-	if (!has_changes && this.initial_commit) {
-		this.may_save_state();
-	}
-	this.changed = {};
-	this.queue_start();
-};
-
 GoogleBookmarksLink.prototype.add_to_queue = function (params, callback) {
 	params.zx   = new Date().getTime();
 	if (!this.sig) {
