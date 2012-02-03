@@ -56,8 +56,8 @@ TreeBasedLink.prototype. f_mv = function (link, node, oldParent) {
 	this.queue_add(this.moveItem.bind(this), node);
 };
 
-TreeBasedLink.prototype.bm_add = function (link, node) {
-	console.log('bm_add');
+TreeBasedLink.prototype.bm_add =
+TreeBasedLink.prototype. f_add = function (link, node) {
 	this.queue_add(function (node, callback) {
 			if (node[link.id+'_id']) {
 				this.queue_error(node, 'already uploaded');

@@ -455,33 +455,26 @@ OperaLink.prototype.createItem = function (node, callback) {
 		callback(result);
 	}
 
-	this.fixBookmark(node);
-	var oplData = {title: node.title, uri: node.url};
-	if (node.parentNode == sync2all.bookmarks) {
-		opera.link.bookmarks.create(oplData, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+	if (node instanceof Bookmark) {
+		this.fixBookmark(node);
+		var oplData = {title: node.title, uri: node.url};
+		if (node.parentNode == sync2all.bookmarks) {
+			opera.link.bookmarks.create(oplData, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+		} else {
+			opera.link.bookmarks.create(oplData, node.parentNode.opl_id, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+		}
+	} else if (node instanceof BookmarkFolder) {
+		var oplData = {title: node.title};
+		// createFolder(params, [parent,] callback);
+		if (node.parentNode.opl_id) {
+			opera.link.bookmarks.createFolder(oplData, node.parentNode.opl_id, ownCallback.bind(this));
+		} else {
+			opera.link.bookmarks.createFolder(oplData, ownCallback.bind(this));
+		}
 	} else {
-		opera.link.bookmarks.create(oplData, node.parentNode.opl_id, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+		console.error(node);
+		throw 'unknown node';
 	}
-}
-
-OperaLink.prototype.f_add = function (target, folder) {
-	this.queue_add(function (folder) {
-				if (!folder.parentNode.opl_id && folder.parentNode != sync2all.bookmarks) {
-					console.warn('No parent ID! Folder:');
-					console.warn(folder);
-					this.queue_next();
-					return;
-				}
-				this.current_item = folder;
-				console.log('f_add');
-
-				// createFolder(params, [parent,] callback);
-				if (folder.parentNode.opl_id) {
-					opera.link.bookmarks.createFolder({title: folder.title}, folder.parentNode.opl_id, this.itemCreated.bind(this));
-				} else {
-					opera.link.bookmarks.createFolder({title: folder.title}, this.itemCreated.bind(this));
-				}
-			}.bind(this), folder);
 }
 
 
