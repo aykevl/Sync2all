@@ -8,9 +8,7 @@ function TreeBasedLink (id) {
 	 * TODO something's wrong here
 	 * How should we index items that have been added by another link?
 	 */
-	// index of node.id => node
-	this.added   = {};
-	// index of node.*_id => (node or false)
+	// index of node.*_id => (node)
 	this.changed = {};
 }
 
@@ -29,11 +27,7 @@ TreeBasedLink.prototype.commit = function () {
 	}
 	for (var id in this.changed) {
 		var node = this.changed[id];
-		if (!node) {
-			this.queue_add(this.removeItem.bind(this), id);
-		} else {
-			this.queue_add(this.changeItem.bind(this), node);
-		}
+		this.queue_add(this.changeItem.bind(this), node);
 	}
 	this.changed = {};
 	this.queue_start(); // start running
@@ -41,32 +35,23 @@ TreeBasedLink.prototype.commit = function () {
 
 TreeBasedLink.prototype.bm_del =
 TreeBasedLink.prototype.f_del  = function (link, node) {
-	if (this.added[node.id]) {
-		// just in case, only on rare circumstances when a node is
-		// added and removed before a commit.
-		delete this.added[node.id];
-	} else {
-		var id = node[this.id+'_id'];
-		if (!id) {
-			console.error(this.id+': no *_id while deleting', node);
-			return;
-		}
-		this.changed[id] = false;
-	}
+	this.queue_add(this.removeItem.bind(this), node[this.id+'_id']);
 }
 
 TreeBasedLink.prototype.f_mod_title  =
 TreeBasedLink.prototype.bm_mod_title =
 TreeBasedLink.prototype.bm_mod_url   = function (link, node) {
-	if (node.id && this.added[node.id]) {
-		// already tracked, will be new uploaded anyway
+	var id = node[this.id+'_id'];
+	if (!id) {
+		console.error(this.id+': no *_id while changing', node);
 	} else {
-		var id = node[this.id+'_id'];
-		if (!id) {
-			console.error(this.id+': no *_id while changing', node);
-		} else {
-			this.changed[id] = node;
-		}
+		this.changed[id] = node;
 	}
 }
+
+
+TreeBasedLink.prototype.bm_mv =
+TreeBasedLink.prototype. f_mv = function (link, node, oldParent) {
+	this.queue_add(this.moveItem.bind(this), node);
+};
 

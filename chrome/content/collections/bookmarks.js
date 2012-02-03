@@ -517,7 +517,7 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 
 		if (!this_node) {
 			// WARNING: this makes 'other' invalid (doesn't harm because it
-			// will be discarded anyway
+			// will be discarded anyway)
 			other_node._remove(); // don't broadcast this change
 			this.add(other.link, other_node); // broadcast this change
 		} else {

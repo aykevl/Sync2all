@@ -431,15 +431,6 @@ OperaLink.prototype.itemCreated = function (result) {
 	this.current_item.opl_id = result.response.id;
 	this.queue_next();
 };
-OperaLink.prototype.itemMoved = function (result) {
-	if (!result.status == 200) {
-		console.error('ERROR moving:');
-		console.log(result);
-		this.queue_error();
-		return;
-	}
-	this.queue_next();
-};
 
 OperaLink.prototype.fixBookmark = function (bm) {
 	if (!bm.title) {
@@ -462,6 +453,10 @@ OperaLink.prototype.changeItem = function (node, callback) {
 		console.error(node);
 	}
 	opera.link.bookmarks.update(node.opl_id, changes, callback);
+}
+
+OperaLink.prototype.moveItem = function (node, callback) {
+	opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', callback);
 }
 
 
@@ -509,15 +504,5 @@ OperaLink.prototype.f_add = function (target, folder) {
 				}
 			}.bind(this), folder);
 }
-
-OperaLink.prototype.bm_mv = OperaLink.prototype.f_mv = function (target, node, oldParent) {
-	console.log('move:');
-	console.log(node);
-	this.queue_add(
-			function (node) {
-				// the parent ID should be an empty string when moving to the root.
-				opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', this.itemMoved.bind(this));
-			}.bind(this), node);
-};
 
 
