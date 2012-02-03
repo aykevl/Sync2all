@@ -35,6 +35,7 @@ TreeBasedLink.prototype.commit = function () {
 
 TreeBasedLink.prototype.bm_del =
 TreeBasedLink.prototype.f_del  = function (link, node) {
+	delete this.changed[node[this.id+'_id']]; // remove when needed
 	this.queue_add(this.removeItem.bind(this), node[this.id+'_id']);
 }
 
@@ -54,4 +55,18 @@ TreeBasedLink.prototype.bm_mv =
 TreeBasedLink.prototype. f_mv = function (link, node, oldParent) {
 	this.queue_add(this.moveItem.bind(this), node);
 };
+
+TreeBasedLink.prototype.bm_add = function (link, node) {
+	console.log('bm_add');
+	this.queue_add(function (node, callback) {
+			if (node[link.id+'_id']) {
+				this.queue_error(node, 'already uploaded');
+			} else if (node.parentNode != sync2all.bookmarks &&
+				!node.parentNode.opl_id) {
+				this.queue_error(node, 'no parent ID while uploading node');
+			} else {
+				this.createItem(node, callback);
+			}
+		}.bind(this), node);
+}
 

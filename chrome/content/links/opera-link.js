@@ -419,19 +419,6 @@ OperaLink.prototype.parseBookmarks = function (array, folder) {
 	}
 };
 
-// Callbacks for Opera Link
-// TODO merge these, because they are nearly the same
-OperaLink.prototype.itemCreated = function (result) {
-	if (result.status != 200) {
-		console.error('ERROR creating bookmark/folder:');
-		console.error(result);
-		this.queue_error();
-		return;
-	}
-	this.current_item.opl_id = result.response.id;
-	this.queue_next();
-};
-
 OperaLink.prototype.fixBookmark = function (bm) {
 	if (!bm.title) {
 		// fix title. Opera Link needs a title
@@ -445,6 +432,7 @@ OperaLink.prototype.removeItem = function (id, callback) {
 
 OperaLink.prototype.changeItem = function (node, callback) {
 	// TODO calculate changes somewhere else
+	// TODO only change those that really have changed
 	if (node instanceof BookmarkFolder) {
 		var changes = {title: node.title};
 	} else if (node instanceof Bookmark) {
@@ -459,30 +447,21 @@ OperaLink.prototype.moveItem = function (node, callback) {
 	opera.link.bookmarks.move(node.opl_id, node.parentNode.opl_id || '', 'into', callback);
 }
 
-
-OperaLink.prototype.bm_add = function (target, bm) {
-	if (bm.opl_id) {
-		console.error(bm);
-		throw 'already uploaded';
+OperaLink.prototype.createItem = function (node, callback) {
+	// TODO: last visited timestamp, comments (from Google Bookmarks)
+	
+	function ownCallback (result) {
+		node.opl_id = result.response.id;
+		callback(result);
 	}
-	this.queue_add(
-			function (bm) {
-				this.current_item = bm;
-				// TODO: last visited timestamp, comments (from Google Bookmarks)
-				console.log('bm_add');
 
-				this.fixBookmark(bm);
-				if (bm.parentNode == sync2all.bookmarks) {
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
-				} else {
-					if (!bm.parentNode.opl_id) {
-						console.error('opl: no parent ID while uploading bookmark!', bm);
-						this.queue_next();
-						return;
-					}
-					opera.link.bookmarks.create({title: bm.title, uri: bm.url}, bm.parentNode.opl_id, this.itemCreated.bind(this)); //, created: timestamp(new Date(bm.mtime))
-				}
-			}.bind(this), bm);
+	this.fixBookmark(node);
+	var oplData = {title: node.title, uri: node.url};
+	if (node.parentNode == sync2all.bookmarks) {
+		opera.link.bookmarks.create(oplData, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+	} else {
+		opera.link.bookmarks.create(oplData, node.parentNode.opl_id, ownCallback.bind(this)); //, created: timestamp(new Date(node.mtime))
+	}
 }
 
 OperaLink.prototype.f_add = function (target, folder) {

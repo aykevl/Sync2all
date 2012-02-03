@@ -369,7 +369,14 @@ Link.prototype.queue_stop = function () {
 	this.may_save_state();
 };
 
-Link.prototype.queue_error = function () {
+Link.prototype.queue_error = function (node, msg) {
+	console.error(node);
+	if (debug) {
+		// fail noisily when it fails
+		throw link.id+': queue error: '+msg;
+	} else {
+		console.error(link.id+': queue error: '+msg);
+	}
 	// disable link on error
 	this.queue_stop();
 	this.stop();
