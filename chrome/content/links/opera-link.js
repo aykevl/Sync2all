@@ -110,15 +110,6 @@ OperaLink.prototype.mapLinkIdsToLocalIds = function (state) {
 	}
 }
 
-OperaLink.prototype.make_stable_lId = function (node) {
-	var sid = [];
-	while (node) {
-		sid.push([this.ownId_to_lId[node.opl_id], node.url?node.url:node.title]);
-		node = node.parentNode;
-	}
-	return sid;
-};
-
 // @var parentNode The current folder (represents #state), undefined if this folder
 // is deleted (and should be checked for moved items).
 // @var state The array of children of this folder.
@@ -223,9 +214,6 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 
 				// useful information for debugging
 				console.log('opl: moved: ', item, movedTo);
-
-				// get stable ID
-				var stableToId = this.make_stable_lId(movedTo);
 
 				// add type-specifc information
 				if (isfolder) {

@@ -59,10 +59,10 @@ TreeBasedLink.prototype. f_mv = function (link, node, oldParent) {
 TreeBasedLink.prototype.bm_add =
 TreeBasedLink.prototype. f_add = function (link, node) {
 	this.queue_add(function (node, callback) {
-			if (node[link.id+'_id']) {
+			if (node[this.id+'_id']) {
 				this.queue_error(node, 'already uploaded');
 			} else if (node.parentNode != sync2all.bookmarks &&
-				!node.parentNode.opl_id) {
+				!node.parentNode[this.id+'_id']) {
 				this.queue_error(node, 'no parent ID while uploading node');
 			} else {
 				this.createItem(node, callback);

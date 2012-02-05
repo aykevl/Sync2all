@@ -76,7 +76,7 @@ NodeBase.prototype.selftest = function () {
 }
 
 NodeBase.prototype.testfail = function (error, element) {
-	console.log(this, element);
+	console.error(this, element);
 	throw (this.link.fullName || this.link.name)+' Failed test: '+error;
 }
 
