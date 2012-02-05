@@ -102,6 +102,8 @@ OperaLink.prototype.mapLinkIdsToLocalIds = function (state) {
 	var item;
 	for (var i=0; item=state[i]; i++) {
 		this.ownId_to_lId[item.opl_id] = item.id;
+		if (this.bookmarks.ids[item.opl_id])
+			this.bookmarks.ids[item.opl_id].id = item.id;
 
 		// if this node has children (that means this is a folder).
 		if (item.children) {
@@ -125,9 +127,6 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 			console.error(parentNode);
 			continue;
 		}
-
-		if (this.bookmarks.ids[item.opl_id])
-			this.bookmarks.ids[item.opl_id].id = item.id;
 
 		var isfolder = false; // whether this item is a folder
 
@@ -209,19 +208,19 @@ OperaLink.prototype.calculate_actions = function (parentState, parentNode) {
 					}
 				}
 
-			} else if (this.bookmarks.ids[item.opl_id].parentNode != parentNode) {
+			} else if (this.bookmarks.ids[item.opl_id].parentNode != parentNode &&
+					sync2all.bookmarks.ids[item.id].parentNode.id != this.bookmarks.ids[item.opl_id].parentNode.id) {
 				var movedTo = this.bookmarks.ids[item.opl_id].parentNode;
 
 				// useful information for debugging
 				console.log('opl: moved: ', item, movedTo);
 
-				// add type-specifc information
+				// mark as moved, merge will handle the rest
+				this.bookmarks.moved[item.id] = true;
+
 				if (isfolder) {
-					this.bookmarks.moved[item.id] = true;
 					// search for changes within this folder
 					this.calculate_actions(item.children, this.bookmarks.ids[item.opl_id]);
-				} else {
-					this.bookmarks.moved[item.id] = true;
 				}
 
 			} else {

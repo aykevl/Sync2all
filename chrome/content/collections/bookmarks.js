@@ -456,8 +456,7 @@ BookmarkFolder.prototype.hasContents = function () {
 	return false;
 }
 
-// 'local' represents 'remote'.
-BookmarkFolder.prototype.mergeWith = function (link, other) {
+BookmarkFolder.prototype.mergeWith = function (other) {
 
 	// first, apply the actions (if available)
 	this.forEach(function (this_node, other) {
@@ -465,12 +464,20 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			this_node.remove(other.link);
 		} else if (this_node.id in this.rootNode.moved) {
 			var other_node = other.rootNode.ids[this_node.id];
+
+			// do normal merge stuff here (as it will not be done normally)
 			this_node.copyPropertiesFrom(other_node);
+			if (this_node instanceof BookmarkFolder) {
+				this_node.mergeWith(other_node);
+			}
+
 			if (other_node.parentNode == this) {
 				// node hasn't been moved
 				// TODO this check shouldn't be here, but in the links
 				return;
 			}
+
+			// do the actual move
 			var oldParent = other_node.parentNode;
 			other_node._moveTo(other);
 			other_node.markMoved(this.link, oldParent);
@@ -483,11 +490,20 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			other_node.markDeleted(this.link);
 		} else if (other_node.id in other.rootNode.moved) {
 			var this_node = this.rootNode.ids[other_node.id];
+
+			// do merge stuff
 			this_node.copyPropertiesFrom(other_node);
+			if (this_node instanceof BookmarkFolder) {
+				this_node.mergeWith(other_node);
+			}
+
+			// whether this node hasn't been moved at all
 			if (this_node.parentNode == this) {
 				// TODO this check shouldn't be here, but in the links
 				return;
 			}
+
+			// do the actual move
 			this_node.moveTo(other.link, this);
 		}
 	}.bind(this), other);
@@ -524,7 +540,7 @@ BookmarkFolder.prototype.mergeWith = function (link, other) {
 			this_node.copyPropertiesFrom(other_node);
 			// TODO merge changes (changed title etc.)
 			if (this_node instanceof BookmarkFolder) {
-				this_node.mergeWith(link, other_node);
+				this_node.mergeWith(other_node);
 			}
 		}
 	}.bind(this), other);

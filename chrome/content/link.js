@@ -373,9 +373,9 @@ Link.prototype.queue_error = function (node, msg) {
 	console.error(node);
 	if (debug) {
 		// fail noisily when it fails
-		throw link.id+': queue error: '+msg;
+		throw this.id+': queue error: '+msg;
 	} else {
-		console.error(link.id+': queue error: '+msg);
+		console.error(this.id+': queue error: '+msg);
 	}
 	// disable link on error
 	this.queue_stop();

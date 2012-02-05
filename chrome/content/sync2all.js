@@ -121,7 +121,7 @@ Sync2all.prototype = {
 
 		// merge the bookmarks
 		console.log('Merging bookmarks with '+link.fullName+'...');
-		this.bookmarks.mergeWith(link, link.bookmarks);
+		this.bookmarks.mergeWith(link.bookmarks);
 		// are not needed anymore, and should not be used. They use a lof memory too.
 		if (!debug) {
 			delete link.bookmarks;
