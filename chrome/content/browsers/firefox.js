@@ -78,9 +78,9 @@ Browser.prototype = {
 	// Observer notifications
 
 	onItemRemoved: function (id) {
-		if (!fx.ids[id]) return;
-		var node = fx.ids[id];
-		fx.ids.remove();
+		if (!this.ids[id]) return;
+		var node = this.ids[id];
+		node.remove(this);
 		sync2all.commit();
 	},
 	onBeginUpdateBatch: function () {
@@ -159,9 +159,9 @@ Browser.prototype = {
 		var url = bm.url;
 		try {
 			var uri = fx.ios.newURI(fx.escape_chrome_uri(bm.url), null, null);
-		} catch (err) {
+		} catch (e) {
 			// invalid URI
-			console.error(err);
+			console.error(e, e.stack);
 			return;
 		}
 		bm.id = fx.bmsvc.insertBookmark(bm.parentNode.id, uri, fx.bmsvc.DEFAULT_INDEX, bm.title);

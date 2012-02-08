@@ -13,6 +13,9 @@ BrowserBase.prototype.onCreated = function (node) {
 
 	if (node.id in sync2all.bookmarks.ids) return; // already tracked
 
+	// log event
+	console.log('onCreated', node);
+
 	// check whether they already exist
 	if (parentNode.bm[node.url]  && !parentNode.bm[node.url].id ||
 	    parentNode.f[node.title] && !parentNode.f[node.title].id) {
@@ -37,9 +40,9 @@ BrowserBase.prototype.onCreated = function (node) {
  */
 BrowserBase.prototype.onMoved = function (id, newParentId, oldParentId) {
 	// get info
-	var node      = this.ids[id];
-	var oldParent = this.ids[oldParentId];
-	var newParent = this.ids[newParentId];
+	var node      = sync2all.bookmarks.ids[id];
+	var oldParent = sync2all.bookmarks.ids[oldParentId];
+	var newParent = sync2all.bookmarks.ids[newParentId];
 	console.log('onMoved:', node, oldParent, newParent);
 
 

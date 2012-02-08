@@ -194,22 +194,17 @@ function broadcastMessage(methodName, sourceLink, params) {
 
 // apply action, parts are the same as broadcastMessage.
 function apply_action (link, action) {
-	// first get the arguments
-	var args    = [];
-	var arg;
-	// start after the first arg, that is the function name.
-	for (var i_arg=1; arg=action[i_arg]; i_arg++) {
-		if (typeof(arg) == 'object' && arg.length) {
-			arg = get_stable_lId(link, arg);
-		} else {
-			arg = sync2all.bookmarks.ids[arg];
-		}
-		if (!arg) {
-			console.warn('WARNING: action could not be applied (link: '+link.name+'):');
-			console.log(action);
-			return; // WARNING: errors may not be catched!
-		}
-		args.push(arg);
+	// first get the node
+	var node;
+	if (typeof(action[1]) == 'object' && action[1].length) {
+		// string, thus a node ID
+		node = get_stable_lId(link, action[1]);
+	} else {
+		node = sync2all.bookmarks.ids[action[1]];
+	}
+	if (!node) {
+		console.error('WARNING: action could not be applied (link: '+link.name+'):', action);
+		return; // WARNING: errors may not be catched!
 	}
 	
 	// then get the command
@@ -218,16 +213,15 @@ function apply_action (link, action) {
 	// and check whether it is allowed
 	if (command == 'f_del_ifempty') {
 		// directory shouldn't be removed if it has entries in it
-		if (args[0].hasContents()) return;
+		if (node.hasContents()) return;
 		command = 'f_del';
 	}
 
 	// apply actions partially
 	if (command == 'f_del') {
-		args[0].remove(link);
+		node.remove(link);
 	} else {
-		console.log('ERROR: unknown action: ');
-		console.log(action);
+		console.log('ERROR: unknown action:', action);
 		return;
 	}
 }

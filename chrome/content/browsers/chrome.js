@@ -118,7 +118,10 @@ Browser.prototype.f_del = function (source, folder) {
 	// keep in the queue to prevent possible errors
 	this.queue_add(
 			function (folder) {
+				if (!folder.id)
+					this.queue_error(folder, 'no id while removing');
 				chrome.bookmarks.removeTree(folder.id, this.queue_next.bind(this)); // can run without waiting
+				delete folder.id;
 			}.bind(this), folder);
 };
 
@@ -135,10 +138,20 @@ Browser.prototype.bm_add = function (source, bm) {
 };
 
 Browser.prototype.bm_del = function (source, bm) {
+	console.log('bm_del');
 	// just to keep it safe, in the queue
 	this.queue_add(
 			function (bm) {
+				if (!bm.id) {
+					this.queue_error(bm, 'no id while removing');
+					return;
+				}
+				if (bm.rootNode.ids[bm.id]) {
+					this.queue_error(bm, 'Not removed from rootNode');
+					return;
+				}
 				chrome.bookmarks.remove(bm.id, this.queue_next.bind(this));
+				delete bm.id;
 			}.bind(this), bm);
 };
 
@@ -169,7 +182,6 @@ Browser.prototype.bm_mod_url = function (target, node, oldurl) {
  ************************************/
 
 Browser.prototype.evt_onCreated = function (id, node) {
-	console.log('evt_onCreated', node);
 	// make this object ready
 	node.mtime = node.dateAdded/1000;
 	// let the browser library handle the rest
@@ -177,11 +189,15 @@ Browser.prototype.evt_onCreated = function (id, node) {
 };
 
 Browser.prototype.evt_onRemoved = function (id, removeInfo) {
-	console.log('evt_onRemoved');
-	if (!(id in sync2all.bookmarks.ids)) return; // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
-	var node = sync2all.bookmarks.ids[id];
-	node.remove(this);
-	sync2all.commit();
+	try { // try/catch is needed because Chrome doesn't print the error otherwise (only 'someting failed')
+		console.log('evt_onRemoved');
+		if (!(id in sync2all.bookmarks.ids)) return; // already removed (or in the 'Other Bookmarks' menu)... FIXME this may change in a future version (like chrome.bookmarks.onCreated)
+		var node = sync2all.bookmarks.ids[id];
+		node.remove(this);
+		sync2all.commit();
+	} catch (e) {
+		console.error(e, e.stack);
+	}
 }
 
 Browser.prototype.evt_onChanged = function (id, changeInfo) {
@@ -190,9 +206,13 @@ Browser.prototype.evt_onChanged = function (id, changeInfo) {
 }
 
 Browser.prototype.evt_onMoved = function (id, moveInfo) {
-	console.log('evt_onMoved');
+	try { // try/catch is needed because Chrome doesn't print the error otherwise (only 'someting failed')
+		console.log('evt_onMoved');
 
-	this.onMoved(id, moveInfo.parentId, moveInfo.oldParentId);
+		this.onMoved(id, moveInfo.parentId, moveInfo.oldParentId);
+	} catch (e) {
+		console.error(e, e.stack);
+	}
 }
 
 

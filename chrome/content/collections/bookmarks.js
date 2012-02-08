@@ -33,8 +33,9 @@ NodeBase.prototype._moveTo = function (newParent) {
 	if (this.parentNode == newParent) {
 		console.warn('WARNING: node moved to it\'s parent folder!', this, newParent);
 		console.trace();
+		return; // avoid more errors
 	}
-	this._remove();
+	this.unlink();
 	newParent._import(this);
 }
 
@@ -113,23 +114,39 @@ Bookmark.prototype.getOther = function (other_parent) {
 	return other_parent.bm[this.url];
 }
 
-Bookmark.prototype._remove = function () {
+Bookmark.prototype.unlink = function () {
 	if (this.rootNode.ids) {
 		delete this.rootNode.ids[this.id];
 	}
-	if (this.parentNode.bm[this.url] != this)
+	var other = this.parentNode.bm[this.url];
+	if (other && other != this) {
+		console.error(this);
 		throw 'Removing a bookmark that wasn\'t added';
+	}
 	delete this.parentNode.bm[this.url];
-	//delete this.parentNode; // also cuts of connection with link
+	//delete this.parentNode; // also cuts off connection with link
 }
 Bookmark.prototype.remove = function (link) {
 	console.log('Removed bookmark:', this, this.url);
 	this.rootNode.deleted[this.id] = true;
-	this._remove(); // cuts the connection with the rest of the tree
-	broadcastMessage('bm_del', link, [this]);
+	this.unlink(); // cuts the connection with the rest of the tree
+	// the following check works because:
+	//  * events during merge are fired from sync2all.bookmarks
+	//    (browser bookmarks)
+	//  * events from the browser are... from the browser and are thus fired
+	//    from sync2all.bookmarks
+	// So, if links want to push changes after the start/restart (Chrome Sync?),
+	// they should fire them from the browser too (which they should do
+	// anyway because their own bookmarks tree might be broken after the merge)
+	if (this.link instanceof Browser) {
+		broadcastMessage('bm_del', link, [this]);
+	} else {
+		this.link.bm_del(link, this);
+	}
 }
+
 Bookmark.prototype.moveTo = function (link, newParent) {
-	console.log('bookmark move:', this, link, newParent);
+	console.log('bookmark move:', this, link.id, newParent);
 	this.rootNode.moved[this.id] = true;
 	this._moveTo(newParent);
 	broadcastMessage('bm_mv', link, [this, newParent]);
@@ -145,7 +162,7 @@ Bookmark.prototype.setTitle = function (link, newTitle) {
 	broadcastMessage('bm_mod_title', link, [this, oldTitle]);
 }
 
-Bookmark.prototype._setUrl = function (newUrl) {
+Bookmark.prototype.setUrl = function (link, newUrl) {
 	var oldUrl = this.url;
 
 	if (!newUrl) {
@@ -161,15 +178,13 @@ Bookmark.prototype._setUrl = function (newUrl) {
 	// does that url already exist?
 	if (this.parentNode.bm[newUrl]) {
 		console.log('"Duplicate URL '+newUrl+', merging by removing other.');
-		this.parentNode.bm[newUrl].remove();
+		this.parentNode.bm[newUrl].remove(link);
 	}
 
 	// add new reference
 	this.parentNode.bm[newUrl] = this;
-}
-Bookmark.prototype.setUrl = function (link, newUrl) {
-	var oldUrl = this.url;
-	this._setUrl(newUrl);
+
+	// report changes
 	console.log('Url of '+this.title+' changed from '+this.url+' to '+newUrl);
 	broadcastMessage('bm_mod_url', link, [this, oldUrl]);
 }
@@ -187,9 +202,6 @@ Bookmark.prototype.markAdded = function (link) {
 }
 Bookmark.prototype.markMoved = function (link, oldParent) {
 	this.link.bm_mv(link, this, oldParent);
-}
-Bookmark.prototype.markDeleted = function (link) {
-	this.link.bm_del(link, this);
 }
 
 Bookmark.prototype.getTreelessLabels = function (link) {
@@ -305,7 +317,6 @@ BookmarkFolder.prototype._import = function (node) {
 		console.error(node, this);
 		throw 'Node has already a parent';
 	}*/ // TODO
-	node.parentNode = this;
 	if (this.rootNode.ids) {
 		if (this.link instanceof Browser) {
 			this.rootNode.ids[node.id] = node;
@@ -320,6 +331,9 @@ BookmarkFolder.prototype._import = function (node) {
 			console.error(node, this);
 			throw '!node.title';
 		}
+
+		node.parentNode = this;
+
 		// check for duplicates
 		if (this.f[node.title]) {
 			// duplicate folder, merge contents
@@ -345,11 +359,12 @@ BookmarkFolder.prototype._import = function (node) {
 			// now delete this folder. This removes it's contents too!
 			// But that should not be a problem, as the contents has already
 			// been moved.
-			this.link.f_del(this.link, otherNode);
-		} else {
-			// no duplicate
-			this.f[node.title] = node;
+			otherNode.remove();
 		}
+
+		// now there are no duplicates (a possible duplicate has already been removed)
+		this.f[node.title] = node;
+
 	} else if (node instanceof Bookmark) {
 		// check for duplicate
 		if (this.bm[node.url]) {
@@ -360,16 +375,19 @@ BookmarkFolder.prototype._import = function (node) {
 
 			if (otherNode.mtime > node.mtime) {
 				// otherBookmark is the latest added, so remove this bookmark
-				this.link.bm_del(this.link, node);
+				// it isn't linked with the tree, so may be low-level removed
+				node.remove();
 				// other bookmark is already added to the tree
 				return true; // invalid bookmark
 			} else {
 				// this bookmark is the newest, remove the other
-				this.link.bm_del(this.link, otherNode);
+				otherNode.remove();
+				node.parentNode = this;
 				this.bm[node.url] = node; // replace the other bookmark
 			}
 		} else {
 			// no duplicate, so just add
+			node.parentNode = this;
 			this.bm[node.url] = node;
 		}
 	} else {
@@ -396,7 +414,7 @@ BookmarkFolder.prototype.newFolder = function (link, data) {
 	return folder;
 }
 
-BookmarkFolder.prototype._remove = function () {
+BookmarkFolder.prototype.unlink = function () {
 	if (this.rootNode.ids) {
 		delete this.rootNode.ids[this.id];
 	}
@@ -406,12 +424,18 @@ BookmarkFolder.prototype._remove = function () {
 	//delete this.parentNode; // also cuts of connection with link
 }
 BookmarkFolder.prototype.remove = function (link) {
-	this._remove();
-	broadcastMessage('f_del', link, [this]);
+	console.log('Removed folder:', this, this.title);
+	this.rootNode.deleted[this.id] = true;
+	this.unlink();
+	if (this.link instanceof Browser) {
+		broadcastMessage('f_del', link, [this]);
+	} else {
+		this.link.f_del(link, this);
+	}
 }
 
 BookmarkFolder.prototype.moveTo = function (link, newParent) {
-	console.log('folder move:', this, link, newParent);
+	console.log('folder move:', this, link.id, newParent);
 	this._moveTo(newParent);
 	broadcastMessage('f_mv', link, [this, newParent]);
 }
@@ -486,8 +510,7 @@ BookmarkFolder.prototype.mergeWith = function (other) {
 
 	other.forEach(function (other_node, other) {
 		if (other_node.id in this.rootNode.deleted) {
-			other_node._remove();
-			other_node.markDeleted(this.link);
+			other_node.remove();
 		} else if (other_node.id in other.rootNode.moved) {
 			var this_node = this.rootNode.ids[other_node.id];
 
@@ -534,8 +557,8 @@ BookmarkFolder.prototype.mergeWith = function (other) {
 		if (!this_node) {
 			// WARNING: this makes 'other' invalid (doesn't harm because it
 			// will be discarded anyway)
-			other_node._remove(); // don't broadcast this change
-			this.add(other.link, other_node); // broadcast this change
+			other_node.unlink();
+			this.add(other.link, other_node);
 		} else {
 			this_node.copyPropertiesFrom(other_node);
 			// TODO merge changes (changed title etc.)

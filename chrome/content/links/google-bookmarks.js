@@ -68,8 +68,8 @@ GoogleBookmarksLink.prototype.onXmlRSC = function () {
 GoogleBookmarksLink.prototype.parseXmlBookmarks = function (xmlTree) {
 	try {
 		var google_bookmarks = xmlTree.childNodes[0].childNodes[0].childNodes;
-	} catch (err) {
-		this.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
+	} catch (e) {
+		this.errorStarting("Failed to parse bookmarks ("+e.message+") -- are you logged in?");
 		return true;
 	}
 
@@ -129,8 +129,8 @@ GoogleBookmarksLink.prototype.parseRssBookmarks = function (xmlTree) {
 		var sig_element = channel.getElementsByTagName('signature')[0] ||
 			channel.getElementsByTagName('smh:signature')[0]; // firefox
 		this.sig     = sig_element.firstChild.nodeValue;
-	} catch (err) {
-		this.errorStarting("Failed to parse bookmarks ("+err+") -- are you logged in?");
+	} catch (e) {
+		this.errorStarting("Failed to parse bookmarks ("+e.message+") -- are you logged in?");
 		return;
 	}
 	/*var element;
