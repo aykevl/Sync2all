@@ -90,6 +90,20 @@ NodeBase.prototype.isInMoveQueue = function (other_parent) {
 	return false;
 }
 
+NodeBase.prototype.getId = function (link) {
+	if (link instanceof Browser)
+		return this.id;
+	if (link instanceof TreeBasedLink)
+		return this[link.id+'_id'];
+	console.error(this);
+	throw "Can't get ID for link "+link.id;
+}
+
+NodeBase.prototype.isDeleted = function (link) {
+	return this.deleted || this.parentNode.isDeleted(link);
+}
+
+
 
 function Folder(link, data) {
 	NodeBase.call(this, link, data);
@@ -129,6 +143,7 @@ Bookmark.prototype.unlink = function () {
 Bookmark.prototype.remove = function (link) {
 	console.log('Removed bookmark:', this, this.url);
 	this.rootNode.deleted[this.id] = true;
+	this.deleted = true;
 	this.unlink(); // cuts the connection with the rest of the tree
 	// the following check works because:
 	//  * events during merge are fired from sync2all.bookmarks
@@ -426,6 +441,7 @@ BookmarkFolder.prototype.unlink = function () {
 BookmarkFolder.prototype.remove = function (link) {
 	console.log('Removed folder:', this, this.title);
 	this.rootNode.deleted[this.id] = true;
+	this.deleted = true;
 	this.unlink();
 	if (this.link instanceof Browser) {
 		broadcastMessage('f_del', link, [this]);
@@ -646,6 +662,7 @@ function BookmarkCollection (link, data) {
 
 	this._link = link;
 }
+
 BookmarkCollection.prototype.__proto__ = BookmarkFolder.prototype;
 
 BookmarkCollection.prototype.__defineGetter__('link', function () {
@@ -655,4 +672,8 @@ BookmarkCollection.prototype.__defineGetter__('link', function () {
 BookmarkCollection.prototype.__defineGetter__('rootNode', function () {
 	return this;
 });
+
+BookmarkCollection.prototype.isDeleted = function (link) {
+	return false; // root shall never be deleted
+}
 

@@ -114,17 +114,6 @@ Browser.prototype.f_add  = function (source, folder) {
 			}.bind(this), folder);
 };
 
-Browser.prototype.f_del = function (source, folder) {
-	// keep in the queue to prevent possible errors
-	this.queue_add(
-			function (folder) {
-				if (!folder.id)
-					this.queue_error(folder, 'no id while removing');
-				chrome.bookmarks.removeTree(folder.id, this.queue_next.bind(this)); // can run without waiting
-				delete folder.id;
-			}.bind(this), folder);
-};
-
 Browser.prototype.bm_add = function (source, bm) {
 	this.queue_add(
 			function (bm) {
@@ -137,23 +126,15 @@ Browser.prototype.bm_add = function (source, bm) {
 			}.bind(this), bm);
 };
 
-Browser.prototype.bm_del = function (source, bm) {
-	console.log('bm_del');
-	// just to keep it safe, in the queue
-	this.queue_add(
-			function (bm) {
-				if (!bm.id) {
-					this.queue_error(bm, 'no id while removing');
-					return;
-				}
-				if (bm.rootNode.ids[bm.id]) {
-					this.queue_error(bm, 'Not removed from rootNode');
-					return;
-				}
-				chrome.bookmarks.remove(bm.id, this.queue_next.bind(this));
-				delete bm.id;
-			}.bind(this), bm);
-};
+Browser.prototype.removeItem = function (node, callback) {
+	if (node instanceof Bookmark) {
+		chrome.bookmarks.remove(node.id, callback);
+	} else if (node instanceof Folder) {
+		chrome.bookmarks.removeTree(node.id, callback);
+	} else {
+		console.error('unknown node type', node);
+	}
+}
 
 Browser.prototype.bm_mv = Browser.prototype.f_mv = function (target, node, oldParent) {
 	this.queue_add(

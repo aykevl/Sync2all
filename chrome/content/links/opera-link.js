@@ -413,8 +413,8 @@ OperaLink.prototype.fixBookmark = function (bm) {
 	}
 }
 
-OperaLink.prototype.removeItem = function (id, callback) {
-	opera.link.bookmarks.deleteItem(id, callback);
+OperaLink.prototype.removeItem = function (node, callback) {
+	opera.link.bookmarks.deleteItem(node.getId(this), callback);
 }
 
 OperaLink.prototype.changeItem = function (node, callback) {
