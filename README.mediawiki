@@ -1,3 +1,5 @@
+'''Note: this extension does not work anymore and is unsupported at the moment. Any help continuing this project is appreciated (just fork this repository), but don't expect a working extension.'''
+
 = Google Chrome synchronization =
 
 This is an extension that synchronizes Google Chrome (or Chromium or Iron or ... ) with Google Bookmarks and Opera Link.
